@@ -1,7 +1,10 @@
 import sys
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
-                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout)
+                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QWidgetAction)
+
+from PyQt6.QtGui import QAction
+
 
 class ButtonGridWidget(QWidget):
     window_closed = pyqtSignal()
@@ -22,13 +25,15 @@ class ButtonGridWidget(QWidget):
 
     def button_clicked(self, x, y):
         print(f"Button at ({x}, {y}) clicked!")
-        self.close()
+        #self.close()
 
     def closeEvent(self, event):
         self.window_closed.emit()
         super().closeEvent(event)
 
 class InputCounterWidget(QWidget):
+    window_closed = pyqtSignal()
+
     def __init__(self):
         super().__init__()
 
@@ -58,12 +63,27 @@ class InputCounterWidget(QWidget):
         self.count += 1
         self.lcd_counter.display(self.count)
 
+    def closeEvent(self, event):
+        self.window_closed.emit()
+        super().closeEvent(event)
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
         self.setWindowTitle('Lesson App')
         self.setGeometry(100, 100, 300, 200)
+
+        # File menu and actions
+        self.file_menu = self.menuBar().addMenu("File")
+
+        self.show_stat_action = QAction("Show Stat", self)
+        self.show_stat_action.triggered.connect(self.show_stat)
+        self.file_menu.addAction(self.show_stat_action)
+
+        self.exit_action = QAction("Exit", self)
+        self.exit_action.triggered.connect(self.close)
+        self.file_menu.addAction(self.exit_action)
 
         next_lesson_btn = QPushButton('Next Lesson', self)
         repeat_btn = QPushButton('Repeat', self)
@@ -82,6 +102,10 @@ class MainWindow(QMainWindow):
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
 
+    def show_stat(self):
+        print("Show Stat clicked!")
+
+
     def next_lesson(self):
         self.button_grid_window = ButtonGridWidget()
         self.button_grid_window.show()
@@ -91,15 +115,24 @@ class MainWindow(QMainWindow):
     def open_input_counter_widget(self):
         self.input_counter_widget = InputCounterWidget()
         self.input_counter_widget.show()
+        self.input_counter_widget.window_closed.connect(self.show)
+        self.close()
 
     def repeat(self):
-        print("Repeat clicked!")
+        self.input_counter_widget = InputCounterWidget()
+        self.input_counter_widget.show()
+        self.input_counter_widget.window_closed.connect(self.show)
+        self.close()
 
     def exam(self):
-        print("Exam clicked!")
+        self.button_grid_window = ButtonGridWidget()
+        self.button_grid_window.show()
+        self.button_grid_window.window_closed.connect(self.open_input_counter_widget)
+        self.close()
 
 def main():
     app = QApplication(sys.argv)
+    app.setAttribute(Qt.ApplicationAttribute.AA_DontUseNativeMenuBar)
     main_window = MainWindow()
     main_window.show()
     sys.exit(app.exec())
