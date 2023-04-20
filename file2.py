@@ -23,7 +23,7 @@ class ButtonGridWidget(QWidget):
 
         for i in range(5):
             for j in range(5):
-                button = QPushButton(f'{sample[i * 5 + j].getWord()}', self)
+                button = QPushButton(f'{sample[i * 5 + j].getWord()} \n | \n {sample[i * 5 + j].getTranslation()}', self)
                 button.setFixedSize(200, 100)
                 #button.clicked.connect(lambda _, x=i, y=j: self.button_clicked(x, y))
                 button.clicked.connect(self.on_button_clicked)
@@ -45,14 +45,12 @@ class ButtonGridWidget(QWidget):
         sender.style().unpolish(sender)  # update the button's appearance
         sender.style().polish(sender)  # update the button's appearance
 
-    def button_clicked(self, x, y):
-        print(f"Button at ({x}, {y}) clicked!")
-        #self.close()
 
     def closeEvent(self, event):
         self.window_closed.emit()
         self.counterChanged.emit(self.counter)  # emit the custom signal with the counter value
         super().closeEvent(event)
+
 
 class InputCounterWidget(QWidget):
     window_closed = pyqtSignal()
@@ -60,14 +58,22 @@ class InputCounterWidget(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.list_of_words = QApplication.instance().shared_object_list.copy()
+        print([x.getWord() for x in self.list_of_words])
+
         self.label = QLabel("Enter your translation:", self)
         # label for special characters
         self.label_2 = QLabel('Use special characters: [à ë ï é è ç ’]', self)
+
+        self.temp_label = QLabel()
+
         self.line_edit = QLineEdit(self)
         self.submit_button = QPushButton("Submit", self)
         self.lcd_counter = QLCDNumber(self)
         self.lcd_counter.setDigitCount(3)
         self.count = 0
+        self.indx = 0
+        self.list_to_delete = []
 
         self.submit_button.clicked.connect(self.submit_text)
 
@@ -81,13 +87,51 @@ class InputCounterWidget(QWidget):
         layout.addLayout(hlayout)
 
         layout.addWidget(self.lcd_counter)
+
+        layout.addWidget(self.temp_label)
+
         self.setLayout(layout)
+
+        # Start quiz
+        self.next_word()
+
+    def next_word(self):
+        print(self.indx, len(self.list_of_words))
+        if self.count == 25:
+            self.temp_label.setText("Congrats!")
+        elif self.indx == len(self.list_of_words):
+            for word in self.list_to_delete:
+                self.list_of_words.remove(word)
+            self.list_to_delete = []
+            self.indx = 0
+            self.current_word = self.list_of_words[self.indx]
+        else:
+            self.current_word = self.list_of_words[self.indx]
+
+
+        # Set the question label
+        self.label.setText(f"{self.current_word.getWord()}: ")
+
+        # Clear the answer line edit and result label
+        self.line_edit.clear()
+
 
     def submit_text(self):
         text = self.line_edit.text()
-        print(f"Submitted text: {text}")
-        self.count += 1
-        self.lcd_counter.display(self.count)
+        translation = self.current_word.getTranslation()
+        if ',' in translation:
+            translation = translation.split(',')[0]
+        if text == translation:
+            self.count += 1
+            self.list_to_delete.append(self.current_word)
+            self.indx += 1
+            self.lcd_counter.display(self.count)
+            self.next_word()
+        else:
+            self.temp_label.setText(f"{self.current_word.getTranslation()}, {len(self.list_of_words)}")
+            self.indx += 1
+            print(self.indx)
+            self.next_word()
 
     def closeEvent(self, event):
         self.window_closed.emit()
