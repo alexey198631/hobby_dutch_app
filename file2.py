@@ -46,6 +46,7 @@ class ButtonGridWidget(QWidget):
         sender.style().polish(sender)  # update the button's appearance
 
 
+
     def closeEvent(self, event):
         self.window_closed.emit()
         self.counterChanged.emit(self.counter)  # emit the custom signal with the counter value
@@ -55,11 +56,13 @@ class ButtonGridWidget(QWidget):
 class InputCounterWidget(QWidget):
     window_closed = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, nxt=[]):
         super().__init__()
-
-        self.list_of_words = QApplication.instance().shared_object_list.copy()
-        print([x.getWord() for x in self.list_of_words])
+        if len(nxt) == 0:
+            self.list_of_words = QApplication.instance().shared_object_list.copy()
+        else:
+            self.list_of_words = nxt
+        #print([x.getWord() for x in self.list_of_words])
 
         self.label = QLabel("Enter your translation:", self)
         # label for special characters
@@ -96,7 +99,7 @@ class InputCounterWidget(QWidget):
         self.next_word()
 
     def next_word(self):
-        print(self.indx, len(self.list_of_words))
+        #print(self.indx, len(self.list_of_words))
         if self.count == 25:
             self.temp_label.setText("Congrats!")
         elif self.indx == len(self.list_of_words):
@@ -130,7 +133,6 @@ class InputCounterWidget(QWidget):
         else:
             self.temp_label.setText(f"{self.current_word.getTranslation()}, {len(self.list_of_words)}")
             self.indx += 1
-            print(self.indx)
             self.next_word()
 
     def closeEvent(self, event):
