@@ -139,6 +139,7 @@ class InputCounterWidget(QWidget):
         self.window_closed.emit()
         super().closeEvent(event)
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -195,16 +196,10 @@ class MainWindow(QMainWindow):
         self.close()
 
     def repeat(self):
-        self.input_counter_widget = InputCounterWidget()
-        self.input_counter_widget.show()
-        self.input_counter_widget.window_closed.connect(self.show)
-        self.close()
+        pass
 
     def exam(self):
-        self.button_grid_window = ButtonGridWidget()
-        self.button_grid_window.show()
-        self.button_grid_window.window_closed.connect(self.open_input_counter_widget)
-        self.close()
+        pass
 
     def update_counter(self, counter_value):
         print(f"Counter value from ButtonGridWidget: {counter_value}")
@@ -221,6 +216,11 @@ class CustomApplication(QApplication):
         sample = random_sample(wordList, 25)
 
         self.shared_object_list = sample
+
+        lesson_df = pd.read_excel('data_files/dutch.xlsx', sheet_name='lesson')
+        lesson_df = lesson_df.loc[:, 'lesson':]
+
+        self.lesson = lesson_df
 
 
 def main():
