@@ -59,20 +59,29 @@ class ButtonGridWidgetSpare(QWidget):
         if len(list_of_words) == 0:
             sample = QApplication.instance().shared_object_list
         else:
-            sample = list_of_words
+            sample = list_of_words.copy()
         grid_layout = QGridLayout()
 
-        for i in range(5):
-            for j in range(5):
+
+        # change location of each word at the button board
+        coord_i = [0, 1, 2, 3, 4]
+        coord_j = [0, 1, 2, 3, 4]
+        coord = []
+        for i in coord_i:
+            for j in coord_j:
+                coord.append((i, j))
+        random.shuffle(coord)
+        random.shuffle(sample)
+
+        for k, (i, j) in enumerate(coord):
                 try:
-                    button = QPushButton(f'{sample[i * 5 + j].getWord()} \n | \n {sample[i * 5 + j].getTranslation()}', self)
+                    button = QPushButton(f'{sample[k].getWord()} \n | \n {sample[k].getTranslation()}', self)
                     button.setFixedSize(200, 100)
                     grid_layout.addWidget(button, i, j)
                 except:
                     button = QPushButton()
                     button.setFixedSize(200, 100)
                     grid_layout.addWidget(button, i, j)
-
 
         self.setLayout(grid_layout)
 
