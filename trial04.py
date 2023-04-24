@@ -1,8 +1,15 @@
+"""
+1. Special characters should be buttons
+2. It necessary to create change mechanism for reverse
+
+
+"""
+
 import sys
 import pandas as pd
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
-                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QWidgetAction)
+                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QWidgetAction, QGroupBox)
 
 from PyQt6.QtGui import QAction
 from cls import *
@@ -23,9 +30,10 @@ class ButtonGridWidget(QWidget):
 
         for i in range(5):
             for j in range(5):
-                button = QPushButton(f'{sample[i * 5 + j].getWord()} \n | \n {sample[i * 5 + j].getTranslation()}', self)
+                button = QPushButton(f'{sample[i * 5 + j].getWord()} \n | \n {sample[i * 5 + j].getTranslation()}',
+                                     self)
                 button.setFixedSize(200, 100)
-                #button.clicked.connect(lambda _, x=i, y=j: self.button_clicked(x, y))
+                # button.clicked.connect(lambda _, x=i, y=j: self.button_clicked(x, y))
                 button.clicked.connect(self.on_button_clicked)
                 grid_layout.addWidget(button, i, j)
 
@@ -50,6 +58,7 @@ class ButtonGridWidget(QWidget):
         self.counterChanged.emit(self.counter)  # emit the custom signal with the counter value
         super().closeEvent(event)
 
+
 class ButtonGridWidgetSpare(QWidget):
     window_closed = pyqtSignal()
 
@@ -62,7 +71,6 @@ class ButtonGridWidgetSpare(QWidget):
             sample = list_of_words.copy()
         grid_layout = QGridLayout()
 
-
         # change location of each word at the button board
         coord_i = [0, 1, 2, 3, 4]
         coord_j = [0, 1, 2, 3, 4]
@@ -74,20 +82,21 @@ class ButtonGridWidgetSpare(QWidget):
         random.shuffle(sample)
 
         for k, (i, j) in enumerate(coord):
-                try:
-                    button = QPushButton(f'{sample[k].getWord()} \n | \n {sample[k].getTranslation()}', self)
-                    button.setFixedSize(200, 100)
-                    grid_layout.addWidget(button, i, j)
-                except:
-                    button = QPushButton()
-                    button.setFixedSize(200, 100)
-                    grid_layout.addWidget(button, i, j)
+            try:
+                button = QPushButton(f'{sample[k].getWord()} \n | \n {sample[k].getTranslation()}', self)
+                button.setFixedSize(200, 100)
+                grid_layout.addWidget(button, i, j)
+            except:
+                button = QPushButton()
+                button.setFixedSize(200, 100)
+                grid_layout.addWidget(button, i, j)
 
         self.setLayout(grid_layout)
 
     def closeEvent(self, event):
         self.window_closed.emit()
         super().closeEvent(event)
+
 
 class InputCounterWidget(QWidget):
     window_closed = pyqtSignal()
@@ -98,14 +107,9 @@ class InputCounterWidget(QWidget):
             self.list_of_words = QApplication.instance().shared_object_list.copy()
         else:
             self.list_of_words = nxt
-        #print([x.getWord() for x in self.list_of_words])
 
         self.label = QLabel("Enter your translation:", self)
-        # label for special characters
-        self.label_2 = QLabel('Use special characters: [à ë ï é è ç ’]', self)
-
         self.temp_label = QLabel()
-
         self.line_edit = QLineEdit(self)
         self.submit_button = QPushButton("Submit", self)
         self.lcd_counter = QLCDNumber(self)
@@ -116,18 +120,28 @@ class InputCounterWidget(QWidget):
 
         self.submit_button.clicked.connect(self.submit_text)
 
+        # Create QGroupBox for special character buttons
+        groupBox = QGroupBox('Special Characters', self)
+        hbox = QHBoxLayout(groupBox)
+
+        # Create buttons with special characters
+        spec_buttons = ['à', 'ë', 'ï', 'é', 'è', 'ç', '’']
+        for char in spec_buttons:
+            button = QPushButton(char, self)
+            button.clicked.connect(lambda _, ch=char: self.insertChar(ch))
+            hbox.addWidget(button)
+
+        # Vertical layout with label for words/translations
         layout = QVBoxLayout()
         layout.addWidget(self.label)
-        layout.addWidget(self.label_2)
-
+        # Horizontal layout with line_edit and submit button under the words/translation label
         hlayout = QHBoxLayout()
         hlayout.addWidget(self.line_edit)
         hlayout.addWidget(self.submit_button)
         layout.addLayout(hlayout)
-
         layout.addWidget(self.lcd_counter)
-
         layout.addWidget(self.temp_label)
+        layout.addWidget(groupBox)
 
         self.setLayout(layout)
 
@@ -135,7 +149,7 @@ class InputCounterWidget(QWidget):
         self.next_word()
 
     def next_word(self):
-        #print(self.indx, len(self.list_of_words))
+        # print(self.indx, len(self.list_of_words))
         if self.count == 25:
             self.temp_label.setText("Congrats!")
         elif self.indx == len(self.list_of_words):
@@ -151,14 +165,11 @@ class InputCounterWidget(QWidget):
         else:
             self.current_word = self.list_of_words[self.indx]
 
-
-
         # Set the question label
         self.label.setText(f"{self.current_word.getWord()}: ")
 
         # Clear the answer line edit and result label
         self.line_edit.clear()
-
 
     def submit_text(self):
         text = self.line_edit.text()
@@ -181,6 +192,10 @@ class InputCounterWidget(QWidget):
 
     def shoeMe(self):
         self.show()
+
+    def insertChar(self, ch):
+        # Insert character into QLineEdit
+        self.line_edit.insert(ch)
 
     def closeEvent(self, event):
         self.window_closed.emit()
@@ -227,7 +242,6 @@ class MainWindow(QMainWindow):
         print(f"Shared object list: {shared_object_list}")
         shared_object_list.append("New object")
         print(f"Updated shared object list: {shared_object_list}")
-
 
     def next_lesson(self):
         self.button_grid_window = ButtonGridWidget()
@@ -276,6 +290,7 @@ def main():
     main_window = MainWindow()
     main_window.show()
     sys.exit(app.exec())
+
 
 if __name__ == '__main__':
     main()
