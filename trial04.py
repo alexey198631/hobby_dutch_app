@@ -1,6 +1,5 @@
 """
-1. Special characters should be buttons
-2. It necessary to create change mechanism for reverse
+check opening main window next time
 
 
 """
@@ -62,8 +61,10 @@ class ButtonGridWidget(QWidget):
 class ButtonGridWidgetSpare(QWidget):
     window_closed = pyqtSignal()
 
-    def __init__(self, list_of_words=[]):
+    def __init__(self, list_of_words=[], rever=0):
         super().__init__()
+
+        self.rever = rever
 
         if len(list_of_words) == 0:
             sample = QApplication.instance().shared_object_list
@@ -83,9 +84,14 @@ class ButtonGridWidgetSpare(QWidget):
 
         for k, (i, j) in enumerate(coord):
             try:
-                button = QPushButton(f'{sample[k].getWord()} \n | \n {sample[k].getTranslation()}', self)
-                button.setFixedSize(200, 100)
-                grid_layout.addWidget(button, i, j)
+                if self.rever == 0:
+                    button = QPushButton(f'{sample[k].getWord()} \n | \n {sample[k].getTranslation()}', self)
+                    button.setFixedSize(200, 100)
+                    grid_layout.addWidget(button, i, j)
+                elif self.rever == 1:
+                    button = QPushButton(f'{sample[k].getTranslation()} \n | \n {sample[k].getWord()}', self)
+                    button.setFixedSize(200, 100)
+                    grid_layout.addWidget(button, i, j)
             except:
                 button = QPushButton()
                 button.setFixedSize(200, 100)
@@ -101,12 +107,14 @@ class ButtonGridWidgetSpare(QWidget):
 class InputCounterWidget(QWidget):
     window_closed = pyqtSignal()
 
-    def __init__(self, nxt=[]):
+    def __init__(self, nxt=[], rever=0):
         super().__init__()
         if len(nxt) == 0:
             self.list_of_words = QApplication.instance().shared_object_list.copy()
         else:
             self.list_of_words = nxt
+
+        self.rever = rever
 
         self.label = QLabel("Enter your translation:", self)
         self.temp_label = QLabel()
@@ -119,6 +127,7 @@ class InputCounterWidget(QWidget):
         self.list_to_delete = []
 
         self.submit_button.clicked.connect(self.submit_text)
+        self.line_edit.returnPressed.connect(self.submit_button.click)
 
         # Create QGroupBox for special character buttons
         groupBox = QGroupBox('Special Characters', self)
@@ -150,8 +159,13 @@ class InputCounterWidget(QWidget):
 
     def next_word(self):
         # print(self.indx, len(self.list_of_words))
-        if self.count == 25:
-            self.temp_label.setText("Congrats!")
+        if self.count == 25 and self.rever == 0:
+            self.rever = 1
+            self.list_to_delete = []
+            self.start_translation()
+        elif self.count == 25 and self.rever == 1:
+            self.close()
+            self.main_windwow_back()
         elif self.indx == len(self.list_of_words):
             for word in self.list_to_delete:
                 self.list_of_words.remove(word)
@@ -166,14 +180,20 @@ class InputCounterWidget(QWidget):
             self.current_word = self.list_of_words[self.indx]
 
         # Set the question label
-        self.label.setText(f"{self.current_word.getWord()}: ")
+        if self.rever == 0:
+            self.label.setText(f"{self.current_word.getWord()}: ")
+        elif self.rever == 1:
+            self.label.setText(f"{self.current_word.getTranslation()}: ")
 
         # Clear the answer line edit and result label
         self.line_edit.clear()
 
     def submit_text(self):
         text = self.line_edit.text()
-        translation = self.current_word.getTranslation()
+        if self.rever == 0:
+            translation = self.current_word.getTranslation()
+        elif self.rever == 1:
+            translation = self.current_word.getWord()
         if ',' in translation:
             translation = translation.split(',')[0]
         if text == translation:
@@ -183,7 +203,7 @@ class InputCounterWidget(QWidget):
             self.lcd_counter.display(self.count)
             self.next_word()
         else:
-            self.temp_label.setText(f"{self.current_word.getTranslation()}, {len(self.list_of_words)}")
+            self.temp_label.setText(f"{self.current_word.getWord()}, {self.current_word.getTranslation()}")
             self.indx += 1
             self.next_word()
 
@@ -196,6 +216,20 @@ class InputCounterWidget(QWidget):
     def insertChar(self, ch):
         # Insert character into QLineEdit
         self.line_edit.insert(ch)
+
+    def start_translation(self):
+        self.close()
+        self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=[])
+        self.button_grid_window_spare.window_closed.connect(self.open_tranlsation_counter_widget)
+        self.button_grid_window_spare.show()
+
+    def open_tranlsation_counter_widget(self):
+        self.input_translation_widget = InputCounterWidget(rever=1)
+        self.input_translation_widget.show()
+
+    def main_windwow_back(self):
+        main_window = MainWindow()
+        main_window.show()
 
     def closeEvent(self, event):
         self.window_closed.emit()
@@ -253,8 +287,8 @@ class MainWindow(QMainWindow):
     def open_input_counter_widget(self):
         self.input_counter_widget = InputCounterWidget()
         self.input_counter_widget.show()
-        self.input_counter_widget.window_closed.connect(self.show)
-        self.close()
+        #self.input_counter_widget.window_closed.connect(self.show)
+        #self.close()
 
     def repeat(self):
         pass
