@@ -3,7 +3,6 @@ check opening main window next time
 
 
 """
-
 import sys
 import pandas as pd
 from PyQt6.QtCore import pyqtSignal, Qt
@@ -11,7 +10,6 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout
                              QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QWidgetAction, QGroupBox)
 
 from PyQt6.QtGui import QAction
-from cls import *
 from defs import loadWords, random_sample
 import random
 
@@ -23,6 +21,7 @@ class ButtonGridWidget(QWidget):
     def __init__(self):
         super().__init__()
 
+
         sample = QApplication.instance().shared_object_list
         self.counter = 0  # initialize the counter variable
         grid_layout = QGridLayout()
@@ -32,7 +31,6 @@ class ButtonGridWidget(QWidget):
                 button = QPushButton(f'{sample[i * 5 + j].getWord()} \n | \n {sample[i * 5 + j].getTranslation()}',
                                      self)
                 button.setFixedSize(200, 100)
-                # button.clicked.connect(lambda _, x=i, y=j: self.button_clicked(x, y))
                 button.clicked.connect(self.on_button_clicked)
                 grid_layout.addWidget(button, i, j)
 
@@ -174,6 +172,7 @@ class InputCounterWidget(QWidget):
             self.current_word = self.list_of_words[self.indx]
             self.hideMe()
             self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=self.list_of_words)
+            self.button_grid_window_spare.move(100, 100)
             self.button_grid_window_spare.window_closed.connect(self.shoeMe)
             self.button_grid_window_spare.show()
         else:
@@ -220,15 +219,18 @@ class InputCounterWidget(QWidget):
     def start_translation(self):
         self.close()
         self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=[])
+        self.button_grid_window_spare.move(100, 100)
         self.button_grid_window_spare.window_closed.connect(self.open_tranlsation_counter_widget)
         self.button_grid_window_spare.show()
 
     def open_tranlsation_counter_widget(self):
         self.input_translation_widget = InputCounterWidget(rever=1)
+        self.input_translation_widget.move(100, 100)
         self.input_translation_widget.show()
 
     def main_windwow_back(self):
         main_window = MainWindow()
+        main_window.move(100, 100)
         main_window.show()
 
     def closeEvent(self, event):
@@ -279,6 +281,7 @@ class MainWindow(QMainWindow):
 
     def next_lesson(self):
         self.button_grid_window = ButtonGridWidget()
+        self.button_grid_window.move(100, 100)
         self.button_grid_window.show()
         self.button_grid_window.window_closed.connect(self.open_input_counter_widget)
         self.button_grid_window.counterChanged.connect(self.update_counter)  # connect the signal to the slot
@@ -286,6 +289,7 @@ class MainWindow(QMainWindow):
 
     def open_input_counter_widget(self):
         self.input_counter_widget = InputCounterWidget()
+        self.input_counter_widget.move(100, 100)
         self.input_counter_widget.show()
         #self.input_counter_widget.window_closed.connect(self.show)
         #self.close()
@@ -322,6 +326,7 @@ def main():
     app = CustomApplication(sys.argv)
     app.setAttribute(Qt.ApplicationAttribute.AA_DontUseNativeMenuBar)
     main_window = MainWindow()
+    main_window.move(100, 100)
     main_window.show()
     sys.exit(app.exec())
 
