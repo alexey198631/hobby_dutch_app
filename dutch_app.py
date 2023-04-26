@@ -1,5 +1,6 @@
 """
-check opening main window next time
+translation correct not only for the first part
+
 
 
 """
@@ -7,7 +8,7 @@ import sys
 import pandas as pd
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
-                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QWidgetAction, QGroupBox)
+                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox)
 
 from PyQt6.QtGui import QAction
 from defs import loadWords, random_sample
@@ -17,12 +18,24 @@ import random
 class ButtonGridWidget(QWidget):
     window_closed = pyqtSignal()
     counterChanged = pyqtSignal(int)
+    sampleList = pyqtSignal(list)
 
     def __init__(self):
         super().__init__()
 
+        words = pd.read_excel('data_files/dutch.xlsx', sheet_name='update')
+        words = words.loc[:, 'word':]
+        wordList = loadWords(words, "yes")
+        sample = random_sample(wordList, 25)
 
-        sample = QApplication.instance().shared_object_list
+        self.shared_object_list = sample
+
+        lesson_df = pd.read_excel('data_files/dutch.xlsx', sheet_name='lesson')
+        lesson_df = lesson_df.loc[:, 'lesson':]
+
+        self.lesson = lesson_df
+
+
         self.counter = 0  # initialize the counter variable
         grid_layout = QGridLayout()
 
@@ -53,6 +66,7 @@ class ButtonGridWidget(QWidget):
     def closeEvent(self, event):
         self.window_closed.emit()
         self.counterChanged.emit(self.counter)  # emit the custom signal with the counter value
+        self.sampleList.emit(self.shared_object_list) # emit sample of words
         super().closeEvent(event)
 
 
@@ -63,11 +77,7 @@ class ButtonGridWidgetSpare(QWidget):
         super().__init__()
 
         self.rever = rever
-
-        if len(list_of_words) == 0:
-            sample = QApplication.instance().shared_object_list
-        else:
-            sample = list_of_words.copy()
+        sample = list_of_words.copy()
         grid_layout = QGridLayout()
 
         # change location of each word at the button board
@@ -105,15 +115,16 @@ class ButtonGridWidgetSpare(QWidget):
 class InputCounterWidget(QWidget):
     window_closed = pyqtSignal()
 
-    def __init__(self, nxt=[], rever=0):
+    def __init__(self, main_window, sampleList, nxt=[], rever=0):
         super().__init__()
         if len(nxt) == 0:
-            self.list_of_words = QApplication.instance().shared_object_list.copy()
+            self.list_of_words = sampleList.copy()
         else:
             self.list_of_words = nxt
 
         self.rever = rever
-
+        self.main_window = main_window
+        self.start_list = sampleList.copy()
         self.label = QLabel("Enter your translation:", self)
         self.temp_label = QLabel()
         self.line_edit = QLineEdit(self)
@@ -149,21 +160,18 @@ class InputCounterWidget(QWidget):
         layout.addWidget(self.lcd_counter)
         layout.addWidget(self.temp_label)
         layout.addWidget(groupBox)
-
         self.setLayout(layout)
 
         # Start quiz
         self.next_word()
 
     def next_word(self):
-        # print(self.indx, len(self.list_of_words))
         if self.count == 25 and self.rever == 0:
             self.rever = 1
             self.list_to_delete = []
             self.start_translation()
         elif self.count == 25 and self.rever == 1:
             self.close()
-            self.main_windwow_back()
         elif self.indx == len(self.list_of_words):
             for word in self.list_to_delete:
                 self.list_of_words.remove(word)
@@ -218,20 +226,19 @@ class InputCounterWidget(QWidget):
 
     def start_translation(self):
         self.close()
-        self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=[])
+        self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=self.start_list)
         self.button_grid_window_spare.move(100, 100)
         self.button_grid_window_spare.window_closed.connect(self.open_tranlsation_counter_widget)
         self.button_grid_window_spare.show()
 
     def open_tranlsation_counter_widget(self):
-        self.input_translation_widget = InputCounterWidget(rever=1)
+        self.input_translation_widget = InputCounterWidget(self, self.start_list, rever=1)
         self.input_translation_widget.move(100, 100)
         self.input_translation_widget.show()
+        self.input_translation_widget.window_closed.connect(self.main_window_back)
 
-    def main_windwow_back(self):
-        main_window = MainWindow()
-        main_window.move(100, 100)
-        main_window.show()
+    def main_window_back(self):
+        self.main_window.show()
 
     def closeEvent(self, event):
         self.window_closed.emit()
@@ -283,16 +290,14 @@ class MainWindow(QMainWindow):
         self.button_grid_window = ButtonGridWidget()
         self.button_grid_window.move(100, 100)
         self.button_grid_window.show()
-        self.button_grid_window.window_closed.connect(self.open_input_counter_widget)
+        self.button_grid_window.sampleList.connect(self.open_input_counter_widget)
         self.button_grid_window.counterChanged.connect(self.update_counter)  # connect the signal to the slot
-        self.close()
+        self.hide()
 
-    def open_input_counter_widget(self):
-        self.input_counter_widget = InputCounterWidget()
+    def open_input_counter_widget(self, sampleList):
+        self.input_counter_widget = InputCounterWidget(self, sampleList)
         self.input_counter_widget.move(100, 100)
         self.input_counter_widget.show()
-        #self.input_counter_widget.window_closed.connect(self.show)
-        #self.close()
 
     def repeat(self):
         pass
@@ -305,25 +310,8 @@ class MainWindow(QMainWindow):
         # Do something with the counter_value
 
 
-class CustomApplication(QApplication):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        words = pd.read_excel('data_files/dutch.xlsx', sheet_name='update')
-        words = words.loc[:, 'word':]
-        wordList = loadWords(words, "yes")
-        sample = random_sample(wordList, 25)
-
-        self.shared_object_list = sample
-
-        lesson_df = pd.read_excel('data_files/dutch.xlsx', sheet_name='lesson')
-        lesson_df = lesson_df.loc[:, 'lesson':]
-
-        self.lesson = lesson_df
-
-
 def main():
-    app = CustomApplication(sys.argv)
+    app = QApplication(sys.argv)
     app.setAttribute(Qt.ApplicationAttribute.AA_DontUseNativeMenuBar)
     main_window = MainWindow()
     main_window.move(100, 100)
