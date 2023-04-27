@@ -1,6 +1,8 @@
 """
-translation correct not only for the first part
+To do:
 
+separate lcd for score and attempts
+move xlsx database to SQLite (two languages databases)
 
 
 """
@@ -201,7 +203,7 @@ class InputCounterWidget(QWidget):
             translation = self.current_word.getTranslation()
         elif self.rever == 1:
             translation = self.current_word.getWord()
-        translation = translation_with_comma(translation) # create list of all translations 
+        translation = translation_with_comma(translation) # create list of all translations
         if text in translation:
             self.count += 1
             self.list_to_delete.append(self.current_word)
