@@ -10,25 +10,76 @@ import sys
 import pandas as pd
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
-                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox)
+                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget)
 
 from PyQt6.QtGui import QAction
-from defs import loadWords, random_sample, translation_with_comma
+from defs import loadWords, random_sample, translation_with_comma, next_lesson, reps
 import random
 
+
+class RepeatWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.setGeometry(100, 100, 800, 400)  # x, y, width, height
+        self.setWindowTitle('Lessons to repeat')
+
+        lesson_df = pd.read_excel('data_files/dutch.xlsx', sheet_name='lesson')
+        lesson_df = lesson_df.loc[:, 'lesson':]
+        self.lesson = lesson_df
+        unique_values = next_lesson(self.lesson)[0]
+
+        # create layout for widget and add list widget
+        vbox = QVBoxLayout()
+        # create list widget
+        self.list_widget = QListWidget()
+
+        # create list item for each unique value in column and add to list widget
+        for i, value in enumerate(unique_values):
+            lesson_text = 'Lesson ' + str(value)
+            print(lesson_text)
+            self.list_widget.insertItem(i, lesson_text)
+
+        # connect list item click event to function
+        self.list_widget.itemClicked.connect(self.on_lesson_clicked)
+        vbox.addWidget(self.list_widget)
+
+        # set layout for widget
+        self.setLayout(vbox)
+
+        # function to be performed on item click
+
+    def on_lesson_clicked(self, item):
+        repeat_lesson = int(item.text().split(' ')[1])
+
+        words = pd.read_excel('data_files/dutch.xlsx', sheet_name='update')
+        words = words.loc[:, 'word':]
+        wordList = loadWords(words, "yes")
+
+        self.sample = reps(repeat_lesson, self.lesson, wordList)
+
+        self.button_grid_window = ButtonGridWidget(repeat=self.sample)
+        self.button_grid_window.move(100, 100)
+        self.button_grid_window.show()
+        self.hide()
 
 class ButtonGridWidget(QWidget):
     window_closed = pyqtSignal()
     counterChanged = pyqtSignal(int)
     sampleList = pyqtSignal(list)
 
-    def __init__(self):
+    def __init__(self, repeat=[]):
         super().__init__()
 
-        words = pd.read_excel('data_files/dutch.xlsx', sheet_name='update')
-        words = words.loc[:, 'word':]
-        wordList = loadWords(words, "yes")
-        sample = random_sample(wordList, 25)
+        self.repeat = repeat
+
+        if len(repeat)==0:
+            words = pd.read_excel('data_files/dutch.xlsx', sheet_name='update')
+            words = words.loc[:, 'word':]
+            wordList = loadWords(words, "yes")
+            sample = random_sample(wordList, 25)
+        else:
+            sample = repeat
 
         self.shared_object_list = sample
 
@@ -301,7 +352,10 @@ class MainWindow(QMainWindow):
         self.input_counter_widget.show()
 
     def repeat(self):
-        pass
+        self.repeat_window = RepeatWindow()
+        self.repeat_window.move(100, 100)
+        self.repeat_window.show()
+        self.hide()
 
     def exam(self):
         pass
@@ -309,6 +363,9 @@ class MainWindow(QMainWindow):
     def update_counter(self, counter_value):
         print(f"Counter value from ButtonGridWidget: {counter_value}")
         # Do something with the counter_value
+
+
+
 
 
 def main():
