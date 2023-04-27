@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout
                              QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox)
 
 from PyQt6.QtGui import QAction
-from defs import loadWords, random_sample
+from defs import loadWords, random_sample, translation_with_comma
 import random
 
 
@@ -201,9 +201,8 @@ class InputCounterWidget(QWidget):
             translation = self.current_word.getTranslation()
         elif self.rever == 1:
             translation = self.current_word.getWord()
-        if ',' in translation:
-            translation = translation.split(',')[0]
-        if text == translation:
+        translation = translation_with_comma(translation) # create list of all translations 
+        if text in translation:
             self.count += 1
             self.list_to_delete.append(self.current_word)
             self.indx += 1
