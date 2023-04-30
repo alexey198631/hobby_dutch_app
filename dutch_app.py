@@ -37,7 +37,6 @@ class RepeatWindow(QWidget):
         # create list item for each unique value in column and add to list widget
         for i, value in enumerate(unique_values):
             lesson_text = 'Lesson ' + str(value)
-            print(lesson_text)
             self.list_widget.insertItem(i, lesson_text)
 
         # connect list item click event to function
@@ -339,6 +338,7 @@ class MainWindow(QMainWindow):
         print(f"Updated shared object list: {shared_object_list}")
 
     def next_lesson(self):
+
         self.button_grid_window = ButtonGridWidget()
         self.button_grid_window.move(100, 100)
         self.button_grid_window.show()
@@ -347,6 +347,7 @@ class MainWindow(QMainWindow):
         self.hide()
 
     def open_input_counter_widget(self, sampleList):
+
         self.input_counter_widget = InputCounterWidget(self, sampleList)
         self.input_counter_widget.move(100, 100)
         self.input_counter_widget.show()
