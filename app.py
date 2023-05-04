@@ -4,13 +4,9 @@ from cls import *
 from sound import *
 from exam import *
 from werkwoorden import *
-import sys
-from gui import *
 
 
 exm = str(input('Is it time to have an exam or werkwoorden? - enter "yes" for exam and "verb" for irregula verbs! '))
-
-
 
 if exm == 'yes':
     exam_mode()
@@ -75,39 +71,11 @@ print('Lesson #:', lessonNumber.getNumber())
 lessonNumber.wlist([x.getWord() for x in save])
 lessonNumber.length_of_lesson(lesson_length(sample))
 lessonNumber.start(datetime.now())
-
-app = QApplication(sys.argv)
-
-# setting icon for app
-icon = QIcon("data_files/python.png")
-app.setWindowIcon(icon)
-
-window = QuizWindow(sample)
-window.show()
-
-
-
-
-def handle_counter_changed(value):
-    known = value
-    lessonNumber.number_of_easy(known)
-    print(f"{value} button(s) were clicked.")  # print the final count of clicked buttons
-
-#window.counterChanged.connect(handle_counter_changed)  # connect to the counterChanged signal
-
-def new_window(sample):
-    # create the new widget window
-    new_window = QuizWindow(sample)
-    # show the new widget window
-    new_window.show()
-
-#window.closeEvent.connect(new_window)
-
-sys.exit(app.exec())
-
-"""
-lessonNumber.points(cycle(sample, rever=0), window_2())
-
+plotting(sample)
+known = int(input('How many words do I know? '))
+lessonNumber.number_of_easy(known)
+print('special characters: [à ë ï é è ç ’]')
+lessonNumber.points(cycle(sample, rever=0))
 lessonNumber.inter(datetime.now())
 place(for_inter_time(lesson_df, lessonNumber, known), repeat, lessonNumber.getInterTime(), 1)
 plotting(sample)
@@ -123,4 +91,4 @@ elif repeat == 999:
     nine_nine_nine(sample, sample_weights)
     print('\n')
 else:
-    print('Goodbay!')"""
+    print('Goodbay!')
