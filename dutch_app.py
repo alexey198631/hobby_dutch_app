@@ -3,7 +3,7 @@ To do:
 
 separate lcd for score and attempts
 move xlsx database to SQLite (two languages databases)
-
+необходимо менять порядок слов при ответе
 
 """
 import sys
@@ -61,6 +61,7 @@ class RepeatWindow(QWidget):
         self.button_grid_window.move(100, 100)
         self.button_grid_window.show()
         self.hide()
+
 
 class ButtonGridWidget(QWidget):
     window_closed = pyqtSignal()
@@ -229,6 +230,7 @@ class InputCounterWidget(QWidget):
                 self.list_of_words.remove(word)
             self.list_to_delete = []
             self.indx = 0
+            random.shuffle(self.list_of_words)
             self.current_word = self.list_of_words[self.indx]
             self.hideMe()
             self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=self.list_of_words)
