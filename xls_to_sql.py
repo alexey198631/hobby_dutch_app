@@ -29,15 +29,24 @@ list_of_df = [words, lesson_df, verbs_df, exam_df]
 
 def xlstosql(df):
     df_name = df.name
+
     # connect to the SQLite database
     conn = sqlite3.connect(f'data_files/{df_name}.db')
 
-    table_schema = ''
+    # create a dictionary of column names and data types
+    column_types = {}
     for col in df.columns:
-        if col[0].isdigit():
-            col = f'_{col}'
-        table_schema += f'{col} TEXT, '
-    table_schema = table_schema[:-2]  # remove the last comma and space
+        col_type = str(df[col].dtype)
+        if col_type == 'object':
+            col_type = 'TEXT'
+        elif col_type.startswith('float'):
+            col_type = 'REAL'
+        elif col_type.startswith('int'):
+            col_type = 'INTEGER'
+        column_types[col] = col_type
+
+    # create the table schema string
+    table_schema = ', '.join([f'{col} {column_types[col]}' for col in df.columns])
 
     # create the table in the database
     conn.execute(f'CREATE TABLE {df_name} ({table_schema})')
