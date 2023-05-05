@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout
 from PyQt6.QtGui import QAction
 from defs import loadWords, random_sample, translation_with_comma, next_lesson, reps
 import random
+import sqlite3
 
 
 class RepeatWindow(QWidget):
@@ -74,10 +75,14 @@ class ButtonGridWidget(QWidget):
         self.repeat = repeat
 
         if len(repeat)==0:
-            words = pd.read_excel('data_files/dutch.xlsx', sheet_name='update')
-            words = words.loc[:, 'word':]
+            # connect to the SQLite database and read the data into a pandas dataframe
+            conn = sqlite3.connect('data_files/words.db')
+            df = pd.read_sql('SELECT * FROM words', conn)
+            words = df.loc[:, 'word':]
             wordList = loadWords(words, "yes")
             sample = random_sample(wordList, 25)
+            # close the database connection
+            conn.close()
         else:
             sample = repeat
 
