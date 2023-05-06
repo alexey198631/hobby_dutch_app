@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout
                              QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget)
 
 from PyQt6.QtGui import QAction
-from defs import loadWords, random_sample, translation_with_comma, next_lesson, reps
+from defs import *
 import random
 import sqlite3
 
@@ -86,19 +86,20 @@ class RepeatWindow(QWidget):
         self.main_window.show()
 
 
-
 class ButtonGridWidget(QWidget):
     window_closed = pyqtSignal()
     counterChanged = pyqtSignal(int)
     sampleList = pyqtSignal(list)
+    lessonnumber = pyqtSignal(object)
 
     def __init__(self, repeat=[]):
         super().__init__()
 
         self.repeat = repeat
 
-        if len(repeat)==0:
+        if len(repeat) == 0:
             # connect to the SQLite database and read the data into a pandas dataframe
+            # preparation of word list
             conn = sqlite3.connect('data_files/words.db')
             df = pd.read_sql('SELECT * FROM words', conn)
             words = df.loc[:, 'word':]
@@ -106,17 +107,26 @@ class ButtonGridWidget(QWidget):
             sample = random_sample(wordList, 25)
             # close the database connection
             conn.close()
+
+            # getting lesson number and creation of lesson object
+            conn2 = sqlite3.connect('data_files/lessons.db')
+            df = pd.read_sql('SELECT * FROM lessons', conn2)
+            # close the database connection
+            conn2.close()
+            lesson_df = df.loc[:, 'lesson':]
+            lessonNumber = Lesson(next_lesson(lesson_df)[1])
+
         else:
             sample = repeat
 
-        self.shared_object_list = sample
+        # set the title name for the widget
+        self.setWindowTitle(f'Lesson #: {lessonNumber.getNumber()}')
 
-        lesson_df = pd.read_excel('data_files/dutch.xlsx', sheet_name='lesson')
-        lesson_df = lesson_df.loc[:, 'lesson':]
+        self.shared_object_list = sample
+        self.shared_lesson = lessonNumber
+
 
         self.lesson = lesson_df
-
-
         self.counter = 0  # initialize the counter variable
         grid_layout = QGridLayout()
 
@@ -148,6 +158,7 @@ class ButtonGridWidget(QWidget):
         self.window_closed.emit()
         self.counterChanged.emit(self.counter)  # emit the custom signal with the counter value
         self.sampleList.emit(self.shared_object_list) # emit sample of words
+        self.lessonnumber.emit(self.shared_lesson)  # emit sample of words
         super().closeEvent(event)
 
 
@@ -373,8 +384,16 @@ class MainWindow(QMainWindow):
         self.button_grid_window.move(100, 100)
         self.button_grid_window.show()
         self.button_grid_window.sampleList.connect(self.open_input_counter_widget)
+
+        # what to next with Lesson???
+        self.button_grid_window.lessonnumber.connect(self.print_lesson)
+
         self.button_grid_window.counterChanged.connect(self.update_counter)  # connect the signal to the slot
         self.hide()
+
+    # temporary
+    def print_lesson(self, lessonnumber):
+        print(lessonnumber.getNumber())
 
     def open_input_counter_widget(self, sampleList):
 
@@ -394,9 +413,6 @@ class MainWindow(QMainWindow):
     def update_counter(self, counter_value):
         print(f"Counter value from ButtonGridWidget: {counter_value}")
         # Do something with the counter_value
-
-
-
 
 
 def main():
