@@ -2,8 +2,7 @@
 To do:
 
 separate lcd for score and attempts
-move xlsx database to SQLite (two languages databases)
-необходимо менять порядок слов при ответе
+two languages databases
 
 """
 import sys
@@ -19,16 +18,22 @@ import sqlite3
 
 
 class RepeatWindow(QWidget):
-    def __init__(self):
+    window_closed = pyqtSignal()
+
+    def __init__(self, main_window):
         super().__init__()
 
+        self.main_window = main_window
         self.setGeometry(100, 100, 800, 400)  # x, y, width, height
         self.setWindowTitle('Lessons to repeat')
 
-        lesson_df = pd.read_excel('data_files/dutch.xlsx', sheet_name='lesson')
-        lesson_df = lesson_df.loc[:, 'lesson':]
+        conn2 = sqlite3.connect('data_files/lessons.db')
+        df = pd.read_sql('SELECT * FROM lessons', conn2)
+        lesson_df = df.loc[:, 'lesson':]
         self.lesson = lesson_df
         unique_values = next_lesson(self.lesson)[0]
+        # close the database connection
+        conn2.close()
 
         # create layout for widget and add list widget
         vbox = QVBoxLayout()
@@ -40,9 +45,14 @@ class RepeatWindow(QWidget):
             lesson_text = 'Lesson ' + str(value)
             self.list_widget.insertItem(i, lesson_text)
 
+        # create a QPushButton widget and add it to the layout
+        self.button = QPushButton('Main Menu')
+        self.button.clicked.connect(self.main_window_back)
+
         # connect list item click event to function
         self.list_widget.itemClicked.connect(self.on_lesson_clicked)
         vbox.addWidget(self.list_widget)
+        vbox.addWidget(self.button)
 
         # set layout for widget
         self.setLayout(vbox)
@@ -52,16 +62,29 @@ class RepeatWindow(QWidget):
     def on_lesson_clicked(self, item):
         repeat_lesson = int(item.text().split(' ')[1])
 
-        words = pd.read_excel('data_files/dutch.xlsx', sheet_name='update')
-        words = words.loc[:, 'word':]
+        conn1 = sqlite3.connect('data_files/words.db')
+        df = pd.read_sql('SELECT * FROM words', conn1)
+        words = df.loc[:, 'word':]
         wordList = loadWords(words, "yes")
+        conn1.close()
 
         self.sample = reps(repeat_lesson, self.lesson, wordList)
 
         self.button_grid_window = ButtonGridWidget(repeat=self.sample)
         self.button_grid_window.move(100, 100)
         self.button_grid_window.show()
+        self.button_grid_window.window_closed.connect(self.open_input_counter_widget)
         self.hide()
+
+    def open_input_counter_widget(self):
+        self.input_counter_widget = InputCounterWidget(self, self.sample)
+        self.input_counter_widget.move(100, 100)
+        self.input_counter_widget.show()
+
+    def main_window_back(self):
+        self.close()
+        self.main_window.show()
+
 
 
 class ButtonGridWidget(QWidget):
@@ -360,7 +383,7 @@ class MainWindow(QMainWindow):
         self.input_counter_widget.show()
 
     def repeat(self):
-        self.repeat_window = RepeatWindow()
+        self.repeat_window = RepeatWindow(self)
         self.repeat_window.move(100, 100)
         self.repeat_window.show()
         self.hide()
