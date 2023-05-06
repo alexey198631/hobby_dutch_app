@@ -90,7 +90,6 @@ class ButtonGridWidget(QWidget):
     window_closed = pyqtSignal()
     counterChanged = pyqtSignal(int)
     sampleList = pyqtSignal(list)
-    lessonnumber = pyqtSignal(object)
 
     def __init__(self, repeat=[]):
         super().__init__()
@@ -157,8 +156,7 @@ class ButtonGridWidget(QWidget):
     def closeEvent(self, event):
         self.window_closed.emit()
         self.counterChanged.emit(self.counter)  # emit the custom signal with the counter value
-        self.sampleList.emit(self.shared_object_list) # emit sample of words
-        self.lessonnumber.emit(self.shared_lesson)  # emit sample of words
+        self.sampleList.emit([self.shared_object_list, self.shared_lesson]) # emit sample of words and lesson object
         super().closeEvent(event)
 
 
@@ -207,13 +205,16 @@ class ButtonGridWidgetSpare(QWidget):
 class InputCounterWidget(QWidget):
     window_closed = pyqtSignal()
 
-    def __init__(self, main_window, sampleList, nxt=[], rever=0):
+    def __init__(self, main_window, sampleList, nxt=[], rever=0, lsn=999):
         super().__init__()
         if len(nxt) == 0:
             self.list_of_words = sampleList.copy()
         else:
             self.list_of_words = nxt
 
+        if lsn != 999:
+            self.lesson = lsn
+            print(self.lesson.getNumber())
         self.rever = rever
         self.main_window = main_window
         self.start_list = sampleList.copy()
@@ -384,20 +385,18 @@ class MainWindow(QMainWindow):
         self.button_grid_window.move(100, 100)
         self.button_grid_window.show()
         self.button_grid_window.sampleList.connect(self.open_input_counter_widget)
-
-        # what to next with Lesson???
-        self.button_grid_window.lessonnumber.connect(self.print_lesson)
-
         self.button_grid_window.counterChanged.connect(self.update_counter)  # connect the signal to the slot
         self.hide()
 
-    # temporary
-    def print_lesson(self, lessonnumber):
-        print(lessonnumber.getNumber())
 
     def open_input_counter_widget(self, sampleList):
 
-        self.input_counter_widget = InputCounterWidget(self, sampleList)
+        sampleList_words = sampleList[0]
+        print(sampleList_words)
+        lesson_obj = sampleList[1]
+        print('openin', lesson_obj.getNumber())
+
+        self.input_counter_widget = InputCounterWidget(self, sampleList=sampleList_words, lsn=lesson_obj)
         self.input_counter_widget.move(100, 100)
         self.input_counter_widget.show()
 
