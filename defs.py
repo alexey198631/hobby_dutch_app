@@ -441,3 +441,31 @@ def bottom_five(lesson_df):
     sml.set_index("r", inplace=True)
     dct = sml.to_dict()
     return dct
+
+def temp(lessonNumber):
+    print(f'{lessonNumber.getStart()}, {lessonNumber.getFinish()}, {lessonNumber.getNumber_of_easy()} , {lessonNumber.getLength_of_lesson()} , {lessonNumber.getTime()} ')
+
+def sql():
+    # connect to the SQLite database and read the data into a pandas dataframe
+    pass
+    """
+    conn1 = sqlite3.connect('data_files/words.db')
+    df = pd.read_sql('SELECT * FROM words', conn1)
+    conn1.close()
+
+    # select a random sample of 25 rows
+    selected_indices = random.sample(range(len(df)), 25)
+    selected_rows = df.loc[selected_indices]
+
+    # perform some actions on the selected rows...
+
+    # remove the selected rows from the database table
+    conn2 = sqlite3.connect('data_files/words.db')
+    c = conn2.cursor()
+    for index in selected_rows.index:
+        c.execute(f"DELETE FROM words WHERE rowid = {index + 1}")
+    conn2.commit()
+
+    # insert the selected rows into the database table
+    selected_rows.to_sql('words', conn2, if_exists='append', index=False)
+    conn2.close() """

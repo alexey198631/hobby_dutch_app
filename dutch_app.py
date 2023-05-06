@@ -1,8 +1,15 @@
 """
 To do:
 
+Lesson#: - delete :
+name of the lesson for second 25 window
+necessary to create lesson subject for repeat lessons
+then features of words
+then writing to db back
 separate lcd for score and attempts
 two languages databases
+
+
 
 """
 import sys
@@ -57,8 +64,7 @@ class RepeatWindow(QWidget):
         # set layout for widget
         self.setLayout(vbox)
 
-        # function to be performed on item click
-
+    # function to be performed on item click
     def on_lesson_clicked(self, item):
         repeat_lesson = int(item.text().split(' ')[1])
 
@@ -88,7 +94,6 @@ class RepeatWindow(QWidget):
 
 class ButtonGridWidget(QWidget):
     window_closed = pyqtSignal()
-    counterChanged = pyqtSignal(int)
     sampleList = pyqtSignal(list)
 
     def __init__(self, repeat=[]):
@@ -122,7 +127,8 @@ class ButtonGridWidget(QWidget):
         self.setWindowTitle(f'Lesson #: {lessonNumber.getNumber()}')
 
         self.shared_object_list = sample
-        self.shared_lesson = lessonNumber
+        self.save = sample.copy()
+
 
 
         self.lesson = lesson_df
@@ -139,6 +145,11 @@ class ButtonGridWidget(QWidget):
 
         self.setLayout(grid_layout)
 
+        lessonNumber.wlist([x.getWord() for x in self.save])
+        lessonNumber.length_of_lesson(lesson_length(sample))
+        lessonNumber.start(datetime.now())
+        self.shared_lesson = lessonNumber
+
     def on_button_clicked(self):
         sender = self.sender()
         if sender.property('clicked'):
@@ -153,9 +164,10 @@ class ButtonGridWidget(QWidget):
         sender.style().unpolish(sender)  # update the button's appearance
         sender.style().polish(sender)  # update the button's appearance
 
+        self.shared_lesson.number_of_easy(self.counter)
+
     def closeEvent(self, event):
         self.window_closed.emit()
-        self.counterChanged.emit(self.counter)  # emit the custom signal with the counter value
         self.sampleList.emit([self.shared_object_list, self.shared_lesson]) # emit sample of words and lesson object
         super().closeEvent(event)
 
@@ -214,7 +226,12 @@ class InputCounterWidget(QWidget):
 
         if lsn != 999:
             self.lesson = lsn
-            print(self.lesson.getNumber())
+        else:
+            self.lesson = Lesson(1000)
+
+        # set the title name for the widget
+        self.setWindowTitle(f'Lesson #: {self.lesson.getNumber()}')
+
         self.rever = rever
         self.main_window = main_window
         self.start_list = sampleList.copy()
@@ -261,9 +278,12 @@ class InputCounterWidget(QWidget):
     def next_word(self):
         if self.count == 25 and self.rever == 0:
             self.rever = 1
+            self.lesson.inter(datetime.now())
             self.list_to_delete = []
             self.start_translation()
         elif self.count == 25 and self.rever == 1:
+            self.lesson.finish(datetime.now())
+            temp(self.lesson)
             self.close()
         elif self.indx == len(self.list_of_words):
             for word in self.list_to_delete:
@@ -325,7 +345,7 @@ class InputCounterWidget(QWidget):
         self.button_grid_window_spare.show()
 
     def open_tranlsation_counter_widget(self):
-        self.input_translation_widget = InputCounterWidget(self, self.start_list, rever=1)
+        self.input_translation_widget = InputCounterWidget(self, self.start_list, rever=1, lsn=self.lesson)
         self.input_translation_widget.move(100, 100)
         self.input_translation_widget.show()
         self.input_translation_widget.window_closed.connect(self.main_window_back)
@@ -374,10 +394,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
     def show_stat(self):
-        shared_object_list = QApplication.instance().shared_object_list
-        print(f"Shared object list: {shared_object_list}")
-        shared_object_list.append("New object")
-        print(f"Updated shared object list: {shared_object_list}")
+        pass
 
     def next_lesson(self):
 
@@ -385,16 +402,13 @@ class MainWindow(QMainWindow):
         self.button_grid_window.move(100, 100)
         self.button_grid_window.show()
         self.button_grid_window.sampleList.connect(self.open_input_counter_widget)
-        self.button_grid_window.counterChanged.connect(self.update_counter)  # connect the signal to the slot
         self.hide()
 
 
     def open_input_counter_widget(self, sampleList):
 
         sampleList_words = sampleList[0]
-        print(sampleList_words)
         lesson_obj = sampleList[1]
-        print('openin', lesson_obj.getNumber())
 
         self.input_counter_widget = InputCounterWidget(self, sampleList=sampleList_words, lsn=lesson_obj)
         self.input_counter_widget.move(100, 100)
@@ -408,10 +422,6 @@ class MainWindow(QMainWindow):
 
     def exam(self):
         pass
-
-    def update_counter(self, counter_value):
-        print(f"Counter value from ButtonGridWidget: {counter_value}")
-        # Do something with the counter_value
 
 
 def main():

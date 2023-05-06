@@ -152,6 +152,9 @@ class Lesson(object):
     def getLength_of_lesson(self):
         return self.lol
 
+    def __repr__(self):
+        return 'hello'
+
 
 # class for werkwoorden
 class Verbs(Words):
