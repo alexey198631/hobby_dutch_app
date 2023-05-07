@@ -1,7 +1,6 @@
 """
 To do:
 
-name of the lesson for second 25 window
 necessary to create lesson subject for repeat lessons
 then features of words
 then writing to db back
@@ -174,10 +173,20 @@ class ButtonGridWidget(QWidget):
 class ButtonGridWidgetSpare(QWidget):
     window_closed = pyqtSignal()
 
-    def __init__(self, list_of_words=[], rever=0):
+    def __init__(self, list_of_words=[], rever=0, lsn=999):
         super().__init__()
 
         self.rever = rever
+
+        if lsn != 999:
+            self.lesson = lsn
+        else:
+            self.lesson = Lesson(1000)
+
+        # set the title name for the widget
+        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()}')
+
+
         sample = list_of_words.copy()
         grid_layout = QGridLayout()
 
@@ -292,7 +301,7 @@ class InputCounterWidget(QWidget):
             random.shuffle(self.list_of_words)
             self.current_word = self.list_of_words[self.indx]
             self.hideMe()
-            self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=self.list_of_words)
+            self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=self.list_of_words, lsn=self.lesson)
             self.button_grid_window_spare.move(100, 100)
             self.button_grid_window_spare.window_closed.connect(self.shoeMe)
             self.button_grid_window_spare.show()
@@ -338,7 +347,7 @@ class InputCounterWidget(QWidget):
 
     def start_translation(self):
         self.close()
-        self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=self.start_list)
+        self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=self.start_list, lsn=self.lesson)
         self.button_grid_window_spare.move(100, 100)
         self.button_grid_window_spare.window_closed.connect(self.open_tranlsation_counter_widget)
         self.button_grid_window_spare.show()
