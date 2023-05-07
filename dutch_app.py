@@ -1,7 +1,6 @@
 """
 To do:
 
-Lesson#: - delete :
 name of the lesson for second 25 window
 necessary to create lesson subject for repeat lessons
 then features of words
@@ -124,7 +123,7 @@ class ButtonGridWidget(QWidget):
             sample = repeat
 
         # set the title name for the widget
-        self.setWindowTitle(f'Lesson #: {lessonNumber.getNumber()}')
+        self.setWindowTitle(f'Lesson # {lessonNumber.getNumber()}')
 
         self.shared_object_list = sample
         self.save = sample.copy()
@@ -230,7 +229,7 @@ class InputCounterWidget(QWidget):
             self.lesson = Lesson(1000)
 
         # set the title name for the widget
-        self.setWindowTitle(f'Lesson #: {self.lesson.getNumber()}')
+        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()}')
 
         self.rever = rever
         self.main_window = main_window
