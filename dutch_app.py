@@ -1,7 +1,6 @@
 """
 To do:
 
-then features of words
 then writing to db back
 separate lcd for score and attempts
 two languages databases
@@ -72,6 +71,7 @@ class RepeatWindow(QWidget):
         conn1.close()
 
         self.lessonNumber = Lesson(repeat_lesson)
+        self.lessonNumber.number_of_easy(25)
         self.sample = reps(repeat_lesson, self.lesson, wordList)
 
         self.button_grid_window = ButtonGridWidget(repeat=self.sample, lsn=self.lessonNumber)
@@ -150,10 +150,11 @@ class ButtonGridWidget(QWidget):
 
         self.setLayout(grid_layout)
 
-        lessonNumber.wlist([x.getWord() for x in self.save])
+        lessonNumber.wlist([word.getWord() for word in self.save])
         lessonNumber.length_of_lesson(lesson_length(sample))
         lessonNumber.start(datetime.now())
         self.shared_lesson = lessonNumber
+        print(self.shared_object_list)
 
     def on_button_clicked(self):
         sender = self.sender()
@@ -299,6 +300,7 @@ class InputCounterWidget(QWidget):
         elif self.count == 25 and self.rever == 1:
             self.lesson.finish(datetime.now())
             temp(self.lesson)
+            print(self.start_list)
             self.close()
         elif self.indx == len(self.list_of_words):
             for word in self.list_to_delete:
@@ -332,13 +334,22 @@ class InputCounterWidget(QWidget):
             translation = self.current_word.getWord()
         translation = translation_with_comma(translation) # create list of all translations
         if text in translation:
+            self.current_word.addSuccess()
+            if self.rever == 0:
+                self.current_word.addTrials_d()
+            else:
+                self.current_word.addTrials_r()
             self.count += 1
             self.list_to_delete.append(self.current_word)
             self.indx += 1
             self.lcd_counter.display(self.count)
             self.next_word()
         else:
-            self.temp_label.setText(f"{self.current_word.getWord()}, {self.current_word.getTranslation()}")
+            if self.rever == 0:
+                self.current_word.addTrials_d()
+            else:
+                self.current_word.addTrials_r()
+            self.temp_label.setText(f"{self.current_word.getWord()}, {self.current_word.getTranslation()}") # temporary func
             self.indx += 1
             self.next_word()
 
