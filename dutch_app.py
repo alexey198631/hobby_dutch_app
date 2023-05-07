@@ -66,8 +66,8 @@ class RepeatWindow(QWidget):
 
         conn1 = sqlite3.connect('data_files/words.db')
         df = pd.read_sql('SELECT * FROM words', conn1)
-        words = df.loc[:, 'word':]
-        wordList = loadWords(words, "yes")
+        self.words = df.loc[:, 'word':]
+        wordList = loadWords(self.words, "yes")
         conn1.close()
 
         self.lessonNumber = Lesson(repeat_lesson)
@@ -81,7 +81,7 @@ class RepeatWindow(QWidget):
         self.hide()
 
     def open_input_counter_widget(self):
-        self.input_counter_widget = InputCounterWidget(self, self.sample, lsn=self.lessonNumber)
+        self.input_counter_widget = InputCounterWidget(self, self.sample, lsn=self.lessonNumber, awl=self.words)
         self.input_counter_widget.move(100, 100)
         self.input_counter_widget.show()
 
@@ -135,6 +135,7 @@ class ButtonGridWidget(QWidget):
         [word.addAppear() for word in sample]
 
         self.shared_object_list = sample
+        self.all_word_list = wordList
         self.save = sample.copy()
         self.lesson = lesson_df
         self.counter = 0  # initialize the counter variable
@@ -174,7 +175,7 @@ class ButtonGridWidget(QWidget):
 
     def closeEvent(self, event):
         self.window_closed.emit()
-        self.sampleList.emit([self.shared_object_list, self.shared_lesson]) # emit sample of words and lesson object
+        self.sampleList.emit([self.shared_object_list, self.shared_lesson, self.all_word_list]) # emit sample of words and lesson object
         super().closeEvent(event)
 
 
@@ -233,7 +234,7 @@ class ButtonGridWidgetSpare(QWidget):
 class InputCounterWidget(QWidget):
     window_closed = pyqtSignal()
 
-    def __init__(self, main_window, sampleList, nxt=[], rever=0, lsn=999):
+    def __init__(self, main_window, sampleList, awl, nxt=[], rever=0, lsn=999):
         super().__init__()
         if len(nxt) == 0:
             self.list_of_words = sampleList.copy()
@@ -247,7 +248,7 @@ class InputCounterWidget(QWidget):
 
         # set the title name for the widget
         self.setWindowTitle(f'Lesson # {self.lesson.getNumber()}')
-
+        self.all_words = awl
         self.rever = rever
         self.main_window = main_window
         self.start_list = sampleList.copy()
@@ -258,6 +259,7 @@ class InputCounterWidget(QWidget):
         self.lcd_counter = QLCDNumber(self)
         self.lcd_counter.setDigitCount(3)
         self.count = 0
+        self.attempts = 0
         self.indx = 0
         self.list_to_delete = []
 
@@ -294,13 +296,14 @@ class InputCounterWidget(QWidget):
     def next_word(self):
         if self.count == 25 and self.rever == 0:
             self.rever = 1
+            self.lesson.points(250 - self.attempts)
             self.lesson.inter(datetime.now())
             self.list_to_delete = []
             self.start_translation()
         elif self.count == 25 and self.rever == 1:
+            self.lesson.add_pts(250 - self.attempts)
             self.lesson.finish(datetime.now())
-            temp(self.lesson)
-            print(self.start_list)
+            final_creation_sql(self.all_words, self.lesson)
             self.close()
         elif self.indx == len(self.list_of_words):
             for word in self.list_to_delete:
@@ -340,6 +343,7 @@ class InputCounterWidget(QWidget):
             else:
                 self.current_word.addTrials_r()
             self.count += 1
+            self.attempts += 1
             self.list_to_delete.append(self.current_word)
             self.indx += 1
             self.lcd_counter.display(self.count)
@@ -351,6 +355,7 @@ class InputCounterWidget(QWidget):
                 self.current_word.addTrials_r()
             self.temp_label.setText(f"{self.current_word.getWord()}, {self.current_word.getTranslation()}") # temporary func
             self.indx += 1
+            self.attempts += 1
             self.next_word()
 
     def hideMe(self):
@@ -371,7 +376,7 @@ class InputCounterWidget(QWidget):
         self.button_grid_window_spare.show()
 
     def open_tranlsation_counter_widget(self):
-        self.input_translation_widget = InputCounterWidget(self, self.start_list, rever=1, lsn=self.lesson)
+        self.input_translation_widget = InputCounterWidget(self, self.start_list, rever=1, lsn=self.lesson, awl=self.all_words)
         self.input_translation_widget.move(100, 100)
         self.input_translation_widget.show()
         self.input_translation_widget.window_closed.connect(self.main_window_back)
@@ -435,8 +440,9 @@ class MainWindow(QMainWindow):
 
         sampleList_words = sampleList[0]
         lesson_obj = sampleList[1]
+        all_word_list = sampleList[2]
 
-        self.input_counter_widget = InputCounterWidget(self, sampleList=sampleList_words, lsn=lesson_obj)
+        self.input_counter_widget = InputCounterWidget(self, sampleList=sampleList_words, awl=all_word_list,  lsn=lesson_obj)
         self.input_counter_widget.move(100, 100)
         self.input_counter_widget.show()
 
