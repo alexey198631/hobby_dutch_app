@@ -1,8 +1,6 @@
 """
 To do:
 
-
-understand why at the second and third window is not right repeat number lesson
 then features of words
 then writing to db back
 separate lcd for score and attempts
@@ -132,6 +130,9 @@ class ButtonGridWidget(QWidget):
 
         # set the title name for the widget
         self.setWindowTitle(f'Lesson # {lessonNumber.getNumber()}')
+
+        # adding apperance for each word in a sample of words
+        [word.addAppear() for word in sample]
 
         self.shared_object_list = sample
         self.save = sample.copy()
