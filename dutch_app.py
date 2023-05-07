@@ -1,7 +1,7 @@
 """
 To do:
 
-then writing to db back
+it is necesary to fix format of data in re-written db
 separate lcd for score and attempts
 two languages databases
 
@@ -67,21 +67,21 @@ class RepeatWindow(QWidget):
         conn1 = sqlite3.connect('data_files/words.db')
         df = pd.read_sql('SELECT * FROM words', conn1)
         self.words = df.loc[:, 'word':]
-        wordList = loadWords(self.words, "yes")
+        self.wordList = loadWords(self.words, "yes")
         conn1.close()
 
         self.lessonNumber = Lesson(repeat_lesson)
         self.lessonNumber.number_of_easy(25)
-        self.sample = reps(repeat_lesson, self.lesson, wordList)
+        self.sample = reps(repeat_lesson, self.lesson, self.wordList)
 
-        self.button_grid_window = ButtonGridWidget(repeat=self.sample, lsn=self.lessonNumber)
+        self.button_grid_window = ButtonGridWidget(repeat=self.sample, lsn=self.lessonNumber, awl=self.wordList)
         self.button_grid_window.move(100, 100)
         self.button_grid_window.show()
         self.button_grid_window.window_closed.connect(self.open_input_counter_widget)
         self.hide()
 
     def open_input_counter_widget(self):
-        self.input_counter_widget = InputCounterWidget(self, self.sample, lsn=self.lessonNumber, awl=self.words)
+        self.input_counter_widget = InputCounterWidget(self, self.sample, lsn=self.lessonNumber, awl=self.wordList)
         self.input_counter_widget.move(100, 100)
         self.input_counter_widget.show()
 
@@ -94,7 +94,7 @@ class ButtonGridWidget(QWidget):
     window_closed = pyqtSignal()
     sampleList = pyqtSignal(list)
 
-    def __init__(self, repeat=[], lsn=None):
+    def __init__(self, repeat=[], lsn=None, awl=[]):
         super().__init__()
 
         self.repeat = repeat
@@ -120,6 +120,7 @@ class ButtonGridWidget(QWidget):
 
         else:
             sample = repeat
+            wordList = awl
             # getting lesson number and creation of lesson object
             conn2 = sqlite3.connect('data_files/lessons.db')
             df = pd.read_sql('SELECT * FROM lessons', conn2)
@@ -155,7 +156,6 @@ class ButtonGridWidget(QWidget):
         lessonNumber.length_of_lesson(lesson_length(sample))
         lessonNumber.start(datetime.now())
         self.shared_lesson = lessonNumber
-        print(self.shared_object_list)
 
     def on_button_clicked(self):
         sender = self.sender()
