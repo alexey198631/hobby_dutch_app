@@ -1,7 +1,8 @@
 """
 To do:
 
-necessary to create lesson subject for repeat lessons
+
+understand why at the second and third window is not right repeat number lesson
 then features of words
 then writing to db back
 separate lcd for score and attempts
@@ -72,9 +73,10 @@ class RepeatWindow(QWidget):
         wordList = loadWords(words, "yes")
         conn1.close()
 
+        lessonNumber = Lesson(repeat_lesson)
         self.sample = reps(repeat_lesson, self.lesson, wordList)
 
-        self.button_grid_window = ButtonGridWidget(repeat=self.sample)
+        self.button_grid_window = ButtonGridWidget(repeat=self.sample, lsn=lessonNumber)
         self.button_grid_window.move(100, 100)
         self.button_grid_window.show()
         self.button_grid_window.window_closed.connect(self.open_input_counter_widget)
@@ -94,7 +96,7 @@ class ButtonGridWidget(QWidget):
     window_closed = pyqtSignal()
     sampleList = pyqtSignal(list)
 
-    def __init__(self, repeat=[]):
+    def __init__(self, repeat=[], lsn=None):
         super().__init__()
 
         self.repeat = repeat
@@ -120,15 +122,19 @@ class ButtonGridWidget(QWidget):
 
         else:
             sample = repeat
+            # getting lesson number and creation of lesson object
+            conn2 = sqlite3.connect('data_files/lessons.db')
+            df = pd.read_sql('SELECT * FROM lessons', conn2)
+            # close the database connection
+            conn2.close()
+            lesson_df = df.loc[:, 'lesson':]
+            lessonNumber = lsn
 
         # set the title name for the widget
         self.setWindowTitle(f'Lesson # {lessonNumber.getNumber()}')
 
         self.shared_object_list = sample
         self.save = sample.copy()
-
-
-
         self.lesson = lesson_df
         self.counter = 0  # initialize the counter variable
         grid_layout = QGridLayout()
