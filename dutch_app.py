@@ -73,17 +73,17 @@ class RepeatWindow(QWidget):
         wordList = loadWords(words, "yes")
         conn1.close()
 
-        lessonNumber = Lesson(repeat_lesson)
+        self.lessonNumber = Lesson(repeat_lesson)
         self.sample = reps(repeat_lesson, self.lesson, wordList)
 
-        self.button_grid_window = ButtonGridWidget(repeat=self.sample, lsn=lessonNumber)
+        self.button_grid_window = ButtonGridWidget(repeat=self.sample, lsn=self.lessonNumber)
         self.button_grid_window.move(100, 100)
         self.button_grid_window.show()
         self.button_grid_window.window_closed.connect(self.open_input_counter_widget)
         self.hide()
 
     def open_input_counter_widget(self):
-        self.input_counter_widget = InputCounterWidget(self, self.sample)
+        self.input_counter_widget = InputCounterWidget(self, self.sample, lsn=self.lessonNumber)
         self.input_counter_widget.move(100, 100)
         self.input_counter_widget.show()
 
