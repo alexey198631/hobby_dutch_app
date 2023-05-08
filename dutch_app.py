@@ -2,11 +2,11 @@
 To do:
 
 window with words and its translation for speaking lesson
-999 repeat lesson
 exam mode
 verbs mode
 separate lcd for score and attempts
 two languages databases
+if now db?? I need to create the initial start version
 
 
 
@@ -15,13 +15,100 @@ import sys
 import pandas as pd
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
-                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget)
+                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem)
 
 from PyQt6.QtGui import QAction
 from defs import *
 import random
 import sqlite3
 
+
+class TextWindow(QMainWindow):
+    def __init__(self, main_window, data=None):
+        super().__init__()
+
+        self.main_window = main_window
+
+        # Set the fixed size of the window
+        self.setFixedSize(350, 380)
+
+        # Create a widget to hold the table and text input field
+        widget = QWidget()
+        layout = QVBoxLayout()
+        widget.setLayout(layout)
+
+        # Create a table widget and add it to the layout
+        self.table_widget = QTableWidget()
+        layout.addWidget(self.table_widget)
+
+        # Set the column widths
+        self.table_widget.setColumnWidth(0, 400)  # Set the width of the first column to 200 pixels
+        self.table_widget.setColumnWidth(1, 200)  # Set the width of the second column to 100 pixels
+        self.table_widget.setColumnWidth(2, 200)  # Set the width of the second column to 100 pixels
+
+        # Set the column names
+        column_names = list(data.columns)
+        self.table_widget.setColumnCount(len(column_names))
+        self.table_widget.setHorizontalHeaderLabels(column_names)
+
+        # If data is provided, populate the table with the data
+        if data is not None:
+            self.populate_table(data)
+
+        # Create a button to go to Main Menu
+        submit_button = QPushButton("Main Menu")
+        submit_button.clicked.connect(self.main_window_back)
+        layout.addWidget(submit_button)
+
+        # Set the central widget of the window to the input widget
+        self.setCentralWidget(widget)
+
+        # Resize the columns and rows to fit the content
+        #self.table_widget.resizeColumnsToContents()
+        #self.table_widget.resizeRowsToContents()
+
+        # Initialize the sort order for each column to None
+        self.sort_order = [None] * self.table_widget.columnCount()
+
+        # Connect the sectionClicked signal to the sort_table function
+        self.table_widget.horizontalHeader().sectionClicked.connect(self.sort_table)
+
+    def populate_table(self, data):
+        # Convert the DataFrame to a list of lists
+        table_data = data.values.tolist()
+
+        # Set the number of rows and columns in the table
+        self.table_widget.setRowCount(len(table_data))
+        self.table_widget.setColumnCount(len(table_data[0]))
+
+        # Populate the table with the data
+        for i, row in enumerate(table_data):
+            for j, val in enumerate(row):
+                item = QTableWidgetItem(str(val))
+                if j != 0:
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)  # Set the text alignment of the cell to center
+                    item.setData(Qt.ItemDataRole.DisplayRole, float(val))  # Set the data type of the cell to float
+                self.table_widget.setItem(i, j, item)
+
+    def sort_table(self, logical_index):
+        # Get the current sort order for the column
+        current_order = self.sort_order[logical_index]
+
+        # Determine the new sort order for the column
+        if current_order is None or current_order == Qt.SortOrder.DescendingOrder:
+            new_order = Qt.SortOrder.AscendingOrder
+        else:
+            new_order = Qt.SortOrder.DescendingOrder
+
+        # Sort the table in the desired order
+        self.table_widget.sortItems(logical_index, new_order)
+
+        # Update the sort order for the column
+        self.sort_order[logical_index] = new_order
+
+    def main_window_back(self):
+        self.close()
+        self.main_window.show()
 
 class RepeatWindow(QWidget):
     window_closed = pyqtSignal()
@@ -430,6 +517,10 @@ class MainWindow(QMainWindow):
         self.bottom_ten_action.triggered.connect(self.bottom_ten)
         self.file_menu.addAction(self.bottom_ten_action)
 
+        self.all_lesson_action = QAction("The Worst lessons", self)
+        self.all_lesson_action.triggered.connect(self.worst_lessons)
+        self.file_menu.addAction(self.all_lesson_action)
+
         self.file_menu.addSeparator()
 
         self.exit_action = QAction("Exit", self)
@@ -456,11 +547,35 @@ class MainWindow(QMainWindow):
     def show_stat(self):
         pass
 
+    def worst_lessons(self):
+        conn2 = sqlite3.connect('data_files/lessons.db')
+        df = pd.read_sql('SELECT * FROM lessons', conn2)
+        df = df.loc[:, 'lesson':]
+        # close the database connection
+        conn2.close()
+        data = bottom_not_repeated(df)
+
+        # Create and show the text window
+        self.text_window = TextWindow(self, data=data)
+        self.text_window.move(100, 100)
+        self.text_window.show()
+        self.hide()
+
     def top_ten(self):
-        pass
+        data = topbottom()
+        # Create and show the text window
+        self.text_window = TextWindow(self, data=data)
+        self.text_window.move(100, 100)
+        self.text_window.show()
+        self.hide()
 
     def bottom_ten(self):
-        pass
+        data = topbottom(top=0)
+        # Create and show the text window
+        self.text_window = TextWindow(self, data=data)
+        self.text_window.move(100, 100)
+        self.text_window.show()
+        self.hide()
 
     def next_lesson(self):
 
