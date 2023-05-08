@@ -2,6 +2,7 @@
 import pandas as pd
 import math
 import re
+import sqlite3
 from cls import *
 from word_plot import *
 
@@ -445,27 +446,82 @@ def bottom_five(lesson_df):
 def temp(lessonNumber):
     print(f'{lessonNumber.getStart()}, {lessonNumber.getFinish()}, {lessonNumber.getNumber_of_easy()} , {lessonNumber.getLength_of_lesson()} , {lessonNumber.getTime()} ')
 
-def sql():
-    # connect to the SQLite database and read the data into a pandas dataframe
-    pass
-    """
-    conn1 = sqlite3.connect('data_files/words.db')
-    df = pd.read_sql('SELECT * FROM words', conn1)
-    conn1.close()
 
-    # select a random sample of 25 rows
-    selected_indices = random.sample(range(len(df)), 25)
-    selected_rows = df.loc[selected_indices]
+def xlstosql(df):
+    df_name = df.name
 
-    # perform some actions on the selected rows...
+    # connect to the SQLite database
+    conn = sqlite3.connect(f'data_files/{df_name}.db')
 
-    # remove the selected rows from the database table
-    conn2 = sqlite3.connect('data_files/words.db')
-    c = conn2.cursor()
-    for index in selected_rows.index:
-        c.execute(f"DELETE FROM words WHERE rowid = {index + 1}")
-    conn2.commit()
+    # create a dictionary of column names and data types
+    #column_types = {}
+    #for col in df.columns:
+    #    col_type = str(df[col].dtype)
+    #    if col_type == 'object':
+    #        col_type = 'TEXT'
+    #    elif col_type.startswith('float'):
+    #        col_type = 'REAL'
+    #    elif col_type.startswith('int'):
+    #        col_type = 'INTEGER'
+    #    column_types[col] = col_type
 
-    # insert the selected rows into the database table
-    selected_rows.to_sql('words', conn2, if_exists='append', index=False)
-    conn2.close() """
+    # create the table schema string
+    #table_schema = ', '.join([f'{col} {column_types[col]}' for col in df.columns])
+
+    # Drop table if it exists
+    #conn.execute(f'DROP TABLE IF EXISTS {df_name}')
+
+    # create the table in the database
+    #conn.execute(f'CREATE TABLE {df_name} ({table_schema})')
+
+    # insert the data from the dataframe into the database table
+    df.to_sql(f'{df_name}', conn, if_exists='replace', index=False)
+
+    # close the database connection
+    conn.close()
+
+
+def final_creation_sql(wordList, lessonNumber):
+
+    conn01 = sqlite3.connect('data_files/words.db')
+    df = pd.read_sql('SELECT * FROM words', conn01)
+    words = df.loc[:, 'word':]
+    conn01.close()
+
+    conn02 = sqlite3.connect('data_files/lessons.db')
+    df2 = pd.read_sql('SELECT * FROM lessons', conn02)
+    lesson_df = df2.loc[:, 'lesson':]
+    # close the database connection
+    conn02.close()
+
+    dutch = words.copy()
+    dutch.name = 'words'
+
+    for i in range(len(dutch)):
+        dutch.loc[i, 'appear'] = wordList[i].getAppear()
+        dutch.loc[i, 'trial_d'] = wordList[i].getTrials_d()
+        dutch.loc[i, 'trial_r'] = wordList[i].getTrials_r()
+        dutch.loc[i, 'success'] = wordList[i].getSuccess()
+        dutch.loc[i, 'weight'] = wordList[i].getWeight()
+
+    row = lesson_df.loc[:, 'lesson'][-1:].values[0]
+    lesson_df.loc[row, 'lesson'] = lesson_df.loc[:, 'lesson'][-1:].values[0] + 1
+    lesson_df.loc[row, 'start'] = lessonNumber.getStart()
+    lesson_df.loc[row, 'inter'] = lessonNumber.getInter()
+    lesson_df.loc[row, 'finish'] = lessonNumber.getFinish()
+    lesson_df.loc[row, 'known'] = lessonNumber.getNumber_of_easy()
+    lesson_df.loc[row, 'points'] = lessonNumber.getPoints()
+    lesson_df.loc[row, 'length'] = lessonNumber.getLength_of_lesson()
+    lesson_df.loc[row, 'time'] = lessonNumber.getTime()
+    lesson_df.loc[row, 'list_of_words'] = list_to_list(lessonNumber.getList())
+    lesson_df.loc[row, 'r'] = lessonNumber.getNumber()
+
+    # change the data type of the 'numbers' and 'floats' columns to string
+    lesson_df[['lesson', 'known', 'points','length', 'time', 'r']] = lesson_df[['lesson', 'known', 'points','length', 'time', 'r']].astype(int)
+    lesson_df['start'] = pd.to_datetime(lesson_df['start'], format='%Y-%m-%d %H:%M:%S')
+    lesson_df['inter'] = pd.to_datetime(lesson_df['inter'], format='%Y-%m-%d %H:%M:%S')
+    lesson_df['finish'] = pd.to_datetime(lesson_df['finish'], format='%Y-%m-%d %H:%M:%S')
+    lesson_df.name = 'lessons'
+
+    xlstosql(dutch)
+    xlstosql(lesson_df)

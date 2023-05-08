@@ -1,7 +1,10 @@
 """
 To do:
 
-it is necesary to fix format of data in re-written db
+window with words and its translation for speaking lesson
+999 repeat lesson
+exam mode
+verbs mode
 separate lcd for score and attempts
 two languages databases
 
@@ -171,7 +174,8 @@ class ButtonGridWidget(QWidget):
         sender.style().unpolish(sender)  # update the button's appearance
         sender.style().polish(sender)  # update the button's appearance
 
-        self.shared_lesson.number_of_easy(self.counter)
+        if len(self.repeat) == 0:
+            self.shared_lesson.number_of_easy(self.counter)
 
     def closeEvent(self, event):
         self.window_closed.emit()
