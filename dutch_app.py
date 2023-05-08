@@ -415,9 +415,22 @@ class MainWindow(QMainWindow):
         # File menu and actions
         self.file_menu = self.menuBar().addMenu("File")
 
+
         self.show_stat_action = QAction("Show Stat", self)
         self.show_stat_action.triggered.connect(self.show_stat)
         self.file_menu.addAction(self.show_stat_action)
+
+        self.file_menu.addSeparator()
+
+        self.top_ten_action = QAction("TOP 10 lessons", self)
+        self.top_ten_action.triggered.connect(self.top_ten)
+        self.file_menu.addAction(self.top_ten_action)
+
+        self.bottom_ten_action = QAction("BOTTOM 10 lessons", self)
+        self.bottom_ten_action.triggered.connect(self.bottom_ten)
+        self.file_menu.addAction(self.bottom_ten_action)
+
+        self.file_menu.addSeparator()
 
         self.exit_action = QAction("Exit", self)
         self.exit_action.triggered.connect(self.close)
@@ -441,6 +454,12 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
     def show_stat(self):
+        pass
+
+    def top_ten(self):
+        pass
+
+    def bottom_ten(self):
         pass
 
     def next_lesson(self):
