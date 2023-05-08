@@ -38,6 +38,7 @@ class RepeatWindow(QWidget):
         lesson_df = df.loc[:, 'lesson':]
         self.lesson = lesson_df
         unique_values = next_lesson(self.lesson)[0]
+        unique_values.insert(0, 'Select random words from the entire learned vocabulary')
         # close the database connection
         conn2.close()
 
@@ -48,7 +49,10 @@ class RepeatWindow(QWidget):
 
         # create list item for each unique value in column and add to list widget
         for i, value in enumerate(unique_values):
-            lesson_text = 'Lesson ' + str(value)
+            if i == 0:
+                lesson_text = str(value)
+            else:
+                lesson_text = 'Lesson ' + str(value)
             self.list_widget.insertItem(i, lesson_text)
 
         # create a QPushButton widget and add it to the layout
@@ -65,7 +69,10 @@ class RepeatWindow(QWidget):
 
     # function to be performed on item click
     def on_lesson_clicked(self, item):
-        repeat_lesson = int(item.text().split(' ')[1])
+        if item.text().split(' ')[0] != 'Lesson':
+            repeat_lesson = 999
+        else:
+            repeat_lesson = int(item.text().split(' ')[1])
 
         conn1 = sqlite3.connect('data_files/words.db')
         df = pd.read_sql('SELECT * FROM words', conn1)
@@ -75,7 +82,12 @@ class RepeatWindow(QWidget):
 
         self.lessonNumber = Lesson(repeat_lesson)
         self.lessonNumber.number_of_easy(25)
-        self.sample = reps(repeat_lesson, self.lesson, self.wordList)
+
+        if repeat_lesson == 999:
+            self.sample = random_sample(all_learned(self.lesson, self.wordList), 25)
+        else:
+            self.sample = reps(repeat_lesson, self.lesson, self.wordList)
+
 
         self.button_grid_window = ButtonGridWidget(repeat=self.sample, lsn=self.lessonNumber, awl=self.wordList)
         self.button_grid_window.move(100, 100)
