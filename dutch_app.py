@@ -23,6 +23,13 @@ import random
 import sqlite3
 
 
+class GlobalLanguage:
+    file_path = 'data_files/'
+
+    @classmethod
+    def set_value(cls, new_value):
+        cls.file_path = new_value
+
 class TextWindow(QMainWindow):
     def __init__(self, main_window, data=None):
         super().__init__()
@@ -527,18 +534,33 @@ class MainWindow(QMainWindow):
         self.exit_action.triggered.connect(self.close)
         self.file_menu.addAction(self.exit_action)
 
+        # Language menu and actions
+        self.language_menu = self.menuBar().addMenu("Language")
+
+        self.dutch_action = QAction("Dutch", self)
+        self.dutch_action.triggered.connect(self.choose_dutch)
+        self.language_menu.addAction(self.dutch_action)
+
+        self.spanish_action = QAction("Spanish", self)
+        self.spanish_action.triggered.connect(self.choose_spanish)
+        self.language_menu.addAction(self.spanish_action)
+
+
         next_lesson_btn = QPushButton('Next Lesson', self)
         repeat_btn = QPushButton('Repeat', self)
         exam_btn = QPushButton('Exam', self)
+        verb_btn = QPushButton('Verbs', self)
 
         next_lesson_btn.clicked.connect(self.next_lesson)
         repeat_btn.clicked.connect(self.repeat)
         exam_btn.clicked.connect(self.exam)
+        verb_btn.clicked.connect(self.verbs)
 
         layout = QVBoxLayout()
         layout.addWidget(next_lesson_btn)
         layout.addWidget(repeat_btn)
         layout.addWidget(exam_btn)
+        layout.addWidget(verb_btn)
 
         central_widget = QWidget()
         central_widget.setLayout(layout)
@@ -604,6 +626,17 @@ class MainWindow(QMainWindow):
 
     def exam(self):
         pass
+
+    def verbs(self):
+        pass
+
+    def choose_dutch(self):
+        print('dutch')
+        print(GlobalLanguage.file_path)
+
+    def choose_spanish(self):
+        new_value = 'data_files/spanish/'
+        GlobalLanguage.set_value(new_value)
 
 
 def main():
