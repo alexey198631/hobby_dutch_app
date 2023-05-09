@@ -24,7 +24,7 @@ import sqlite3
 
 
 class GlobalLanguage:
-    file_path = 'data_files/'
+    file_path = 'data_files/spanish/'
 
     @classmethod
     def set_value(cls, new_value):
@@ -127,7 +127,7 @@ class RepeatWindow(QWidget):
         self.setGeometry(100, 100, 800, 400)  # x, y, width, height
         self.setWindowTitle('Lessons to repeat')
 
-        conn2 = sqlite3.connect('data_files/lessons.db')
+        conn2 = sqlite3.connect(GlobalLanguage.file_path + '/lessons.db')
         df = pd.read_sql('SELECT * FROM lessons', conn2)
         lesson_df = df.loc[:, 'lesson':]
         self.lesson = lesson_df
@@ -168,7 +168,7 @@ class RepeatWindow(QWidget):
         else:
             repeat_lesson = int(item.text().split(' ')[1])
 
-        conn1 = sqlite3.connect('data_files/words.db')
+        conn1 = sqlite3.connect(GlobalLanguage.file_path + '/words.db')
         df = pd.read_sql('SELECT * FROM words', conn1)
         self.words = df.loc[:, 'word':]
         self.wordList = loadWords(self.words, "yes")
@@ -211,7 +211,7 @@ class ButtonGridWidget(QWidget):
         if len(repeat) == 0:
             # connect to the SQLite database and read the data into a pandas dataframe
             # preparation of word list
-            conn = sqlite3.connect('data_files/words.db')
+            conn = sqlite3.connect(GlobalLanguage.file_path + '/words.db')
             df = pd.read_sql('SELECT * FROM words', conn)
             words = df.loc[:, 'word':]
             wordList = loadWords(words, "yes")
@@ -220,7 +220,7 @@ class ButtonGridWidget(QWidget):
             conn.close()
 
             # getting lesson number and creation of lesson object
-            conn2 = sqlite3.connect('data_files/lessons.db')
+            conn2 = sqlite3.connect(GlobalLanguage.file_path + '/lessons.db')
             df = pd.read_sql('SELECT * FROM lessons', conn2)
             # close the database connection
             conn2.close()
@@ -231,7 +231,7 @@ class ButtonGridWidget(QWidget):
             sample = repeat
             wordList = awl
             # getting lesson number and creation of lesson object
-            conn2 = sqlite3.connect('data_files/lessons.db')
+            conn2 = sqlite3.connect(GlobalLanguage.file_path + '/lessons.db')
             df = pd.read_sql('SELECT * FROM lessons', conn2)
             # close the database connection
             conn2.close()
@@ -570,7 +570,7 @@ class MainWindow(QMainWindow):
         pass
 
     def worst_lessons(self):
-        conn2 = sqlite3.connect('data_files/lessons.db')
+        conn2 = sqlite3.connect(GlobalLanguage.file_path + '/lessons.db')
         df = pd.read_sql('SELECT * FROM lessons', conn2)
         df = df.loc[:, 'lesson':]
         # close the database connection
@@ -631,8 +631,8 @@ class MainWindow(QMainWindow):
         pass
 
     def choose_dutch(self):
-        print('dutch')
-        print(GlobalLanguage.file_path)
+        new_value = 'data_files/'
+        GlobalLanguage.set_value(new_value)
 
     def choose_spanish(self):
         new_value = 'data_files/spanish/'
