@@ -1,7 +1,7 @@
 """
 To do:
 
-word -> translation for first window
+
 exam mode
 verbs mode
 if now db?? I need to create the initial start version
@@ -294,10 +294,14 @@ class ButtonGridWidget(QWidget):
 
         for i in range(5):
             for j in range(5):
-                button = QPushButton(f'{sample[i * 5 + j].getWord()} \n | \n {sample[i * 5 + j].getTranslation()}',
-                                     self)
+                wrd = self.shared_object_list[i * 5 + j]
+                if wrd.getTyp() is not None:
+                    button = QPushButton(f'{wrd.getTyp()} \n \n {wrd.getWord()}', self)  # \n | \n {sample[i * 5 + j].getTranslation()}
+                else:
+                    button = QPushButton(f'{wrd.getWord()}', self)  # \n | \n {sample[i * 5 + j].getTranslation()}
                 button.setFixedSize(200, 100)
-                button.clicked.connect(self.on_button_clicked)
+                button.clicked.connect(lambda _, i=i, j=j: self.on_button_clicked(i, j))
+
                 grid_layout.addWidget(button, i, j)
 
         self.setLayout(grid_layout)
@@ -307,7 +311,7 @@ class ButtonGridWidget(QWidget):
         lessonNumber.start(datetime.now())
         self.shared_lesson = lessonNumber
 
-    def on_button_clicked(self):
+    def on_button_clicked(self, i, j):
         sender = self.sender()
         if sender.property('clicked'):
             sender.setProperty('clicked', False)
@@ -315,7 +319,9 @@ class ButtonGridWidget(QWidget):
             self.counter -= 1
         else:
             sender.setProperty('clicked', True)
-            sender.setStyleSheet("background-color: white")  # change the background color of the clicked button
+            sender.setText(
+                f'{self.shared_object_list[i * 5 + j].getTranslation()} \n | \n {self.shared_object_list[i * 5 + j].getRussian()}')
+            sender.setStyleSheet("background-color: grey")  # change the background color of the clicked button
             self.counter += 1
 
         sender.style().unpolish(sender)  # update the button's appearance
