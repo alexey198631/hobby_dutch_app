@@ -5,6 +5,7 @@ import re
 import sqlite3
 from cls import *
 from word_plot import *
+from dutch_app import GlobalLanguage
 
 
 def initial_load() -> object:  # load data from init file - xlsx with words
@@ -42,6 +43,16 @@ def next_load():  # load data from existing file
     exist = 'yes'
 
     return words, lesson_df, exist, exam_df, verbs_df
+
+
+def loadData(source):
+    # connect to the SQLite database and read the data into a pandas dataframe
+    conn = sqlite3.connect(GlobalLanguage.file_path + f'/{source}s.db')
+    df = pd.read_sql(f'SELECT * FROM {source}s', conn)
+    df = df.loc[:, f'{source}':]
+    # close the database connection
+    conn.close()
+    return df
 
 
 def loadWords(df_words, temp):  # data frame from xlsx file with words, it creates list of class Words
@@ -425,23 +436,44 @@ def nine_nine_nine(sample, sample_weights):
     print(f'Progress for {count} words from {len(sample)}. Good job!')
 
 
-def bottom_five(lesson_df):
+def bottom_not_repeated(lesson_df):
     # this function determine the worst lessons 5 which were not repeated
     data_words_lesson_df = lesson_df.copy()
     # keeping necessary columns only and sorting them descending
-    data_words_lesson_df = data_words_lesson_df.loc[:, ['points', 'r']]
+    data_words_lesson_df = data_words_lesson_df.loc[:, ['points', 'r', 'time']]
     data_words_lesson_df = data_words_lesson_df.sort_values(by='points', ascending=False, ignore_index=True)
     mask = data_words_lesson_df.duplicated(subset='r', keep='first')
-    # keeping only the worst lessons in rating, anti top 5
+    # keeping only the worst lessons in rating, anti top 10
     df = data_words_lesson_df[~mask]
     df = df.reset_index(drop=True)
-    sml = df.nsmallest(5, columns='points')
+    sml = df.nsmallest(10, columns='points')
     # renaming for printing, to understand how many points each lesson has
-    sml.rename(columns={"points": "lesson/points"}, inplace=True)
-    # key of the dictionary should be number of the lesson
-    sml.set_index("r", inplace=True)
-    dct = sml.to_dict()
-    return dct
+    sml.rename(columns={"points": "Points", 'r':'Lesson', 'time': 'Time'}, inplace=True)
+    # specify the desired column order
+    new_order = ['Lesson', 'Time', 'Points']
+    # reindex the dataframe with the new column order
+    sml = sml.reindex(columns=new_order)
+    sml['Lesson'] = sml['Lesson'].astype(str)
+    sml['Lesson'] = 'Lesson ' + sml['Lesson']
+    return sml
+
+def topbottom(top=1):
+    conn2 = sqlite3.connect('data_files/lessons.db')
+    df = pd.read_sql('SELECT * FROM lessons', conn2)
+    conn2.close()
+    data = df.loc[:, 'lesson':]
+    data = data[data['known'] != 25]
+    data = data.loc[:, ['r', 'time', 'points']]
+    data = data.rename(columns={'r': 'Lesson', 'time': 'Time', 'points': 'Pts'})
+    if top == 0:
+        order = [True, False]
+    else:
+        order = [False, True]
+    data = data.sort_values(['Pts', 'Time'], ascending=order)
+    data = data.head(10)
+    data['Lesson'] = data['Lesson'].astype(str)
+    data['Lesson'] = 'Lesson ' + data['Lesson']
+    return data
 
 def temp(lessonNumber):
     print(f'{lessonNumber.getStart()}, {lessonNumber.getFinish()}, {lessonNumber.getNumber_of_easy()} , {lessonNumber.getLength_of_lesson()} , {lessonNumber.getTime()} ')
@@ -525,3 +557,27 @@ def final_creation_sql(wordList, lessonNumber):
 
     xlstosql(dutch)
     xlstosql(lesson_df)
+
+
+def word_list_to_print(sample):
+    temp = []
+    final = []
+    for w in sample:
+        if w.getTyp() is None:
+            temp.append(w)
+        else:
+            try:
+                math.isnan(w.getTyp())
+                temp.append(w)
+            except:
+                if re.search(r'de', w.getTyp()) and not re.search(r'het', w.getTyp()):
+                    final.append('de ' + str(w.getWord()) + ": " + str(w.getTranslation()))
+                elif re.search(r'het', w.getTyp()) and not re.search(r'de', w.getTyp()):
+                    final.append('het ' + str(w.getWord()) + ": " + str(w.getTranslation()))
+                elif re.search(r'het', w.getTyp()) and re.search(r'de', w.getTyp()):
+                    final.append('de/het ' + str(w.getWord()) + ": " + str(w.getTranslation()))
+                else:
+                    final.append(str(w.getWord()) + ": " + str(w.getTranslation()))
+    for t in temp:
+        final.append(str(t.getWord()) + ": " + str(t.getTranslation()))
+    return final

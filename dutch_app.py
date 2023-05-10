@@ -1,9 +1,9 @@
 """
 To do:
+
+word -> translation for first window
 exam mode
 verbs mode
-separate lcd for score and attempts
-two languages databases
 if now db?? I need to create the initial start version
 
 """
@@ -13,7 +13,7 @@ from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
                              QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy)
 
-from PyQt6.QtGui import QAction, QTextOption
+from PyQt6.QtGui import QAction, QTextOption, QFont
 from defs import *
 import random
 import sqlite3
@@ -34,14 +34,10 @@ class TextWidget(QMainWindow):
 
         self.main_window = main_window
 
-        # Populate the QListWidget with sample words
-        conn2 = sqlite3.connect(GlobalLanguage.file_path + '/lessons.db')
-        df = pd.read_sql('SELECT * FROM lessons', conn2)
-        lesson_df = df.loc[:, 'lesson':]
+        lesson_df = loadData('lesson')
         self.lesson = lesson_df
         unique_values = next_lesson(self.lesson)[0]
         # close the database connection
-        conn2.close()
 
         # Set up the main window layout
         main_layout = QVBoxLayout()
@@ -83,11 +79,8 @@ class TextWidget(QMainWindow):
         self.text_edit.clear()
         repeat = int(item.text().split(' ')[1])
 
-        conn1 = sqlite3.connect(GlobalLanguage.file_path + '/words.db')
-        words_d = pd.read_sql('SELECT * FROM words', conn1)
-        self.words = words_d.loc[:, 'word':]
+        self.words = loadData('word')
         self.wordList = loadWords(self.words, "yes")
-        conn1.close()
 
         word_list = reps(repeat, self.lesson, self.wordList)
         for_print = word_list_to_print(word_list)
@@ -186,6 +179,7 @@ class TextWindow(QMainWindow):
         self.close()
         self.main_window.show()
 
+
 class RepeatWindow(QWidget):
     window_closed = pyqtSignal()
 
@@ -196,14 +190,9 @@ class RepeatWindow(QWidget):
         self.setGeometry(100, 100, 800, 400)  # x, y, width, height
         self.setWindowTitle('Lessons to repeat')
 
-        conn2 = sqlite3.connect(GlobalLanguage.file_path + '/lessons.db')
-        df = pd.read_sql('SELECT * FROM lessons', conn2)
-        lesson_df = df.loc[:, 'lesson':]
-        self.lesson = lesson_df
+        self.lesson = loadData('lesson')
         unique_values = next_lesson(self.lesson)[0]
         unique_values.insert(0, 'Select random words from the entire learned vocabulary')
-        # close the database connection
-        conn2.close()
 
         # create layout for widget and add list widget
         vbox = QVBoxLayout()
@@ -237,11 +226,8 @@ class RepeatWindow(QWidget):
         else:
             repeat_lesson = int(item.text().split(' ')[1])
 
-        conn1 = sqlite3.connect(GlobalLanguage.file_path + '/words.db')
-        df = pd.read_sql('SELECT * FROM words', conn1)
-        self.words = df.loc[:, 'word':]
+        self.words = loadData('word')
         self.wordList = loadWords(self.words, "yes")
-        conn1.close()
 
         self.lessonNumber = Lesson(repeat_lesson)
         self.lessonNumber.number_of_easy(25)
@@ -278,33 +264,19 @@ class ButtonGridWidget(QWidget):
         self.repeat = repeat
 
         if len(repeat) == 0:
-            # connect to the SQLite database and read the data into a pandas dataframe
+
+            words = loadData('word')
             # preparation of word list
-            conn = sqlite3.connect(GlobalLanguage.file_path + '/words.db')
-            df = pd.read_sql('SELECT * FROM words', conn)
-            words = df.loc[:, 'word':]
             wordList = loadWords(words, "yes")
             sample = random_sample(wordList, 25)
-            # close the database connection
-            conn.close()
 
-            # getting lesson number and creation of lesson object
-            conn2 = sqlite3.connect(GlobalLanguage.file_path + '/lessons.db')
-            df = pd.read_sql('SELECT * FROM lessons', conn2)
-            # close the database connection
-            conn2.close()
-            lesson_df = df.loc[:, 'lesson':]
+            lesson_df = loadData('lesson')
             lessonNumber = Lesson(next_lesson(lesson_df)[1])
 
         else:
             sample = repeat
             wordList = awl
-            # getting lesson number and creation of lesson object
-            conn2 = sqlite3.connect(GlobalLanguage.file_path + '/lessons.db')
-            df = pd.read_sql('SELECT * FROM lessons', conn2)
-            # close the database connection
-            conn2.close()
-            lesson_df = df.loc[:, 'lesson':]
+            lesson_df = loadData('lesson')
             lessonNumber = lsn
 
         # set the title name for the widget
@@ -374,7 +346,6 @@ class ButtonGridWidgetSpare(QWidget):
         # set the title name for the widget
         self.setWindowTitle(f'Lesson # {self.lesson.getNumber()}')
 
-
         sample = list_of_words.copy()
         grid_layout = QGridLayout()
 
@@ -425,6 +396,13 @@ class InputCounterWidget(QWidget):
         else:
             self.lesson = Lesson(1000)
 
+        # Set the font to bold
+        #font = QFont()
+        #font.setBold(True)
+        #font.setFamily("Arial")
+        #font.setPointSize(40)
+        #font.setWeight(75)
+
         # set the title name for the widget
         self.setWindowTitle(f'Lesson # {self.lesson.getNumber()}')
         self.all_words = awl
@@ -432,11 +410,15 @@ class InputCounterWidget(QWidget):
         self.main_window = main_window
         self.start_list = sampleList.copy()
         self.label = QLabel("Enter your translation:", self)
-        self.temp_label = QLabel()
         self.line_edit = QLineEdit(self)
+        #self.line_edit.setFont(font)
         self.submit_button = QPushButton("Submit", self)
+
         self.lcd_counter = QLCDNumber(self)
         self.lcd_counter.setDigitCount(3)
+        self.lcd_counter_pts = QLCDNumber(self)
+        self.lcd_counter_pts.setDigitCount(3)
+
         self.count = 0
         self.attempts = 0
         self.indx = 0
@@ -464,8 +446,11 @@ class InputCounterWidget(QWidget):
         hlayout.addWidget(self.line_edit)
         hlayout.addWidget(self.submit_button)
         layout.addLayout(hlayout)
-        layout.addWidget(self.lcd_counter)
-        layout.addWidget(self.temp_label)
+
+        hlayout2 = QHBoxLayout()
+        hlayout2.addWidget(self.lcd_counter)
+        hlayout2.addWidget(self.lcd_counter_pts)
+        layout.addLayout(hlayout2)
         layout.addWidget(groupBox)
         self.setLayout(layout)
 
@@ -526,15 +511,16 @@ class InputCounterWidget(QWidget):
             self.list_to_delete.append(self.current_word)
             self.indx += 1
             self.lcd_counter.display(self.count)
+            self.lcd_counter_pts.display(self.attempts)
             self.next_word()
         else:
             if self.rever == 0:
                 self.current_word.addTrials_d()
             else:
                 self.current_word.addTrials_r()
-            self.temp_label.setText(f"{self.current_word.getWord()}, {self.current_word.getTranslation()}") # temporary func
             self.indx += 1
             self.attempts += 1
+            self.lcd_counter_pts.display(self.attempts)
             self.next_word()
 
     def hideMe(self):
@@ -578,7 +564,6 @@ class MainWindow(QMainWindow):
         # File menu and actions
         self.file_menu = self.menuBar().addMenu("File")
 
-
         self.show_stat_action = QAction("Show Stat", self)
         self.show_stat_action.triggered.connect(self.show_stat)
         self.file_menu.addAction(self.show_stat_action)
@@ -593,9 +578,9 @@ class MainWindow(QMainWindow):
         self.bottom_ten_action.triggered.connect(self.bottom_ten)
         self.file_menu.addAction(self.bottom_ten_action)
 
-        self.all_lesson_action = QAction("The Worst lessons", self)
-        self.all_lesson_action.triggered.connect(self.worst_lessons)
-        self.file_menu.addAction(self.all_lesson_action)
+        self.worst_lesson_action = QAction("The Worst lessons", self)
+        self.worst_lesson_action.triggered.connect(self.worst_lessons)
+        self.file_menu.addAction(self.worst_lesson_action)
 
         self.file_menu.addSeparator()
 
@@ -619,7 +604,6 @@ class MainWindow(QMainWindow):
         self.spanish_action = QAction("Spanish", self)
         self.spanish_action.triggered.connect(self.choose_spanish)
         self.language_menu.addAction(self.spanish_action)
-
 
         next_lesson_btn = QPushButton('Next Lesson', self)
         repeat_btn = QPushButton('Repeat', self)
@@ -645,13 +629,8 @@ class MainWindow(QMainWindow):
         pass
 
     def worst_lessons(self):
-        conn2 = sqlite3.connect(GlobalLanguage.file_path + '/lessons.db')
-        df = pd.read_sql('SELECT * FROM lessons', conn2)
-        df = df.loc[:, 'lesson':]
-        # close the database connection
-        conn2.close()
+        df = loadData('lesson')
         data = bottom_not_repeated(df)
-
         # Create and show the text window
         self.text_window = TextWindow(self, data=data)
         self.text_window.move(100, 100)
@@ -675,7 +654,6 @@ class MainWindow(QMainWindow):
         self.hide()
 
     def next_lesson(self):
-
         self.button_grid_window = ButtonGridWidget()
         self.button_grid_window.move(100, 100)
         self.button_grid_window.show()
