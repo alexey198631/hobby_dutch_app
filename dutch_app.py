@@ -1,34 +1,103 @@
 """
 To do:
-
-window with words and its translation for speaking lesson
 exam mode
 verbs mode
 separate lcd for score and attempts
 two languages databases
 if now db?? I need to create the initial start version
 
-
-
 """
 import sys
 import pandas as pd
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
-                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem)
+                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy)
 
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QTextOption
 from defs import *
 import random
 import sqlite3
 
 
 class GlobalLanguage:
-    file_path = 'data_files/spanish/'
+    file_path = 'data_files/'
 
     @classmethod
     def set_value(cls, new_value):
         cls.file_path = new_value
+
+
+class TextWidget(QMainWindow):
+
+    def __init__(self, main_window):
+        super().__init__()
+
+        self.main_window = main_window
+
+        # Populate the QListWidget with sample words
+        conn2 = sqlite3.connect(GlobalLanguage.file_path + '/lessons.db')
+        df = pd.read_sql('SELECT * FROM lessons', conn2)
+        lesson_df = df.loc[:, 'lesson':]
+        self.lesson = lesson_df
+        unique_values = next_lesson(self.lesson)[0]
+        # close the database connection
+        conn2.close()
+
+        # Set up the main window layout
+        main_layout = QVBoxLayout()
+
+        # Set up the horizontal layout
+        h_layout = QHBoxLayout()
+
+        # Create a QTextEdit for the left text section
+        self.text_edit = QTextEdit()
+        self.text_edit.setReadOnly(True)
+        h_layout.addWidget(self.text_edit)
+
+        # Create a QListWidget for the right list section
+        self.list_widget = QListWidget()
+        self.list_widget.itemClicked.connect(self.update_text_edit)
+        h_layout.addWidget(self.list_widget)
+
+        for i, value in enumerate(unique_values):
+            lesson_text = 'Lesson ' + str(value)
+            self.list_widget.insertItem(i, lesson_text)
+
+        # Add the QHBoxLayout to the main layout
+        main_layout.addLayout(h_layout)
+
+        # Set up the QWidget and set the main layout
+        container = QWidget()
+        container.setLayout(main_layout)
+        self.setCentralWidget(container)
+
+        # Create a button to go to Main Menu
+        submit_button = QPushButton("Main Menu")
+        submit_button.clicked.connect(self.main_window_back)
+        main_layout.addWidget(submit_button)
+
+        # Set the window size
+        self.resize(550, 470)
+
+    def update_text_edit(self, item):
+        self.text_edit.clear()
+        repeat = int(item.text().split(' ')[1])
+
+        conn1 = sqlite3.connect(GlobalLanguage.file_path + '/words.db')
+        words_d = pd.read_sql('SELECT * FROM words', conn1)
+        self.words = words_d.loc[:, 'word':]
+        self.wordList = loadWords(self.words, "yes")
+        conn1.close()
+
+        word_list = reps(repeat, self.lesson, self.wordList)
+        for_print = word_list_to_print(word_list)
+
+        self.text_edit.setText('\n'.join(for_print))
+
+    def main_window_back(self):
+        self.close()
+        self.main_window.show()
+
 
 class TextWindow(QMainWindow):
     def __init__(self, main_window, data=None):
@@ -530,6 +599,12 @@ class MainWindow(QMainWindow):
 
         self.file_menu.addSeparator()
 
+        self.print_words_action = QAction("Print Lesson Words", self)
+        self.print_words_action.triggered.connect(self.print_lesson_words)
+        self.file_menu.addAction(self.print_words_action)
+
+        self.file_menu.addSeparator()
+
         self.exit_action = QAction("Exit", self)
         self.exit_action.triggered.connect(self.close)
         self.file_menu.addAction(self.exit_action)
@@ -637,6 +712,12 @@ class MainWindow(QMainWindow):
     def choose_spanish(self):
         new_value = 'data_files/spanish/'
         GlobalLanguage.set_value(new_value)
+
+    def print_lesson_words(self):
+        self.text_widget = TextWidget(self)
+        self.text_widget.move(100, 100)
+        self.text_widget.show()
+        self.hide()
 
 
 def main():
