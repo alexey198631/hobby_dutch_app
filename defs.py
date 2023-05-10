@@ -457,11 +457,9 @@ def bottom_not_repeated(lesson_df):
     sml['Lesson'] = 'Lesson ' + sml['Lesson']
     return sml
 
+
 def topbottom(top=1):
-    conn2 = sqlite3.connect('data_files/lessons.db')
-    df = pd.read_sql('SELECT * FROM lessons', conn2)
-    conn2.close()
-    data = df.loc[:, 'lesson':]
+    data = loadData('lesson')
     data = data[data['known'] != 25]
     data = data.loc[:, ['r', 'time', 'points']]
     data = data.rename(columns={'r': 'Lesson', 'time': 'Time', 'points': 'Pts'})
@@ -475,56 +473,25 @@ def topbottom(top=1):
     data['Lesson'] = 'Lesson ' + data['Lesson']
     return data
 
+
 def temp(lessonNumber):
     print(f'{lessonNumber.getStart()}, {lessonNumber.getFinish()}, {lessonNumber.getNumber_of_easy()} , {lessonNumber.getLength_of_lesson()} , {lessonNumber.getTime()} ')
 
 
 def xlstosql(df):
     df_name = df.name
-
     # connect to the SQLite database
     conn = sqlite3.connect(f'data_files/{df_name}.db')
-
-    # create a dictionary of column names and data types
-    #column_types = {}
-    #for col in df.columns:
-    #    col_type = str(df[col].dtype)
-    #    if col_type == 'object':
-    #        col_type = 'TEXT'
-    #    elif col_type.startswith('float'):
-    #        col_type = 'REAL'
-    #    elif col_type.startswith('int'):
-    #        col_type = 'INTEGER'
-    #    column_types[col] = col_type
-
-    # create the table schema string
-    #table_schema = ', '.join([f'{col} {column_types[col]}' for col in df.columns])
-
-    # Drop table if it exists
-    #conn.execute(f'DROP TABLE IF EXISTS {df_name}')
-
-    # create the table in the database
-    #conn.execute(f'CREATE TABLE {df_name} ({table_schema})')
-
     # insert the data from the dataframe into the database table
     df.to_sql(f'{df_name}', conn, if_exists='replace', index=False)
-
     # close the database connection
     conn.close()
 
 
 def final_creation_sql(wordList, lessonNumber):
 
-    conn01 = sqlite3.connect('data_files/words.db')
-    df = pd.read_sql('SELECT * FROM words', conn01)
-    words = df.loc[:, 'word':]
-    conn01.close()
-
-    conn02 = sqlite3.connect('data_files/lessons.db')
-    df2 = pd.read_sql('SELECT * FROM lessons', conn02)
-    lesson_df = df2.loc[:, 'lesson':]
-    # close the database connection
-    conn02.close()
+    words = loadData('word')
+    lesson_df = loadData('lesson')
 
     dutch = words.copy()
     dutch.name = 'words'

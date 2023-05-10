@@ -57,5 +57,10 @@ def xlstosql(df):
     # close the database connection
     conn.close()
 
-for df in list_of_df:
-    xlstosql(df)
+#for df in list_of_df:
+ #   xlstosql(df)
+
+spanish = pd.read_excel('data_files/init_words_spanish.xlsx', sheet_name='update')
+spanish = spanish.loc[:, 'word':]
+spanish.name = 'spanish'
+xlstosql(spanish)

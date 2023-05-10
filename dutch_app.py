@@ -1,10 +1,15 @@
 """
 To do:
 
-
+if now db?? I need to create the initial start version
 exam mode
 verbs mode
-if now db?? I need to create the initial start version
+reset all dbs
+examples window
+opening the first letter???
+timer as option?
+logo for app
+
 
 """
 import sys
@@ -37,7 +42,6 @@ class TextWidget(QMainWindow):
         lesson_df = loadData('lesson')
         self.lesson = lesson_df
         unique_values = next_lesson(self.lesson)[0]
-        # close the database connection
 
         # Set up the main window layout
         main_layout = QVBoxLayout()
