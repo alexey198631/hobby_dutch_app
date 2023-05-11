@@ -18,18 +18,11 @@ from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
                              QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy)
 
-from PyQt6.QtGui import QAction, QTextOption, QFont
+from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon
 from defs import *
 import random
+from global_language import GlobalLanguage
 import sqlite3
-
-
-class GlobalLanguage:
-    file_path = 'data_files/'
-
-    @classmethod
-    def set_value(cls, new_value):
-        cls.file_path = new_value
 
 
 class TextWidget(QMainWindow):
@@ -715,10 +708,16 @@ class MainWindow(QMainWindow):
     def choose_dutch(self):
         new_value = 'data_files/'
         GlobalLanguage.set_value(new_value)
+        icon_path = GlobalLanguage.file_path + '/icon.png'
+        icon = QIcon(icon_path)
+        QApplication.instance().setWindowIcon(icon)
 
     def choose_spanish(self):
         new_value = 'data_files/spanish/'
         GlobalLanguage.set_value(new_value)
+        icon_path = GlobalLanguage.file_path + '/icon.png'
+        icon = QIcon(icon_path)
+        QApplication.instance().setWindowIcon(icon)
 
     def print_lesson_words(self):
         self.text_widget = TextWidget(self)
@@ -733,12 +732,19 @@ class MainWindow(QMainWindow):
         self.hide()
 
 
+
 def main():
     app = QApplication(sys.argv)
     app.setAttribute(Qt.ApplicationAttribute.AA_DontUseNativeMenuBar)
+    # Setting icon for app
+    icon_path = GlobalLanguage.file_path + '/icon.png'
+    icon = QIcon(icon_path)
+    app.setWindowIcon(icon)
+
     main_window = MainWindow()
     main_window.move(100, 100)
     main_window.show()
+
     sys.exit(app.exec())
 
 

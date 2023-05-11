@@ -5,7 +5,7 @@ import re
 import sqlite3
 from cls import *
 from word_plot import *
-from dutch_app import GlobalLanguage
+from global_language import GlobalLanguage
 
 
 def initial_load() -> object:  # load data from init file - xlsx with words
