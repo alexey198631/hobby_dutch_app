@@ -548,3 +548,13 @@ def word_list_to_print(sample):
     for t in temp:
         final.append(str(t.getWord()) + ": " + str(t.getTranslation()))
     return final
+
+
+def example_list_to_print(sample):
+    final = []
+    for w in sample:
+        if w.getExample_nl() is None:
+            pass
+        else:
+            final.append(str(w.getWord()) + ' -> ' + str(w.getExample_nl()) + ' -> ' + str(w.getExample_en()) + '\n')
+    return final

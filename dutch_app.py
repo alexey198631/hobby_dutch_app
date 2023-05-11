@@ -5,7 +5,7 @@ if now db?? I need to create the initial start version
 exam mode
 verbs mode
 reset all dbs
-examples window
+
 opening the first letter???
 timer as option?
 logo for app
@@ -34,10 +34,11 @@ class GlobalLanguage:
 
 class TextWidget(QMainWindow):
 
-    def __init__(self, main_window):
+    def __init__(self, main_window, egs='no'):
         super().__init__()
 
         self.main_window = main_window
+        self.egs = egs
 
         lesson_df = loadData('lesson')
         self.lesson = lesson_df
@@ -56,6 +57,7 @@ class TextWidget(QMainWindow):
 
         # Create a QListWidget for the right list section
         self.list_widget = QListWidget()
+        self.list_widget.setFixedWidth(200)  # Set a fixed width for the list widget
         self.list_widget.itemClicked.connect(self.update_text_edit)
         h_layout.addWidget(self.list_widget)
 
@@ -77,7 +79,10 @@ class TextWidget(QMainWindow):
         main_layout.addWidget(submit_button)
 
         # Set the window size
-        self.resize(550, 470)
+        if self.egs == "no":
+            self.resize(550, 470)
+        else:
+            self.resize(1000, 470)
 
     def update_text_edit(self, item):
         self.text_edit.clear()
@@ -87,7 +92,11 @@ class TextWidget(QMainWindow):
         self.wordList = loadWords(self.words, "yes")
 
         word_list = reps(repeat, self.lesson, self.wordList)
-        for_print = word_list_to_print(word_list)
+
+        if self.egs == "no":
+            for_print = word_list_to_print(word_list)
+        else:
+            for_print = example_list_to_print(word_list)
 
         self.text_edit.setText('\n'.join(for_print))
 
@@ -319,6 +328,10 @@ class ButtonGridWidget(QWidget):
         sender = self.sender()
         if sender.property('clicked'):
             sender.setProperty('clicked', False)
+            if self.shared_object_list[i * 5 + j].getTyp() is not None:
+                sender.setText(f'{self.shared_object_list[i * 5 + j].getTyp()} \n \n {self.shared_object_list[i * 5 + j].getWord()}')
+            else:
+                sender.setText(f'{self.shared_object_list[i * 5 + j].getWord()}')
             sender.setStyleSheet("")
             self.counter -= 1
         else:
@@ -400,6 +413,8 @@ class InputCounterWidget(QWidget):
             self.list_of_words = sampleList.copy()
         else:
             self.list_of_words = nxt
+
+        random.shuffle(self.list_of_words)
 
         if lsn != 999:
             self.lesson = lsn
@@ -598,6 +613,10 @@ class MainWindow(QMainWindow):
         self.print_words_action.triggered.connect(self.print_lesson_words)
         self.file_menu.addAction(self.print_words_action)
 
+        self.print_examples_action = QAction("Print Examples", self)
+        self.print_examples_action.triggered.connect(self.print_examples)
+        self.file_menu.addAction(self.print_examples_action)
+
         self.file_menu.addSeparator()
 
         self.exit_action = QAction("Exit", self)
@@ -703,6 +722,12 @@ class MainWindow(QMainWindow):
 
     def print_lesson_words(self):
         self.text_widget = TextWidget(self)
+        self.text_widget.move(100, 100)
+        self.text_widget.show()
+        self.hide()
+
+    def print_examples(self):
+        self.text_widget = TextWidget(self, egs='yes')
         self.text_widget.move(100, 100)
         self.text_widget.show()
         self.hide()
