@@ -465,10 +465,13 @@ def topbottom(top=1):
     data = data.rename(columns={'r': 'Lesson', 'time': 'Time', 'points': 'Pts'})
     if top == 0:
         order = [True, False]
+    elif top == 'all':
+        order=False
     else:
         order = [False, True]
     data = data.sort_values(['Pts', 'Time'], ascending=order)
-    data = data.head(10)
+    if top != 'all':
+        data = data.head(10)
     data['Lesson'] = data['Lesson'].astype(str)
     data['Lesson'] = 'Lesson ' + data['Lesson']
     return data

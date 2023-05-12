@@ -159,7 +159,7 @@ class TextWindow(QMainWindow):
         # Populate the table with the data
         for i, row in enumerate(table_data):
             for j, val in enumerate(row):
-                item = QTableWidgetItem(str(val))
+                item = QTableWidgetItem(val)  #item = QTableWidgetItem(str(val))
                 if j != 0:
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)  # Set the text alignment of the cell to center
                     item.setData(Qt.ItemDataRole.DisplayRole, float(val))  # Set the data type of the cell to float
@@ -600,6 +600,10 @@ class MainWindow(QMainWindow):
         self.worst_lesson_action.triggered.connect(self.worst_lessons)
         self.file_menu.addAction(self.worst_lesson_action)
 
+        self.all_lesson_action = QAction("All lessons", self)
+        self.all_lesson_action.triggered.connect(self.all_lessons)
+        self.file_menu.addAction(self.all_lesson_action)
+
         self.file_menu.addSeparator()
 
         self.print_words_action = QAction("Print Lesson Words", self)
@@ -674,6 +678,15 @@ class MainWindow(QMainWindow):
         self.text_window.move(100, 100)
         self.text_window.show()
         self.hide()
+
+    def all_lessons(self):
+        data = topbottom(top='all')
+        # Create and show the text window
+        self.text_window = TextWindow(self, data=data)
+        self.text_window.move(100, 100)
+        self.text_window.show()
+        self.hide()
+
 
     def next_lesson(self):
         self.button_grid_window = ButtonGridWidget()
