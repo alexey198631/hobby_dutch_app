@@ -5,10 +5,11 @@ if now db?? I need to create the initial start version
 exam mode
 verbs mode
 reset all dbs
-
 opening the first letter???
 timer as option?
 logo for app
+grapsh
+results of the lesson
 
 
 """
