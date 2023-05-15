@@ -100,13 +100,16 @@ class TextWidget(QMainWindow):
 
 
 class TextWindow(QMainWindow):
-    def __init__(self, main_window, data=None):
+    def __init__(self, main_window, data=None, after_lesson=0):
         super().__init__()
 
         self.main_window = main_window
 
-        # Set the fixed size of the window
-        self.setFixedSize(350, 380)
+        if after_lesson != 0:
+            # Set the fixed size of the window
+            self.setFixedSize(450, 410)
+        else:
+            self.setFixedSize(350, 380)
 
         # Create a widget to hold the table and text input field
         widget = QWidget()
@@ -118,9 +121,12 @@ class TextWindow(QMainWindow):
         layout.addWidget(self.table_widget)
 
         # Set the column widths
-        self.table_widget.setColumnWidth(0, 400)  # Set the width of the first column to 200 pixels
-        self.table_widget.setColumnWidth(1, 200)  # Set the width of the second column to 100 pixels
-        self.table_widget.setColumnWidth(2, 200)  # Set the width of the second column to 100 pixels
+        self.table_widget.setColumnWidth(0, 400)  # Set the width of the first column to 400 pixels
+        self.table_widget.setColumnWidth(1, 200)  # Set the width of the second column to 200 pixels
+        self.table_widget.setColumnWidth(2, 200)  # Set the width of the second column to 200 pixels
+
+        if after_lesson != 0:
+            self.table_widget.setColumnWidth(3, 200)  # Set the width of the second column to 200 pixels
 
         # Set the column names
         column_names = list(data.columns)
@@ -131,10 +137,16 @@ class TextWindow(QMainWindow):
         if data is not None:
             self.populate_table(data)
 
-        # Create a button to go to Main Menu
-        submit_button = QPushButton("Main Menu")
-        submit_button.clicked.connect(self.main_window_back)
-        layout.addWidget(submit_button)
+        if after_lesson == 0:
+            # Create a button to go to Main Menu
+            submit_button = QPushButton("Main Menu")
+            submit_button.clicked.connect(self.main_window_back)
+            layout.addWidget(submit_button)
+        else:
+            # Create a button close
+            submit_button = QPushButton("Close")
+            submit_button.clicked.connect(self.close_me)
+            layout.addWidget(submit_button)
 
         # Set the central widget of the window to the input widget
         self.setCentralWidget(widget)
@@ -186,6 +198,9 @@ class TextWindow(QMainWindow):
         self.close()
         self.main_window.show()
 
+    def close_me(self):
+        self.close()
+
 
 class RepeatWindow(QWidget):
     window_closed = pyqtSignal()
@@ -228,6 +243,8 @@ class RepeatWindow(QWidget):
 
     # function to be performed on item click
     def on_lesson_clicked(self, item):
+        self.close()
+
         if item.text().split(' ')[0] != 'Lesson':
             repeat_lesson = 999
         else:
@@ -235,7 +252,6 @@ class RepeatWindow(QWidget):
 
         self.words = loadData('word')
         self.wordList = loadWords(self.words, "yes")
-
         self.lessonNumber = Lesson(repeat_lesson)
         self.lessonNumber.number_of_easy(25)
 
@@ -249,7 +265,6 @@ class RepeatWindow(QWidget):
         self.button_grid_window.move(100, 100)
         self.button_grid_window.show()
         self.button_grid_window.window_closed.connect(self.open_input_counter_widget)
-        self.hide()
 
     def open_input_counter_widget(self):
         self.input_counter_widget = InputCounterWidget(self, self.sample, lsn=self.lessonNumber, awl=self.wordList)
@@ -487,6 +502,7 @@ class InputCounterWidget(QWidget):
             self.lesson.add_pts(250 - self.attempts)
             self.lesson.finish(datetime.now())
             final_creation_sql(self.all_words, self.lesson)
+            self.placing(rever=self.rever)
             self.close()
         elif self.indx == len(self.list_of_words):
             for word in self.list_to_delete:
@@ -547,6 +563,14 @@ class InputCounterWidget(QWidget):
 
     def shoeMe(self):
         self.show()
+
+    def placing(self, rever):
+        lesson_df = loadData('lesson')
+        data = place(lesson_df, rever)
+        # Create and show the text window
+        self.text_window = TextWindow(self, data=data, after_lesson=1)
+        self.text_window.move(400, 100)
+        self.text_window.show()
 
     def insertChar(self, ch):
         # Insert character into QLineEdit
@@ -711,7 +735,7 @@ class MainWindow(QMainWindow):
         self.repeat_window = RepeatWindow(self)
         self.repeat_window.move(100, 100)
         self.repeat_window.show()
-        self.hide()
+        self.close() #here hide
 
     def exam(self):
         pass

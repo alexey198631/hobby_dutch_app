@@ -292,17 +292,30 @@ def place(df, rep, t=0, cond=0):
         mod_lesson = lesson[lesson.known == 25]
 
     if cond == 0:
+
         last = mod_lesson.loc[:, "r"][-1:].values[0]
         last_points = mod_lesson.loc[:, "points"][-1:].values[0]
-        mod_lesson = mod_lesson.sort_values(by='points', ascending=False, ignore_index=True)
-        place = mod_lesson[mod_lesson['points'] == last_points].index[0]
+        last_lesson = mod_lesson.tail(1)  # Extract the last row
 
-        print(f'1. Lesson {mod_lesson.loc[0, "r"]:.0f} - {mod_lesson.loc[0, "points"]:.0f} pts \
-              \n2. Lesson {mod_lesson.loc[1, "r"]:.0f} - {mod_lesson.loc[1, "points"]:.0f} pts \
-              \n3. Lesson {mod_lesson.loc[2, "r"]:.0f} - {mod_lesson.loc[2, "points"]:.0f} pts \
-              \n------------------------ \
-              \n{(place + 1):.0f}. Lesson {last:.0f} - {last_points:.0f} pts \
-              ')
+        mod_lesson = mod_lesson.sort_values(by='points', ascending=False, ignore_index=True)
+        place = mod_lesson[mod_lesson['points'] == last_points].index[0] + 1
+        last_lesson['Place'] = place
+
+        best_lessons = mod_lesson.head(10)
+        best_lessons = best_lessons.reset_index()
+        best_lessons = best_lessons.rename(columns={'index': 'Place'})
+        best_lessons['Place'] = best_lessons['Place'] + 1
+
+
+        final_result = pd.concat([best_lessons, last_lesson], ignore_index=True)
+        final_result = final_result.loc[:, ['r', 'time', 'points', 'Place']]
+        final_result = final_result.rename(columns={'r': 'Lesson', 'time': 'Time', 'points': 'Pts'})
+        final_result['Place'] = final_result['Place'].astype(int)
+        final_result['Lesson'] = final_result['Lesson'].astype(str)
+        final_result['Lesson'] = 'Lesson ' + final_result['Lesson']
+
+        return final_result
+
     elif cond != 0:
         last_points = mod_lesson.loc[:, "points"][-1:].values[0]
         mod_lesson = mod_lesson.sort_values(by='points', ascending=True, ignore_index=True)
