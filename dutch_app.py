@@ -1,6 +1,8 @@
 """
 To do:
 
+if the lesson in top already - not to put it the last .. is it possible to make it bold?
+и непонятно, почему окно не закрывается, а открываается наоборот
 if now db?? I need to create the initial start version
 exam mode
 verbs mode
@@ -243,12 +245,12 @@ class RepeatWindow(QWidget):
 
     # function to be performed on item click
     def on_lesson_clicked(self, item):
-        self.close()
 
         if item.text().split(' ')[0] != 'Lesson':
             repeat_lesson = 999
         else:
             repeat_lesson = int(item.text().split(' ')[1])
+
 
         self.words = loadData('word')
         self.wordList = loadWords(self.words, "yes")
@@ -270,6 +272,7 @@ class RepeatWindow(QWidget):
         self.input_counter_widget = InputCounterWidget(self, self.sample, lsn=self.lessonNumber, awl=self.wordList)
         self.input_counter_widget.move(100, 100)
         self.input_counter_widget.show()
+        self.close()
 
     def main_window_back(self):
         self.close()
@@ -422,6 +425,7 @@ class InputCounterWidget(QWidget):
             self.list_of_words = sampleList.copy()
         else:
             self.list_of_words = nxt
+            self.rep = 1
 
         random.shuffle(self.list_of_words)
 
@@ -502,7 +506,7 @@ class InputCounterWidget(QWidget):
             self.lesson.add_pts(250 - self.attempts)
             self.lesson.finish(datetime.now())
             final_creation_sql(self.all_words, self.lesson)
-            self.placing(rever=self.rever)
+            self.placing(rep=self.rep)
             self.close()
         elif self.indx == len(self.list_of_words):
             for word in self.list_to_delete:
@@ -564,9 +568,9 @@ class InputCounterWidget(QWidget):
     def shoeMe(self):
         self.show()
 
-    def placing(self, rever):
+    def placing(self, rep):
         lesson_df = loadData('lesson')
-        data = place(lesson_df, rever)
+        data = place(lesson_df, rep=rep)
         # Create and show the text window
         self.text_window = TextWindow(self, data=data, after_lesson=1)
         self.text_window.move(400, 100)

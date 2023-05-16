@@ -283,7 +283,7 @@ def for_inter_time(df, lessonNumber, known):
     return lessn
 
 
-def place(df, rep, t=0, cond=0):
+def place(df, rep=0, t=0, cond=0):
     lesson = df.copy()
     if rep == 0:
         mod_lesson = lesson[lesson.known != 25]
@@ -306,8 +306,11 @@ def place(df, rep, t=0, cond=0):
         best_lessons = best_lessons.rename(columns={'index': 'Place'})
         best_lessons['Place'] = best_lessons['Place'] + 1
 
+        if last not in best_lessons['r'].values:
+            final_result = pd.concat([best_lessons, last_lesson], ignore_index=True)
+        else:
+            final_result = best_lessons
 
-        final_result = pd.concat([best_lessons, last_lesson], ignore_index=True)
         final_result = final_result.loc[:, ['r', 'time', 'points', 'Place']]
         final_result = final_result.rename(columns={'r': 'Lesson', 'time': 'Time', 'points': 'Pts'})
         final_result['Place'] = final_result['Place'].astype(int)
