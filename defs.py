@@ -283,11 +283,11 @@ def for_inter_time(df, lessonNumber, known):
     return lessn
 
 
-def place(df, rep=0, t=0, cond=0):
+def place(df, t=0, cond=0):
     lesson = df.copy()
-    if rep == 0:
+    rep = int(lesson.loc[:, "known"][-1:].values[0])
+    if rep != 25:
         mod_lesson = lesson[lesson.known != 25]
-
     else:
         mod_lesson = lesson[lesson.known == 25]
 

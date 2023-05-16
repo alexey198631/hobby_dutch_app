@@ -134,6 +134,9 @@ class Lesson(object):
     def getTime(self):
         return int((self.finish - self.start).seconds)
 
+    def getInterPoints(self):
+        return self.pts + 1500
+
     def getPoints(self):
         return self.pts + 1500 - int((self.finish - self.start).seconds)
 

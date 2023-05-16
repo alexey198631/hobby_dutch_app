@@ -17,7 +17,8 @@ results of the lesson
 """
 import sys
 import pandas as pd
-from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QTime
+
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
                              QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy)
 
@@ -269,10 +270,11 @@ class RepeatWindow(QWidget):
         self.button_grid_window.window_closed.connect(self.open_input_counter_widget)
 
     def open_input_counter_widget(self):
+        self.close()
         self.input_counter_widget = InputCounterWidget(self, self.sample, lsn=self.lessonNumber, awl=self.wordList)
         self.input_counter_widget.move(100, 100)
         self.input_counter_widget.show()
-        self.close()
+        self.input_counter_widget.window_closed.connect(self.main_window_back)
 
     def main_window_back(self):
         self.close()
@@ -296,16 +298,20 @@ class ButtonGridWidget(QWidget):
             sample = random_sample(wordList, 25)
 
             lesson_df = loadData('lesson')
-            lessonNumber = Lesson(next_lesson(lesson_df)[1])
+            self.lessonNumber = Lesson(next_lesson(lesson_df)[1])
 
         else:
             sample = repeat
             wordList = awl
             lesson_df = loadData('lesson')
-            lessonNumber = lsn
+            self.lessonNumber = lsn
 
         # set the title name for the widget
-        self.setWindowTitle(f'Lesson # {lessonNumber.getNumber()}')
+        self.setWindowTitle(f'Lesson # {self.lessonNumber.getNumber()}')
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_title)
+        self.counter = 0
+        self.timer.start(1000)  # Update title every second
 
         # adding apperance for each word in a sample of words
         [word.addAppear() for word in sample]
@@ -331,10 +337,14 @@ class ButtonGridWidget(QWidget):
 
         self.setLayout(grid_layout)
 
-        lessonNumber.wlist([word.getWord() for word in self.save])
-        lessonNumber.length_of_lesson(lesson_length(sample))
-        lessonNumber.start(datetime.now())
-        self.shared_lesson = lessonNumber
+        self.lessonNumber.wlist([word.getWord() for word in self.save])
+        self.lessonNumber.length_of_lesson(lesson_length(sample))
+        self.lessonNumber.start(datetime.now())
+        self.shared_lesson = self.lessonNumber
+
+    def update_title(self):
+        self.counter += 1
+        self.setWindowTitle(f'Lesson # {self.lessonNumber.getNumber()} - {self.counter} s')
 
     def on_button_clicked(self, i, j):
         sender = self.sender()
@@ -419,14 +429,10 @@ class ButtonGridWidgetSpare(QWidget):
 class InputCounterWidget(QWidget):
     window_closed = pyqtSignal()
 
-    def __init__(self, main_window, sampleList, awl, nxt=[], rever=0, lsn=999):
+    def __init__(self, main_window, sampleList, awl, rever=0, lsn=999):
         super().__init__()
-        if len(nxt) == 0:
-            self.list_of_words = sampleList.copy()
-        else:
-            self.list_of_words = nxt
-            self.rep = 1
 
+        self.list_of_words = sampleList.copy()
         random.shuffle(self.list_of_words)
 
         if lsn != 999:
@@ -434,6 +440,7 @@ class InputCounterWidget(QWidget):
         else:
             self.lesson = Lesson(1000)
 
+        self.lesson.points(0)
         # Set the font to bold
         #font = QFont()
         #font.setBold(True)
@@ -442,7 +449,13 @@ class InputCounterWidget(QWidget):
         #font.setWeight(75)
 
         # set the title name for the widget
-        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()}')
+        start = (datetime.now() - self.lesson.getStart()).total_seconds()
+        self.counter = int(round(start, 0)) + 1
+        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - {self.counter} s')
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_title)
+        self.timer.start(1000)  # Update title every second
+
         self.all_words = awl
         self.rever = rever
         self.main_window = main_window
@@ -495,6 +508,10 @@ class InputCounterWidget(QWidget):
         # Start quiz
         self.next_word()
 
+    def update_title(self):
+        self.counter += 1
+        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - {self.counter} s - {self.lesson.getInterPoints() - self.counter}')
+
     def next_word(self):
         if self.count == 25 and self.rever == 0:
             self.rever = 1
@@ -506,7 +523,7 @@ class InputCounterWidget(QWidget):
             self.lesson.add_pts(250 - self.attempts)
             self.lesson.finish(datetime.now())
             final_creation_sql(self.all_words, self.lesson)
-            self.placing(rep=self.rep)
+            self.placing()
             self.close()
         elif self.indx == len(self.list_of_words):
             for word in self.list_to_delete:
@@ -568,9 +585,9 @@ class InputCounterWidget(QWidget):
     def shoeMe(self):
         self.show()
 
-    def placing(self, rep):
+    def placing(self):
         lesson_df = loadData('lesson')
-        data = place(lesson_df, rep=rep)
+        data = place(lesson_df)
         # Create and show the text window
         self.text_window = TextWindow(self, data=data, after_lesson=1)
         self.text_window.move(400, 100)
