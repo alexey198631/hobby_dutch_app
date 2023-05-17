@@ -307,10 +307,10 @@ class ButtonGridWidget(QWidget):
             self.lessonNumber = lsn
 
         # set the title name for the widget
-        self.setWindowTitle(f'Lesson # {self.lessonNumber.getNumber()}')
+        self.counter = 0
+        self.setWindowTitle(f'Lesson # {self.lessonNumber.getNumber()} - [{self.counter}]')
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_title)
-        self.counter = 0
         self.timer.start(1000)  # Update title every second
 
         # adding apperance for each word in a sample of words
@@ -344,7 +344,7 @@ class ButtonGridWidget(QWidget):
 
     def update_title(self):
         self.counter += 1
-        self.setWindowTitle(f'Lesson # {self.lessonNumber.getNumber()} - {self.counter} s')
+        self.setWindowTitle(f'Lesson # {self.lessonNumber.getNumber()} - [{self.counter}]')
 
     def on_button_clicked(self, i, j):
         sender = self.sender()
@@ -389,7 +389,14 @@ class ButtonGridWidgetSpare(QWidget):
             self.lesson = Lesson(1000)
 
         # set the title name for the widget
-        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()}')
+        start = (datetime.now() - self.lesson.getStart()).total_seconds()
+        self.counter = int(round(start, 0)) + 1
+        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}]')
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_title)
+        self.timer.start(1000)  # Update title every second
+
+
 
         sample = list_of_words.copy()
         grid_layout = QGridLayout()
@@ -421,6 +428,10 @@ class ButtonGridWidgetSpare(QWidget):
 
         self.setLayout(grid_layout)
 
+    def update_title(self):
+        self.counter += 1
+        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}]')
+
     def closeEvent(self, event):
         self.window_closed.emit()
         super().closeEvent(event)
@@ -449,8 +460,8 @@ class InputCounterWidget(QWidget):
 
         # set the title name for the widget
         start = (datetime.now() - self.lesson.getStart()).total_seconds()
-        self.counter = int(round(start, 0)) + 1
-        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - {self.counter} s')
+        self.counter = int(round(start, 0))
+        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{2000 - self.counter}]')
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_title)
         self.timer.start(1000)  # Update title every second
@@ -509,7 +520,10 @@ class InputCounterWidget(QWidget):
 
     def update_title(self):
         self.counter += 1
-        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - {self.counter} s - {self.lesson.getInterPoints() - self.counter}')
+        if self.rever == 0:
+            self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{2000 - self.counter - self.attempts + self.count}]')
+        else:
+            self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{1750 - self.counter - self.attempts + self.count + self.lesson.getInterPoints()}]')
 
     def next_word(self):
         if self.count == 25 and self.rever == 0:
