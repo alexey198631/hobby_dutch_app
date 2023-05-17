@@ -10,8 +10,7 @@ reset all dbs
 opening the first letter???
 timer as option?
 logo for app
-grapsh
-results of the lesson
+graps
 
 
 """
@@ -247,6 +246,8 @@ class RepeatWindow(QWidget):
     # function to be performed on item click
     def on_lesson_clicked(self, item):
 
+        self.hide()
+
         if item.text().split(' ')[0] != 'Lesson':
             repeat_lesson = 999
         else:
@@ -270,7 +271,6 @@ class RepeatWindow(QWidget):
         self.button_grid_window.window_closed.connect(self.open_input_counter_widget)
 
     def open_input_counter_widget(self):
-        self.close()
         self.input_counter_widget = InputCounterWidget(self, self.sample, lsn=self.lessonNumber, awl=self.wordList)
         self.input_counter_widget.move(100, 100)
         self.input_counter_widget.show()
@@ -440,7 +440,6 @@ class InputCounterWidget(QWidget):
         else:
             self.lesson = Lesson(1000)
 
-        self.lesson.points(0)
         # Set the font to bold
         #font = QFont()
         #font.setBold(True)
