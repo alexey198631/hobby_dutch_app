@@ -519,11 +519,12 @@ class InputCounterWidget(QWidget):
         self.next_word()
 
     def update_title(self):
+        print(self.attempts)
         self.counter += 1
         if self.rever == 0:
             self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{2000 - self.counter - self.attempts + self.count}]')
-        else:
-            self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{1750 - self.counter - self.attempts + self.count + self.lesson.getInterPoints()}]')
+        elif self.rever == 1:
+            self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{1725 - self.counter - self.attempts + self.count + self.lesson.getInterPoints()}]')
 
     def next_word(self):
         if self.count == 25 and self.rever == 0:
