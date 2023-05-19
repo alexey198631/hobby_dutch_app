@@ -476,7 +476,6 @@ def bottom_not_repeated(lesson_df):
 
 def topbottom(top=1):
     data = loadData('lesson')
-    print(len(data))
     if top != 'overall':
         data = data[data['known'] != 25]
     data = data.loc[:, ['r', 'time', 'points']]
@@ -489,14 +488,12 @@ def topbottom(top=1):
     else:
         order = [False, True]
         data = data.sort_values(['Pts', 'Time'], ascending=order)
-    print(len(data))
     if top == 'all' or top == 'overall':
         data = data
     else:
         data = data.head(10)
     data['Lesson'] = data['Lesson'].astype(str)
     data['Lesson'] = 'Lesson ' + data['Lesson']
-    print(len(data))
     return data
 
 

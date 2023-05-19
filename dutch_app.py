@@ -320,7 +320,7 @@ class ButtonGridWidget(QWidget):
         self.all_word_list = wordList
         self.save = sample.copy()
         self.lesson = lesson_df
-        self.counter = 0  # initialize the counter variable
+        self.counter_click = 0  # initialize the counter variable
         grid_layout = QGridLayout()
 
         for i in range(5):
@@ -355,13 +355,13 @@ class ButtonGridWidget(QWidget):
             else:
                 sender.setText(f'{self.shared_object_list[i * 5 + j].getWord()}')
             sender.setStyleSheet("")
-            self.counter -= 1
+            self.counter_click -= 1
         else:
             sender.setProperty('clicked', True)
             sender.setText(
                 f'{self.shared_object_list[i * 5 + j].getTranslation()} \n | \n {self.shared_object_list[i * 5 + j].getRussian()}')
-            sender.setStyleSheet("background-color: grey")  # change the background color of the clicked button
-            self.counter += 1
+            sender.setStyleSheet("background-color: green")  # change the background color of the clicked button
+            self.counter_click += 1
 
         sender.style().unpolish(sender)  # update the button's appearance
         sender.style().polish(sender)  # update the button's appearance
