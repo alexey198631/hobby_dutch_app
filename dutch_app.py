@@ -664,6 +664,10 @@ class MainWindow(QMainWindow):
         self.all_lesson_action.triggered.connect(self.all_lessons)
         self.file_menu.addAction(self.all_lesson_action)
 
+        self.all_incl_lesson_action = QAction("Lessons overall", self)
+        self.all_incl_lesson_action.triggered.connect(self.all_incl_lessons)
+        self.file_menu.addAction(self.all_incl_lesson_action)
+
         self.file_menu.addSeparator()
 
         self.print_words_action = QAction("Print Lesson Words", self)
@@ -746,6 +750,15 @@ class MainWindow(QMainWindow):
         self.text_window.move(100, 100)
         self.text_window.show()
         self.hide()
+
+    def all_incl_lessons(self):
+        data = topbottom(top='overall')
+        # Create and show the text window
+        self.text_window = TextWindow(self, data=data)
+        self.text_window.move(100, 100)
+        self.text_window.show()
+        self.hide()
+
 
 
     def next_lesson(self):
