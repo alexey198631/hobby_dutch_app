@@ -367,7 +367,7 @@ class ButtonGridWidget(QWidget):
         sender.style().polish(sender)  # update the button's appearance
 
         if len(self.repeat) == 0:
-            self.shared_lesson.number_of_easy(self.counter)
+            self.shared_lesson.number_of_easy(self.counter_click)
 
     def closeEvent(self, event):
         self.window_closed.emit()
