@@ -1,6 +1,8 @@
 """
 To do:
 
+Теперь мне нужно как-то записать df из 25 слов обратно, обновив все, что нужно
+
 if the lesson in top already - not to put it the last .. is it possible to make it bold?
 и непонятно, почему окно не закрывается, а открываается наоборот
 if now db?? I need to create the initial start version
@@ -24,7 +26,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout
 from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon
 from defs import *
 import random
-from global_language import GlobalLanguage
+from global_language import GlobalLanguage, Difficulty
 import sqlite3
 
 
@@ -295,7 +297,8 @@ class ButtonGridWidget(QWidget):
             words = loadData('word')
             # preparation of word list
             wordList = loadWords(words, "yes")
-            sample = random_sample(wordList, 25)
+            #sample = random_sample(wordList, 25)
+            sample = wordList
 
             lesson_df = loadData('lesson')
             self.lessonNumber = Lesson(next_lesson(lesson_df)[1])
@@ -519,7 +522,6 @@ class InputCounterWidget(QWidget):
         self.next_word()
 
     def update_title(self):
-        print(self.attempts)
         self.counter += 1
         if self.rever == 0:
             self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{2000 - self.counter - self.attempts + self.count}]')
@@ -695,6 +697,25 @@ class MainWindow(QMainWindow):
         self.spanish_action.triggered.connect(self.choose_spanish)
         self.language_menu.addAction(self.spanish_action)
 
+        # Difficulty menu and actions
+        self.diff_menu = self.menuBar().addMenu("Difficulty")
+
+        self.easy_action = QAction("Easy", self)
+        self.easy_action.triggered.connect(self.choose_easy)
+        self.diff_menu.addAction(self.easy_action)
+
+        self.standard_action = QAction("Standard", self)
+        self.standard_action.triggered.connect(self.choose_standard)
+        self.diff_menu.addAction(self.standard_action)
+
+        self.hard_action = QAction("Hard", self)
+        self.hard_action.triggered.connect(self.choose_hard)
+        self.diff_menu.addAction(self.hard_action)
+
+        self.very_hard_action = QAction("Very Hard", self)
+        self.very_hard_action.triggered.connect(self.choose_very_hard)
+        self.diff_menu.addAction(self.very_hard_action)
+
         next_lesson_btn = QPushButton('Next Lesson', self)
         repeat_btn = QPushButton('Repeat', self)
         exam_btn = QPushButton('Exam', self)
@@ -804,6 +825,23 @@ class MainWindow(QMainWindow):
         icon_path = GlobalLanguage.file_path + '/icon.png'
         icon = QIcon(icon_path)
         QApplication.instance().setWindowIcon(icon)
+
+    def choose_easy(self):
+        new_diff = 'easy'
+        Difficulty.set_difficluty(new_diff)
+
+    def choose_standard(self):
+        new_diff = 'standard'
+        Difficulty.set_difficluty(new_diff)
+
+    def choose_hard(self):
+        new_diff = 'hard'
+        Difficulty.set_difficluty(new_diff)
+
+    def choose_very_hard(self):
+        new_diff = 'very hard'
+        Difficulty.set_difficluty(new_diff)
+        print(Difficulty.difficulty_distribution)
 
     def print_lesson_words(self):
         self.text_widget = TextWidget(self)

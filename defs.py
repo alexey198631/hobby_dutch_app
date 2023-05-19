@@ -5,7 +5,7 @@ import re
 import sqlite3
 from cls import *
 from word_plot import *
-from global_language import GlobalLanguage
+from global_language import GlobalLanguage, Difficulty
 
 
 def initial_load() -> object:  # load data from init file - xlsx with words
@@ -45,13 +45,23 @@ def next_load():  # load data from existing file
     return words, lesson_df, exist, exam_df, verbs_df
 
 
-def loadData(source):
+def loadData(source, final='no'):
     # connect to the SQLite database and read the data into a pandas dataframe
     conn = sqlite3.connect(GlobalLanguage.file_path + f'/{source}s.db')
     df = pd.read_sql(f'SELECT * FROM {source}s', conn)
     df = df.loc[:, f'{source}':]
     # close the database connection
     conn.close()
+    if source == 'word' and final == 'no':
+        # Sample words from each difficulty level based on difficulty and weight
+        selected_words = []
+        for difficulty, count in Difficulty.difficulty_distribution.items():
+            words_subset = df[(df['wd'] == difficulty)]
+            words_subset = words_subset.sample(n=count, weights=words_subset['weight'])
+            selected_words.append(words_subset)
+        # Concatenate the selected words into a new DataFrame
+        df = pd.concat(selected_words)
+
     return df
 
 
@@ -64,7 +74,11 @@ def loadWords(df_words, temp):  # data frame from xlsx file with words, it creat
                       df_words.iloc[i, 3],
                       df_words.iloc[i, 4], df_words.iloc[i, 6], df_words.iloc[i, 7], df_words.iloc[i, 8],
                       df_words.iloc[i, 9],
-                      df_words.iloc[i, 10]))
+                      df_words.iloc[i, 10],
+                      df_words.iloc[i, 11],
+                      df_words.iloc[i, 12],
+                      df_words.iloc[i, 13]
+                      ))
         else:
             list_of_words.append(
                 Words(df_words.iloc[i, 0], df_words.iloc[i, 1], df_words.iloc[i, 2], df_words.iloc[i, 5],
@@ -344,6 +358,10 @@ def final_creation(exist, words, wordList, lessonNumber, lesson_df, sample, exam
             dutch.loc[i, 'trial_r'] = wordList[i].getTrials_r()
             dutch.loc[i, 'success'] = wordList[i].getSuccess()
             dutch.loc[i, 'weight'] = wordList[i].getWeight()
+            dutch.loc[i, 'word_index'] = wordList[i].getWordIndex()
+            dutch.loc[i, 'difficulty'] = wordList[i].getDifficulty()
+            dutch.loc[i, 'wd'] = wordList[i].getWD()
+
 
         row = lesson_df.loc[:, 'lesson'][-1:].values[0]
         lesson_df.loc[row, 'lesson'] = lesson_df.loc[:, 'lesson'][-1:].values[0] + 1
@@ -373,6 +391,9 @@ def final_creation(exist, words, wordList, lessonNumber, lesson_df, sample, exam
             dutch.loc[i, 'trial_r'] = wordList[i].getTrials_r()
             dutch.loc[i, 'success'] = wordList[i].getSuccess()
             dutch.loc[i, 'weight'] = wordList[i].getWeight()
+            dutch.loc[i, 'word_index'] = wordList[i].getWordIndex()
+            dutch.loc[i, 'difficulty'] = wordList[i].getDifficulty()
+            dutch.loc[i, 'wd'] = wordList[i].getWD()
 
         lesson_df['lesson'] = 0
         lesson_df['start'] = 0
@@ -510,21 +531,43 @@ def xlstosql(df):
     # close the database connection
     conn.close()
 
+def chosenwords(df):
+    """
+    conn = sqlite3.connect('words.db')
+    cursor = conn.cursor()
+    for index, row in df.iterrows():
+        # Ваш код обновления строк в базе данных
+        # Пример обновления - изменение значения столбца "название" на "новое значение"
+        cursor.execute("UPDATE words SET название = ? WHERE id = ?", ("новое значение", row['id']))
+
+    # Фиксация изменений
+    conn.commit()
+
+    # Закрытие соединения с базой данных
+    conn.close()"""
+
 
 def final_creation_sql(wordList, lessonNumber):
 
-    words = loadData('word')
+    words = loadData('word', final='yes')
     lesson_df = loadData('lesson')
 
     dutch = words.copy()
     dutch.name = 'words'
 
-    for i in range(len(dutch)):
-        dutch.loc[i, 'appear'] = wordList[i].getAppear()
-        dutch.loc[i, 'trial_d'] = wordList[i].getTrials_d()
-        dutch.loc[i, 'trial_r'] = wordList[i].getTrials_r()
-        dutch.loc[i, 'success'] = wordList[i].getSuccess()
-        dutch.loc[i, 'weight'] = wordList[i].getWeight()
+    indexes = [word.getWordIndex() for word in wordList]
+
+    for k, i in enumerate(indexes):
+        v1 = wordList[k].getAppear()
+        v2 = wordList[k].getTrials_d()
+        v3 = wordList[k].getTrials_r()
+        v4 = wordList[k].getSuccess()
+        v5 = wordList[k].getWeight()
+        v6 = wordList[k].getWD()
+
+        dutch.loc[dutch['word_index'] == i, ['appear', 'trial_d', 'trial_r', 'success', 'weight', 'wd']] = [v1, v2, v3, v4, v5, v6]
+
+
 
     row = lesson_df.loc[:, 'lesson'][-1:].values[0]
     lesson_df.loc[row, 'lesson'] = lesson_df.loc[:, 'lesson'][-1:].values[0] + 1

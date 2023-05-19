@@ -7,7 +7,7 @@ class Words(object):
     success attempts, also weight, more weight - more often words appear"""
 
     def __init__(self, word, typ, translation, russian, example, example_translation, appear, trial_d, trial_r, success,
-                 weight, word_index):
+                 weight, word_index, difficulty, wd):
         self.word = word
         self.typ = typ
         self.translation = translation
@@ -20,6 +20,8 @@ class Words(object):
         self.success = success
         self.weight = weight
         self.word_index = word_index
+        self.difficulty = difficulty
+        self.wd = wd
 
     def getWord(self):
         return self.word
@@ -76,6 +78,18 @@ class Words(object):
             return round(self.weight, 2)
         else:
             return round((100 - (self.success / (self.trial_d + self.trial_r)) * 100), 2)
+
+    def getDifficulty(self):
+        return self.difficulty
+
+    def getWD(self):
+        if self.weight <= 33:
+            return self.difficulty
+        elif self.weight <= 66:
+            return self.difficulty + 1
+        elif self.weight <= 100:
+            return self.difficulty + 2
+
 
     def __len__(self):
         return len(f'{self.word} -> {self.translation}')
