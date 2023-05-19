@@ -7,7 +7,7 @@ class Words(object):
     success attempts, also weight, more weight - more often words appear"""
 
     def __init__(self, word, typ, translation, russian, example, example_translation, appear, trial_d, trial_r, success,
-                 weight):
+                 weight, word_index):
         self.word = word
         self.typ = typ
         self.translation = translation
@@ -19,9 +19,13 @@ class Words(object):
         self.trial_r = trial_r
         self.success = success
         self.weight = weight
+        self.word_index = word_index
 
     def getWord(self):
         return self.word
+
+    def getWordIndex(self):
+        return self.word_index
 
     def getTyp(self):
         return self.typ
