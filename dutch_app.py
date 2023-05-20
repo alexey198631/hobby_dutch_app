@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout
 from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon
 from defs import *
 import random
-from global_language import GlobalLanguage, Difficulty
+from global_language import GlobalLanguage, Difficulty, Styles
 import sqlite3
 
 
@@ -337,8 +337,15 @@ class ButtonGridWidget(QWidget):
                 button.clicked.connect(lambda _, i=i, j=j: self.on_button_clicked(i, j))
 
                 grid_layout.addWidget(button, i, j)
-
+        # Create a button to go next
+        next_button = QPushButton("Next")
+        next_button.clicked.connect(self.close)
+        next_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        next_button.setStyleSheet(Styles.button_style)
+        grid_layout.addWidget(next_button, i+1, j)
         self.setLayout(grid_layout)
+
+
 
         self.lessonNumber.wlist([word.getWord() for word in self.save])
         self.lessonNumber.length_of_lesson(lesson_length(sample))
@@ -428,8 +435,17 @@ class ButtonGridWidgetSpare(QWidget):
                 button = QPushButton()
                 button.setFixedSize(200, 100)
                 grid_layout.addWidget(button, i, j)
-
+        # Create a button to go next
+        next_button = QPushButton("Next")
+        next_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        next_button.setStyleSheet(Styles.button_style)
+        next_button.clicked.connect(self.close)
+        grid_layout.addWidget(next_button, 5, 4)
         self.setLayout(grid_layout)
+
+
+
+
 
     def update_title(self):
         self.counter += 1
@@ -717,7 +733,13 @@ class MainWindow(QMainWindow):
         self.diff_menu.addAction(self.very_hard_action)
 
         next_lesson_btn = QPushButton('Next Lesson', self)
+        next_lesson_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        next_lesson_btn.setStyleSheet(Styles.button_style)
+
         repeat_btn = QPushButton('Repeat', self)
+        repeat_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        repeat_btn.setStyleSheet(Styles.button_style)
+        
         exam_btn = QPushButton('Exam', self)
         verb_btn = QPushButton('Verbs', self)
 

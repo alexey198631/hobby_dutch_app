@@ -22,3 +22,15 @@ class Difficulty:
             cls.difficulty_distribution = {1: 0, 2: 0, 3: 1, 4: 1, 5: 2, 6: 3, 7: 3, 8: 4, 9: 3, 10: 3, 11: 3, 12: 2}
         elif new_dif == 'very hard':
             cls.difficulty_distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 5, 7: 5, 8: 5, 9: 4, 10: 3, 11: 2, 12: 1}
+
+class Styles:
+    button_style = """
+                    QPushButton {
+                    background-color: lightgrey;
+                    color: black;
+                                }
+                    QPushButton:hover {
+                    background-color: grey;
+                    color: white;
+                                }
+                    """
