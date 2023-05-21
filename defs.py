@@ -549,8 +549,6 @@ def chosenwords(df):
 
 def final_creation_sql(wordList, lessonNumber):
 
-    lesson_df = loadData('lesson')
-
     # Connect to the SQLite database
     conn = sqlite3.connect('data_files/words.db')
     cursor = conn.cursor()
@@ -572,26 +570,26 @@ def final_creation_sql(wordList, lessonNumber):
     conn.commit()
     conn.close()
 
-    row = lesson_df.loc[:, 'lesson'][-1:].values[0]
-    lesson_df.loc[row, 'lesson'] = lesson_df.loc[:, 'lesson'][-1:].values[0] + 1
-    lesson_df.loc[row, 'start'] = lessonNumber.getStart()
-    lesson_df.loc[row, 'inter'] = lessonNumber.getInter()
-    lesson_df.loc[row, 'finish'] = lessonNumber.getFinish()
-    lesson_df.loc[row, 'known'] = lessonNumber.getNumber_of_easy()
-    lesson_df.loc[row, 'points'] = lessonNumber.getPoints()
-    lesson_df.loc[row, 'length'] = lessonNumber.getLength_of_lesson()
-    lesson_df.loc[row, 'time'] = lessonNumber.getTime()
-    lesson_df.loc[row, 'list_of_words'] = list_to_list(lessonNumber.getList())
-    lesson_df.loc[row, 'r'] = lessonNumber.getNumber()
+    conn = sqlite3.connect('data_files/lessons.db')
+    cursor = conn.cursor()
 
-    # change the data type of the 'numbers' and 'floats' columns to string
-    lesson_df[['lesson', 'known', 'points','length', 'time', 'r']] = lesson_df[['lesson', 'known', 'points','length', 'time', 'r']].astype(int)
-    lesson_df['start'] = pd.to_datetime(lesson_df['start'], format='%Y-%m-%d %H:%M:%S')
-    lesson_df['inter'] = pd.to_datetime(lesson_df['inter'], format='%Y-%m-%d %H:%M:%S')
-    lesson_df['finish'] = pd.to_datetime(lesson_df['finish'], format='%Y-%m-%d %H:%M:%S')
-    lesson_df.name = 'lessons'
+    cursor.execute("SELECT lesson FROM lessons WHERE lesson IS NOT NULL ORDER BY lesson DESC LIMIT 1")
+    last_lesson = cursor.fetchone()[0]
+    l1 = last_lesson + 1
+    l2 = lessonNumber.getStart()
+    l3 = lessonNumber.getInter()
+    l4 = lessonNumber.getFinish()
+    l5 = lessonNumber.getNumber_of_easy()
+    l6 = lessonNumber.getPoints()
+    l7 = lessonNumber.getLength_of_lesson()
+    l8 = lessonNumber.getTime()
+    l9 = list_to_list(lessonNumber.getList())
+    l10 = lessonNumber.getNumber()
 
-    xlstosql(lesson_df)
+    cols = 'lesson, start, inter, finish, known, points, length, time, list_of_words, r'
+    cursor.execute(f"INSERT INTO lessons ({cols}) VALUES (?,?,?,?,?,?,?,?,?,?)", (l1,l2,l3,l4,l5,l6,l7,l8,l9,l10))
+    conn.commit()
+    conn.close()
 
 
 def word_list_to_print(sample):
