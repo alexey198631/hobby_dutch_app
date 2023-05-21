@@ -45,45 +45,45 @@ def next_load():  # load data from existing file
     return words, lesson_df, exist, exam_df, verbs_df
 
 
+def sql_text(dffty, limit):
+    text = f"""
+    SELECT word, type, translation, russian, example, example_translation, appear, trial_d, trial_r, success, weight, word_index, difficulty, wd
+    FROM words
+    WHERE wd = {dffty}
+    ORDER BY weight DESC, RANDOM()
+    LIMIT {limit};
+    """
+    return text
+
+
 def loadData(source, final='no'):
     # connect to the SQLite database and read the data into a pandas dataframe
     conn = sqlite3.connect(GlobalLanguage.file_path + f'/{source}s.db')
-    df = pd.read_sql(f'SELECT * FROM {source}s', conn)
-    df = df.loc[:, f'{source}':]
-    # close the database connection
-    conn.close()
+
     if source == 'word' and final == 'no':
+        cursor = conn.cursor()
         # Sample words from each difficulty level based on difficulty and weight
         selected_words = []
         for difficulty, count in Difficulty.difficulty_distribution.items():
-            words_subset = df[(df['wd'] == difficulty)]
-            words_subset = words_subset.sample(n=count, weights=words_subset['weight'])
-            selected_words.append(words_subset)
-        # Concatenate the selected words into a new DataFrame
-        df = pd.concat(selected_words)
+            # Retrieve 5 easy words
+            words_query = sql_text(difficulty, count)
+            cursor.execute(words_query)
+            selected_words = selected_words + cursor.fetchall()
+        return selected_words
+    else:
+        df = pd.read_sql(f'SELECT * FROM {source}s', conn)
+        df = df.loc[:, f'{source}':]
+        return df
 
-    return df
+    # close the database connection
+    conn.close()
 
 
-def loadWords(df_words, temp):  # data frame from xlsx file with words, it creates list of class Words
+def loadWords(words_data):  # data frame from xlsx file with words, it creates list of class Words
     list_of_words = []
-    for i in range(len(df_words)):
-        if temp == 'yes':
-            list_of_words.append(
-                Words(df_words.iloc[i, 0], df_words.iloc[i, 1], df_words.iloc[i, 2], df_words.iloc[i, 5],
-                      df_words.iloc[i, 3],
-                      df_words.iloc[i, 4], df_words.iloc[i, 6], df_words.iloc[i, 7], df_words.iloc[i, 8],
-                      df_words.iloc[i, 9],
-                      df_words.iloc[i, 10],
-                      df_words.iloc[i, 11],
-                      df_words.iloc[i, 12],
-                      df_words.iloc[i, 13]
-                      ))
-        else:
-            list_of_words.append(
-                Words(df_words.iloc[i, 0], df_words.iloc[i, 1], df_words.iloc[i, 2], df_words.iloc[i, 5],
-                      df_words.iloc[i, 3],
-                      df_words.iloc[i, 4], 0, 0, 0, 0, 100))
+    for row in words_data:
+        word = Words(*row)
+        list_of_words.append(word)
     return list_of_words
 
 
@@ -549,12 +549,11 @@ def chosenwords(df):
 
 def final_creation_sql(wordList, lessonNumber):
 
-    words = loadData('word', final='yes')
     lesson_df = loadData('lesson')
 
-    dutch = words.copy()
-    dutch.name = 'words'
-
+    # Connect to the SQLite database
+    conn = sqlite3.connect('data_files/words.db')
+    cursor = conn.cursor()
     indexes = [word.getWordIndex() for word in wordList]
 
     for k, i in enumerate(indexes):
@@ -565,9 +564,13 @@ def final_creation_sql(wordList, lessonNumber):
         v5 = wordList[k].getWeight()
         v6 = wordList[k].getWD()
 
-        dutch.loc[dutch['word_index'] == i, ['appear', 'trial_d', 'trial_r', 'success', 'weight', 'wd']] = [v1, v2, v3, v4, v5, v6]
+        cursor.execute(
+            "UPDATE words SET appear = ?, trial_d = ?, trial_r = ?, success = ?, weight = ?,  wd = ?  WHERE word_index = ?",
+            (v1, v2, v3, v4, v5, v6, i))
 
-
+    # Commit the changes and close the connection
+    conn.commit()
+    conn.close()
 
     row = lesson_df.loc[:, 'lesson'][-1:].values[0]
     lesson_df.loc[row, 'lesson'] = lesson_df.loc[:, 'lesson'][-1:].values[0] + 1
@@ -588,7 +591,6 @@ def final_creation_sql(wordList, lessonNumber):
     lesson_df['finish'] = pd.to_datetime(lesson_df['finish'], format='%Y-%m-%d %H:%M:%S')
     lesson_df.name = 'lessons'
 
-    xlstosql(dutch)
     xlstosql(lesson_df)
 
 

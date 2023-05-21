@@ -87,7 +87,7 @@ class TextWidget(QMainWindow):
         repeat = int(item.text().split(' ')[1])
 
         self.words = loadData('word')
-        self.wordList = loadWords(self.words, "yes")
+        self.wordList = loadWords(self.words)
 
         word_list = reps(repeat, self.lesson, self.wordList)
 
@@ -257,7 +257,7 @@ class RepeatWindow(QWidget):
 
 
         self.words = loadData('word')
-        self.wordList = loadWords(self.words, "yes")
+        self.wordList = loadWords(self.words)
         self.lessonNumber = Lesson(repeat_lesson)
         self.lessonNumber.number_of_easy(25)
 
@@ -296,7 +296,8 @@ class ButtonGridWidget(QWidget):
 
             words = loadData('word')
             # preparation of word list
-            wordList = loadWords(words, "yes")
+            wordList = loadWords(words)
+
             #sample = random_sample(wordList, 25)
             sample = wordList
 
