@@ -1,6 +1,9 @@
 """
 To do:
 
+заменить список слов индексами
+дополнить информацией о сложности урока
+
 Теперь мне нужно как-то записать df из 25 слов обратно, обновив все, что нужно
 
 if the lesson in top already - not to put it the last .. is it possible to make it bold?
@@ -302,7 +305,10 @@ class ButtonGridWidget(QWidget):
             sample = wordList
 
             lesson_df = loadData('lesson')
-            self.lessonNumber = Lesson(next_lesson(lesson_df)[1])
+            try:
+                self.lessonNumber = Lesson(next_lesson(lesson_df)[1])
+            except:
+                self.lessonNumber = Lesson(1)
 
         else:
             sample = repeat
@@ -328,6 +334,7 @@ class ButtonGridWidget(QWidget):
         grid_layout = QGridLayout()
 
         for i in range(5):
+
             for j in range(5):
                 wrd = self.shared_object_list[i * 5 + j]
                 if wrd.getTyp() is not None:
@@ -661,9 +668,7 @@ class MainWindow(QMainWindow):
         # File menu and actions
         self.file_menu = self.menuBar().addMenu("File")
 
-        self.show_stat_action = QAction("Show Stat", self)
-        self.show_stat_action.triggered.connect(self.show_stat)
-        self.file_menu.addAction(self.show_stat_action)
+
 
         self.file_menu.addSeparator()
 
@@ -698,6 +703,10 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction(self.print_examples_action)
 
         self.file_menu.addSeparator()
+
+        self.reset_action = QAction("Reset Progress", self)
+        self.reset_action.triggered.connect(self.reset)
+        self.file_menu.addAction(self.reset_action)
 
         self.exit_action = QAction("Exit", self)
         self.exit_action.triggered.connect(self.close)
@@ -759,8 +768,8 @@ class MainWindow(QMainWindow):
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
 
-    def show_stat(self):
-        pass
+    def reset(self):
+        todefault()
 
     def worst_lessons(self):
         df = loadData('lesson')

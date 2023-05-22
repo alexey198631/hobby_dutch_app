@@ -624,3 +624,46 @@ def example_list_to_print(sample):
         else:
             final.append(str(w.getWord()) + ' -> ' + str(w.getExample_nl()) + ' -> ' + str(w.getExample_en()) + '\n')
     return final
+
+
+def todefault():
+
+    # connect to the SQLite database
+    conn = sqlite3.connect(GlobalLanguage.file_path + 'words.db')
+    cursor = conn.cursor()
+
+    columns = ['appear', 'trial_d', 'trial_r', 'success', 'weight']
+
+    # Generate and execute the UPDATE statements
+    for column in columns:
+        if column != 'weight':
+            update_query = f"UPDATE words SET {column} = 0;"
+            cursor.execute(update_query)
+        else:
+            update_query = f"UPDATE words SET {column} = 100.0;"
+            cursor.execute(update_query)
+
+    text = """
+
+        UPDATE words
+            SET wd = CASE
+                WHEN difficulty = 0 THEN 1
+                ELSE difficulty + ABS(RANDOM()) % 3 + 1
+            END;
+
+        """
+    cursor.execute(text)
+
+    # Commit the changes and close the connection
+    conn.commit()
+    conn.close()
+
+    # connect to the SQLite database
+    conn2 = sqlite3.connect(GlobalLanguage.file_path + 'lessons.db')
+    cursor2 = conn2.cursor()
+    delete_query = "DELETE FROM lessons;"
+    cursor2.execute(delete_query)
+    # Commit the changes and close the connection
+    conn2.commit()
+    conn2.close()
+
