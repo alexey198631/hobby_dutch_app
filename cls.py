@@ -79,11 +79,17 @@ class Words(object):
         else:
             return round((100 - (self.success / (self.trial_d + self.trial_r)) * 100), 2)
 
+    def updateWeight(self):
+        if self.trial_d != 0 and self.trial_r != 0:
+            self.weight = round((100 - (self.success / (self.trial_d + self.trial_r)) * 100), 2)
+
     def getDifficulty(self):
         return self.difficulty
 
     def getWD(self):
-        if self.weight <= 33:
+        if self.weight == 0.0 and self.difficulty == 0:
+            return 1
+        elif self.weight <= 33:
             return self.difficulty
         elif self.weight <= 66:
             return self.difficulty + 1

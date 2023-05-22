@@ -560,6 +560,8 @@ def final_creation_sql(wordList, lessonNumber):
         v3 = wordList[k].getTrials_r()
         v4 = wordList[k].getSuccess()
         v5 = wordList[k].getWeight()
+        print(v5)
+        wordList[k].updateWeight()
         v6 = wordList[k].getWD()
 
         cursor.execute(
@@ -574,7 +576,10 @@ def final_creation_sql(wordList, lessonNumber):
     cursor = conn.cursor()
 
     cursor.execute("SELECT lesson FROM lessons WHERE lesson IS NOT NULL ORDER BY lesson DESC LIMIT 1")
-    last_lesson = cursor.fetchone()[0]
+    try:
+        last_lesson = cursor.fetchone()[0]
+    except:
+        last_lesson = 0
     l1 = last_lesson + 1
     l2 = lessonNumber.getStart()
     l3 = lessonNumber.getInter()
