@@ -550,7 +550,7 @@ def chosenwords(df):
 def final_creation_sql(wordList, lessonNumber):
 
     # Connect to the SQLite database
-    conn = sqlite3.connect('data_files/words.db')
+    conn = sqlite3.connect(GlobalLanguage.file_path + 'words.db')
     cursor = conn.cursor()
     indexes = [word.getWordIndex() for word in wordList]
 
@@ -560,7 +560,6 @@ def final_creation_sql(wordList, lessonNumber):
         v3 = wordList[k].getTrials_r()
         v4 = wordList[k].getSuccess()
         v5 = wordList[k].getWeight()
-        print(v5)
         wordList[k].updateWeight()
         v6 = wordList[k].getWD()
 
@@ -572,7 +571,7 @@ def final_creation_sql(wordList, lessonNumber):
     conn.commit()
     conn.close()
 
-    conn = sqlite3.connect('data_files/lessons.db')
+    conn = sqlite3.connect(GlobalLanguage.file_path + 'lessons.db')
     cursor = conn.cursor()
 
     cursor.execute("SELECT lesson FROM lessons WHERE lesson IS NOT NULL ORDER BY lesson DESC LIMIT 1")

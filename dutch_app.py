@@ -355,7 +355,7 @@ class ButtonGridWidget(QWidget):
 
 
 
-        self.lessonNumber.wlist([word.getWord() for word in self.save])
+        self.lessonNumber.wlist([str(word.getWordIndex()) for word in self.save])
         self.lessonNumber.length_of_lesson(lesson_length(sample))
         self.lessonNumber.start(datetime.now())
         self.shared_lesson = self.lessonNumber
