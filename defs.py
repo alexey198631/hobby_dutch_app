@@ -236,6 +236,34 @@ def random_sample(list_of_words, n):
     return sample
 
 
+def get_lesson_words(lesson_number):
+
+    conn = sqlite3.connect('data_files/lessons.db')
+    cursor = conn.cursor()
+
+    conn2 = sqlite3.connect('data_files/words.db')
+    cursor2 = conn2.cursor()
+
+    cursor.execute(f"SELECT r, list_of_words FROM lessons WHERE r = {lesson_number}")
+    results = cursor.fetchall()[0]
+
+    result_list = []
+
+    r, list_of_words = results
+    number_list = list_of_words.split(';')
+    for number in number_list:
+        word_index = int(number)
+        cursor2.execute("SELECT * FROM words WHERE word_index = ?", (word_index,))
+        word_result = cursor2.fetchone()
+        if word_result is not None:
+            result_list.append(word_result)
+
+    conn.close()
+    conn2.close()
+
+    return result_list
+
+
 def reps(repeat, lesson_df, wordList):
     s_repeat = []
     check_existence = []
