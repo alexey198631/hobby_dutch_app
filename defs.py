@@ -238,30 +238,82 @@ def random_sample(list_of_words, n):
 
 def get_lesson_words(lesson_number):
 
-    conn = sqlite3.connect('data_files/lessons.db')
-    cursor = conn.cursor()
+    if lesson_number != 999:
 
-    conn2 = sqlite3.connect('data_files/words.db')
-    cursor2 = conn2.cursor()
+        conn = sqlite3.connect('data_files/lessons.db')
+        cursor = conn.cursor()
 
-    cursor.execute(f"SELECT r, list_of_words FROM lessons WHERE r = {lesson_number}")
-    results = cursor.fetchall()[0]
+        conn2 = sqlite3.connect('data_files/words.db')
+        cursor2 = conn2.cursor()
 
-    result_list = []
+        cursor.execute(f"SELECT r, list_of_words FROM lessons WHERE r = {lesson_number}")
+        results = cursor.fetchall()[0]
 
-    r, list_of_words = results
-    number_list = list_of_words.split(';')
-    for number in number_list:
-        word_index = int(number)
-        cursor2.execute("SELECT * FROM words WHERE word_index = ?", (word_index,))
-        word_result = cursor2.fetchone()
-        if word_result is not None:
-            result_list.append(word_result)
+        result_list = []
+
+        r, list_of_words = results
+        number_list = list_of_words.split(';')
+        for number in number_list:
+            word_index = int(number)
+            cursor2.execute("SELECT * FROM words WHERE word_index = ?", (word_index,))
+            word_result = cursor2.fetchone()
+            if word_result is not None:
+                result_list.append(word_result)
+
+        conn.close()
+        conn2.close()
+
+    else:
+
+        conn = sqlite3.connect('data_files/lessons.db')
+        cursor = conn.cursor()
+
+        conn2 = sqlite3.connect('data_files/words.db')
+        cursor2 = conn2.cursor()
+
+        cursor.execute(f"SELECT list_of_words FROM lessons")
+        results = cursor.fetchall()
+
+        index_list = []
+
+        for list_of_words in results:
+            list_of_words = str(list_of_words[0])
+            number_list = list_of_words.split(';')
+            for number in number_list:
+                number = int(number)
+                index_list.append(number)
+        index_list = list(set(index_list))
+
+
+        #index_list = random.sample(index_list, k=25)
+
+        result_list = []
+
+        text = """
+                SELECT word, type, translation, russian, example, example_translation, appear, trial_d, trial_r, success, weight, word_index, difficulty, wd
+                FROM words
+                WHERE word_index = ?;
+                """
+        cnt = 0
+        for index in index_list:
+            word_index = int(index)
+            cursor2.execute(text, (word_index,))
+            word_result = cursor2.fetchone()
+            if word_result[-4] > 60.0 and cnt != 25:
+                result_list.append(word_result)
+                cnt += 1
+
 
     conn.close()
     conn2.close()
-
     return result_list
+
+
+
+
+
+
+
 
 
 def reps(repeat, lesson_df, wordList):

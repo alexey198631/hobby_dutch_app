@@ -253,19 +253,17 @@ class RepeatWindow(QWidget):
         self.hide()
         if item.text().split(' ')[0] != 'Lesson':
             repeat_lesson = 999
+            self.words = get_lesson_words(repeat_lesson)
+            self.wordList = loadWords(self.words)
         else:
             repeat_lesson = int(item.text().split(' ')[1])
+            self.words = get_lesson_words(repeat_lesson)
+            self.wordList = loadWords(self.words)
 
 
-        self.words = get_lesson_words(repeat_lesson)
-        self.wordList = loadWords(self.words)
         self.lessonNumber = Lesson(repeat_lesson)
         self.lessonNumber.number_of_easy(25)
-
-        if repeat_lesson == 999:
-            self.sample = random_sample(all_learned(self.lesson, self.wordList), 25)
-        else:
-            self.sample = self.wordList
+        self.sample = self.wordList
 
 
         self.button_grid_window = ButtonGridWidget(repeat=self.sample, lsn=self.lessonNumber, awl=self.wordList)
