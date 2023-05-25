@@ -1,10 +1,7 @@
 """
 To do:
 
-заменить список слов индексами
-дополнить информацией о сложности урока
-
-Теперь мне нужно как-то записать df из 25 слов обратно, обновив все, что нужно
+надо придумать, как расчитыавть сложность урока
 
 if the lesson in top already - not to put it the last .. is it possible to make it bold?
 и непонятно, почему окно не закрывается, а открываается наоборот
@@ -262,9 +259,9 @@ class RepeatWindow(QWidget):
 
 
         self.lessonNumber = Lesson(repeat_lesson)
+        self.lessonNumber.setlevel(repeat_difficulty(self.wordList))
         self.lessonNumber.number_of_easy(25)
         self.sample = self.wordList
-
 
         self.button_grid_window = ButtonGridWidget(repeat=self.sample, lsn=self.lessonNumber, awl=self.wordList)
         self.button_grid_window.move(100, 100)
@@ -303,8 +300,10 @@ class ButtonGridWidget(QWidget):
             lesson_df = loadData('lesson')
             try:
                 self.lessonNumber = Lesson(next_lesson(lesson_df)[1])
+                self.lessonNumber.setlevel(Difficulty.difficulty)
             except:
                 self.lessonNumber = Lesson(1)
+                self.lessonNumber.setlevel(Difficulty.difficulty)
 
         else:
             sample = repeat

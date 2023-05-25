@@ -669,9 +669,10 @@ def final_creation_sql(wordList, lessonNumber):
     l8 = lessonNumber.getTime()
     l9 = list_to_list(lessonNumber.getList())
     l10 = lessonNumber.getNumber()
+    l11 = lessonNumber.getLevel()
 
-    cols = 'lesson, start, inter, finish, known, points, length, time, list_of_words, r'
-    cursor.execute(f"INSERT INTO lessons ({cols}) VALUES (?,?,?,?,?,?,?,?,?,?)", (l1,l2,l3,l4,l5,l6,l7,l8,l9,l10))
+    cols = 'lesson, start, inter, finish, known, points, length, time, list_of_words, r, level'
+    cursor.execute(f"INSERT INTO lessons ({cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?)", (l1,l2,l3,l4,l5,l6,l7,l8,l9,l10,l11))
     conn.commit()
     conn.close()
 
@@ -750,4 +751,18 @@ def todefault():
     # Commit the changes and close the connection
     conn2.commit()
     conn2.close()
+
+
+def repeat_difficulty(words):
+    total_sum = sum(w.getWD() for w in words)
+
+    if total_sum < 124:
+        return 'easy'
+    elif total_sum < 148:
+        return 'standard'
+    elif total_sum < 171:
+        return 'hard'
+    else:
+        return 'very hard'
+
 

@@ -134,6 +134,12 @@ class Lesson(object):
     def inter(self, inter):
         self.inter = inter
 
+    def setlevel(self, level):
+        self.level = level
+
+    def getLevel(self):
+        return self.level
+
     def getInter(self):
         return self.inter
 
