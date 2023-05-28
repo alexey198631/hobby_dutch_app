@@ -263,7 +263,7 @@ def get_lesson_words(lesson_number):
         number_list = list_of_words.split(';')
         for number in number_list:
             word_index = int(number)
-            cursor2.execute("SELECT * FROM words WHERE word_index = ?", (word_index,))
+            cursor2.execute("SELECT word, type, translation, russian, example, example_translation, appear, trial_d, trial_r, success, weight, word_index, difficulty, wd FROM words WHERE word_index = ?", (word_index,))
             word_result = cursor2.fetchone()
             if word_result is not None:
                 result_list.append(word_result)

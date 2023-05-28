@@ -3,7 +3,6 @@ To do:
 
 Печатании уроков было бы неплохо сделать фильтр на сложность
 if the lesson in top already - not to put it the last .. is it possible to make it bold?
-и непонятно, почему окно не закрывается, а открываается наоборот
 if now db?? I need to create the initial start version
 exam mode
 verbs mode
@@ -34,7 +33,6 @@ class TextWidget(QMainWindow):
 
         self.main_window = main_window
         self.egs = egs
-
         self.unique_values = loadData('lesson')[0]
 
         # Set up the main window layout
@@ -97,6 +95,8 @@ class TextWidget(QMainWindow):
 
 
 class TextWindow(QMainWindow):
+    window_closed = pyqtSignal()
+
     def __init__(self, main_window, data=None, after_lesson=0):
         super().__init__()
 
@@ -198,6 +198,10 @@ class TextWindow(QMainWindow):
     def close_me(self):
         self.close()
 
+    def closeEvent(self, event):
+        self.window_closed.emit()
+        super().closeEvent(event)
+
 
 class RepeatWindow(QWidget):
     window_closed = pyqtSignal()
@@ -270,6 +274,10 @@ class RepeatWindow(QWidget):
         self.close()
         self.main_window.show()
 
+    def closeEvent(self, event):
+        self.window_closed.emit()
+        super().closeEvent(event)
+
 
 class ButtonGridWidget(QWidget):
     window_closed = pyqtSignal()
@@ -336,9 +344,6 @@ class ButtonGridWidget(QWidget):
         next_button.setStyleSheet(Styles.button_style)
         grid_layout.addWidget(next_button, i+1, j)
         self.setLayout(grid_layout)
-
-
-
         self.lessonNumber.wlist([str(word.getWordIndex()) for word in self.save])
         self.lessonNumber.length_of_lesson(lesson_length(sample))
         self.lessonNumber.start(datetime.now())
@@ -397,8 +402,6 @@ class ButtonGridWidgetSpare(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_title)
         self.timer.start(1000)  # Update title every second
-
-
 
         sample = list_of_words.copy()
         grid_layout = QGridLayout()
@@ -543,7 +546,6 @@ class InputCounterWidget(QWidget):
             self.lesson.add_pts(250 - self.attempts)
             self.lesson.finish(datetime.now())
             final_creation_sql(self.all_words, self.lesson)
-            self.placing()
             self.close()
         elif self.indx == len(self.list_of_words):
             for word in self.list_to_delete:
@@ -605,13 +607,6 @@ class InputCounterWidget(QWidget):
     def shoeMe(self):
         self.show()
 
-    def placing(self):
-        data = place()
-        # Create and show the text window
-        self.text_window = TextWindow(self, data=data, after_lesson=1)
-        self.text_window.move(400, 100)
-        self.text_window.show()
-
     def insertChar(self, ch):
         # Insert character into QLineEdit
         self.line_edit.insert(ch)
@@ -627,7 +622,15 @@ class InputCounterWidget(QWidget):
         self.input_translation_widget = InputCounterWidget(self, self.start_list, rever=1, lsn=self.lesson, awl=self.all_words)
         self.input_translation_widget.move(100, 100)
         self.input_translation_widget.show()
-        self.input_translation_widget.window_closed.connect(self.main_window_back)
+        self.input_translation_widget.window_closed.connect(self.placing)
+
+    def placing(self):
+        data = place()
+        # Create and show the text window
+        self.text_window = TextWindow(self, data=data, after_lesson=1)
+        self.text_window.move(100, 100)
+        self.text_window.show()
+        self.text_window.window_closed.connect(self.main_window_back)
 
     def main_window_back(self):
         self.main_window.show()
