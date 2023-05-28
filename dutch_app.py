@@ -1,16 +1,13 @@
 """
 To do:
 
-надо придумать, как расчитыавть сложность урока
-
+Печатании уроков было бы неплохо сделать фильтр на сложность
 if the lesson in top already - not to put it the last .. is it possible to make it bold?
 и непонятно, почему окно не закрывается, а открываается наоборот
 if now db?? I need to create the initial start version
 exam mode
 verbs mode
-reset all dbs
 opening the first letter???
-timer as option?
 logo for app
 graps
 
@@ -38,9 +35,7 @@ class TextWidget(QMainWindow):
         self.main_window = main_window
         self.egs = egs
 
-        lesson_df = loadData('lesson')
-        self.lesson = lesson_df
-        unique_values = next_lesson(self.lesson)[0]
+        self.unique_values, self.list_of_lessons = loadData('lesson')
 
         # Set up the main window layout
         main_layout = QVBoxLayout()
@@ -59,7 +54,7 @@ class TextWidget(QMainWindow):
         self.list_widget.itemClicked.connect(self.update_text_edit)
         h_layout.addWidget(self.list_widget)
 
-        for i, value in enumerate(unique_values):
+        for i, value in enumerate(self.unique_values):
             lesson_text = 'Lesson ' + str(value)
             self.list_widget.insertItem(i, lesson_text)
 
@@ -86,15 +81,13 @@ class TextWidget(QMainWindow):
         self.text_edit.clear()
         repeat = int(item.text().split(' ')[1])
 
-        self.words = loadData('word')
+        self.words = get_lesson_words(repeat)
         self.wordList = loadWords(self.words)
 
-        word_list = reps(repeat, self.lesson, self.wordList)
-
         if self.egs == "no":
-            for_print = word_list_to_print(word_list)
+            for_print = word_list_to_print(self.wordList)
         else:
-            for_print = example_list_to_print(word_list)
+            for_print = example_list_to_print(self.wordList)
 
         self.text_edit.setText('\n'.join(for_print))
 
@@ -133,7 +126,7 @@ class TextWindow(QMainWindow):
             self.table_widget.setColumnWidth(3, 200)  # Set the width of the second column to 200 pixels
 
         # Set the column names
-        column_names = list(data.columns)
+        column_names = data[1]
         self.table_widget.setColumnCount(len(column_names))
         self.table_widget.setHorizontalHeaderLabels(column_names)
 
@@ -167,7 +160,7 @@ class TextWindow(QMainWindow):
 
     def populate_table(self, data):
         # Convert the DataFrame to a list of lists
-        table_data = data.values.tolist()
+        table_data = data[0]
 
         # Set the number of rows and columns in the table
         self.table_widget.setRowCount(len(table_data))
@@ -767,8 +760,7 @@ class MainWindow(QMainWindow):
         todefault()
 
     def worst_lessons(self):
-        df = loadData('lesson')
-        data = bottom_not_repeated(df)
+        data = bottom_not_repeated()
         # Create and show the text window
         self.text_window = TextWindow(self, data=data)
         self.text_window.move(100, 100)
@@ -806,8 +798,6 @@ class MainWindow(QMainWindow):
         self.text_window.move(100, 100)
         self.text_window.show()
         self.hide()
-
-
 
     def next_lesson(self):
         self.button_grid_window = ButtonGridWidget()

@@ -69,14 +69,22 @@ def loadData(source, final='no'):
             words_query = sql_text(difficulty, count)
             cursor.execute(words_query)
             selected_words = selected_words + cursor.fetchall()
+        # close the database connection
+        conn.close()
         return selected_words
-    else:
-        df = pd.read_sql(f'SELECT * FROM {source}s', conn)
-        df = df.loc[:, f'{source}':]
-        return df
+    if source == 'lesson':
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT DISTINCT r FROM {source}s")
+        results = cursor.fetchall()
+        list_of_lessons = []
+        for row in results:
+            if row[0] != 999:
+                list_of_lessons.append(row[0])
+        # close the database connection
+        conn.close()
+        return list_of_lessons,  max(list_of_lessons) + 1
 
-    # close the database connection
-    conn.close()
+
 
 
 def loadWords(words_data):  # data frame from xlsx file with words, it creates list of class Words
@@ -284,7 +292,6 @@ def get_lesson_words(lesson_number):
                 index_list.append(number)
         index_list = list(set(index_list))
 
-
         #index_list = random.sample(index_list, k=25)
 
         result_list = []
@@ -303,17 +310,9 @@ def get_lesson_words(lesson_number):
                 result_list.append(word_result)
                 cnt += 1
 
-
     conn.close()
     conn2.close()
     return result_list
-
-
-
-
-
-
-
 
 
 def reps(repeat, lesson_df, wordList):
@@ -553,53 +552,70 @@ def nine_nine_nine(sample, sample_weights):
     print(f'Progress for {count} words from {len(sample)}. Good job!')
 
 
-def bottom_not_repeated(lesson_df):
-    # this function determine the worst lessons 5 which were not repeated
-    data_words_lesson_df = lesson_df.copy()
-    # keeping necessary columns only and sorting them descending
-    data_words_lesson_df = data_words_lesson_df.loc[:, ['points', 'r', 'time']]
-    data_words_lesson_df = data_words_lesson_df.sort_values(by='points', ascending=False, ignore_index=True)
-    mask = data_words_lesson_df.duplicated(subset='r', keep='first')
-    # keeping only the worst lessons in rating, anti top 10
-    df = data_words_lesson_df[~mask]
-    df = df.reset_index(drop=True)
-    sml = df.nsmallest(10, columns='points')
-    # renaming for printing, to understand how many points each lesson has
-    sml.rename(columns={"points": "Points", 'r':'Lesson', 'time': 'Time'}, inplace=True)
-    # specify the desired column order
-    new_order = ['Lesson', 'Time', 'Points']
-    # reindex the dataframe with the new column order
-    sml = sml.reindex(columns=new_order)
-    sml['Lesson'] = sml['Lesson'].astype(str)
-    sml['Lesson'] = 'Lesson ' + sml['Lesson']
-    return sml
+
+def bottom_not_repeated():
+    conn = sqlite3.connect(GlobalLanguage.file_path + f'/lessons.db')
+    cursor = conn.cursor()
+
+    # Prepare the SQL query
+    sql = """
+    SELECT r AS Lesson, time AS Time, points AS Points
+    FROM (
+        SELECT r, time, points
+        FROM (
+            SELECT r, time, points, 
+            ROW_NUMBER() OVER(PARTITION BY r ORDER BY points DESC) rn
+            FROM lessons
+        )
+        WHERE rn = 1
+        ORDER BY points ASC
+        LIMIT 10
+    )
+    """
+
+    # Execute the SQL query
+    cursor.execute(sql)
+
+    # Fetch all the rows
+    data = cursor.fetchall()
+
+    # Close the connection
+    conn.close()
+
+    # Convert the data into the required format
+    data = [('Lesson ' + str(lesson), time, pts) for lesson, time, pts in data]
+    column_names = ['Lesson', 'Time', 'Pts']
+
+    return data, column_names
 
 
 def topbottom(top=1):
-    data = loadData('lesson')
+    conn = sqlite3.connect(GlobalLanguage.file_path + f'/lessons.db')
+    cursor = conn.cursor()
+    # Prepare the basic SQL query
+    sql = "SELECT r AS Lesson, time AS Time, points AS Pts FROM lessons"
+
+    # Add conditions to the SQL query based on the top parameter
     if top != 'overall':
-        data = data[data['known'] != 25]
-    data = data.loc[:, ['r', 'time', 'points']]
-    data = data.rename(columns={'r': 'Lesson', 'time': 'Time', 'points': 'Pts'})
+        sql += " WHERE known != 25"
     if top == 0:
-        order = [True, False]
-        data = data.sort_values(['Pts', 'Time'], ascending=order)
+        sql += " ORDER BY Pts ASC, Time DESC LIMIT 10"
     elif top == 'all' or top == 'overall':
         pass
     else:
-        order = [False, True]
-        data = data.sort_values(['Pts', 'Time'], ascending=order)
-    if top == 'all' or top == 'overall':
-        data = data
-    else:
-        data = data.head(10)
-    data['Lesson'] = data['Lesson'].astype(str)
-    data['Lesson'] = 'Lesson ' + data['Lesson']
-    return data
+        sql += " ORDER BY Pts DESC, Time ASC LIMIT 10"
 
+    # Execute the SQL query
+    cursor.execute(sql)
+    # Fetch all the rows
+    data = cursor.fetchall()
+    # Close the connection
+    conn.close()
+    # Convert the data into the required format
+    data = [('Lesson ' + str(lesson), time, pts) for lesson, time, pts in data]
+    column_names = ['Lesson', 'Time', 'Pts']
 
-def temp(lessonNumber):
-    print(f'{lessonNumber.getStart()}, {lessonNumber.getFinish()}, {lessonNumber.getNumber_of_easy()} , {lessonNumber.getLength_of_lesson()} , {lessonNumber.getTime()} ')
+    return data, column_names
 
 
 def xlstosql(df):
@@ -610,21 +626,6 @@ def xlstosql(df):
     df.to_sql(f'{df_name}', conn, if_exists='replace', index=False)
     # close the database connection
     conn.close()
-
-def chosenwords(df):
-    """
-    conn = sqlite3.connect('words.db')
-    cursor = conn.cursor()
-    for index, row in df.iterrows():
-        # Ваш код обновления строк в базе данных
-        # Пример обновления - изменение значения столбца "название" на "новое значение"
-        cursor.execute("UPDATE words SET название = ? WHERE id = ?", ("новое значение", row['id']))
-
-    # Фиксация изменений
-    conn.commit()
-
-    # Закрытие соединения с базой данных
-    conn.close()"""
 
 
 def final_creation_sql(wordList, lessonNumber):
