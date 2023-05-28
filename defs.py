@@ -248,10 +248,10 @@ def get_lesson_words(lesson_number):
 
     if lesson_number != 999:
 
-        conn = sqlite3.connect('data_files/lessons.db')
+        conn = sqlite3.connect(GlobalLanguage.file_path + 'lessons.db')
         cursor = conn.cursor()
 
-        conn2 = sqlite3.connect('data_files/words.db')
+        conn2 = sqlite3.connect(GlobalLanguage.file_path + 'words.db')
         cursor2 = conn2.cursor()
 
         cursor.execute(f"SELECT r, list_of_words FROM lessons WHERE r = {lesson_number}")
@@ -273,10 +273,10 @@ def get_lesson_words(lesson_number):
 
     else:
 
-        conn = sqlite3.connect('data_files/lessons.db')
+        conn = sqlite3.connect(GlobalLanguage.file_path + 'lessons.db')
         cursor = conn.cursor()
 
-        conn2 = sqlite3.connect('data_files/words.db')
+        conn2 = sqlite3.connect(GlobalLanguage.file_path + 'words.db')
         cursor2 = conn2.cursor()
 
         cursor.execute(f"SELECT list_of_words FROM lessons")
@@ -376,6 +376,52 @@ def for_inter_time(df, lessonNumber, known):
     return lessn
 
 
+def place(t=0, cond=0):
+    conn = sqlite3.connect(GlobalLanguage.file_path + 'lessons.db')
+    cursor = conn.cursor()
+
+    # Get the known value of the last row
+    cursor.execute("SELECT known FROM lessons ORDER BY rowid DESC LIMIT 1")
+    rep = cursor.fetchone()[0]
+
+    # Prepare the base SQL query
+    if rep != 25:
+        sql = "SELECT * FROM lessons WHERE known != 25"
+    else:
+        sql = "SELECT * FROM lessons WHERE known == 25"
+
+    # Execute the SQL query
+    cursor.execute(sql)
+
+    # Fetch all the rows
+    data = cursor.fetchall()
+
+    last_lesson = data[-1][-2]
+
+    # Sort the data by points in descending order and enumerate to assign places
+    data.sort(key=lambda row: row[5], reverse=True)
+    data = [(index + 1, row[9], row[7], row[5]) for index, row in enumerate(data)]
+
+    # Find the place of the last row
+    last_row = next((row for row in data if row[1] == last_lesson), None)
+    last_place = last_row[0]
+
+    # Get the best lessons and ensure the last lesson is included if not already in the top 10
+    best_lessons = data[:10]
+    if last_place > 10:
+        best_lessons.append(last_row)
+
+    # Format the data for output
+    best_lessons = [('Lesson ' + str(row[1]), row[2], row[3], row[0]) for row in best_lessons]
+    columns_names = ['Lesson', 'Time', 'Points', 'Place']
+
+    # Close the connection
+    conn.close()
+
+    return best_lessons, columns_names
+
+
+"""
 def place(df, t=0, cond=0):
     lesson = df.copy()
     rep = int(lesson.loc[:, "known"][-1:].values[0])
@@ -424,7 +470,7 @@ def place(df, t=0, cond=0):
                       \n------------------------ \
                       \n{t} sec, place {(place + 1):.0f}, difference {- int(mod_lesson.loc[0, "points"]) + int(t)} \
                       ')
-
+"""
 
 def final_creation(exist, words, wordList, lessonNumber, lesson_df, sample, exam_df, verbs_df):
 

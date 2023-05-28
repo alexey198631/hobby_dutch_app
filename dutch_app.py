@@ -35,7 +35,7 @@ class TextWidget(QMainWindow):
         self.main_window = main_window
         self.egs = egs
 
-        self.unique_values, self.list_of_lessons = loadData('lesson')
+        self.unique_values = loadData('lesson')[0]
 
         # Set up the main window layout
         main_layout = QVBoxLayout()
@@ -209,8 +209,7 @@ class RepeatWindow(QWidget):
         self.setGeometry(100, 100, 800, 400)  # x, y, width, height
         self.setWindowTitle('Lessons to repeat')
 
-        self.lesson = loadData('lesson')
-        unique_values = next_lesson(self.lesson)[0]
+        unique_values = loadData('lesson')[0]
         unique_values.insert(0, 'Select random words from the entire learned vocabulary')
 
         # create layout for widget and add list widget
@@ -290,9 +289,8 @@ class ButtonGridWidget(QWidget):
             #sample = random_sample(wordList, 25)
             sample = wordList
 
-            lesson_df = loadData('lesson')
             try:
-                self.lessonNumber = Lesson(next_lesson(lesson_df)[1])
+                self.lessonNumber = Lesson(loadData('lesson')[1])
                 self.lessonNumber.setlevel(Difficulty.difficulty)
             except:
                 self.lessonNumber = Lesson(1)
@@ -301,7 +299,6 @@ class ButtonGridWidget(QWidget):
         else:
             sample = repeat
             wordList = awl
-            lesson_df = loadData('lesson')
             self.lessonNumber = lsn
 
         # set the title name for the widget
@@ -317,7 +314,6 @@ class ButtonGridWidget(QWidget):
         self.shared_object_list = sample
         self.all_word_list = wordList
         self.save = sample.copy()
-        self.lesson = lesson_df
         self.counter_click = 0  # initialize the counter variable
         grid_layout = QGridLayout()
 
@@ -438,10 +434,6 @@ class ButtonGridWidgetSpare(QWidget):
         next_button.clicked.connect(self.close)
         grid_layout.addWidget(next_button, 5, 4)
         self.setLayout(grid_layout)
-
-
-
-
 
     def update_title(self):
         self.counter += 1
@@ -614,8 +606,7 @@ class InputCounterWidget(QWidget):
         self.show()
 
     def placing(self):
-        lesson_df = loadData('lesson')
-        data = place(lesson_df)
+        data = place()
         # Create and show the text window
         self.text_window = TextWindow(self, data=data, after_lesson=1)
         self.text_window.move(400, 100)
