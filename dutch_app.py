@@ -686,6 +686,10 @@ class MainWindow(QMainWindow):
 
         self.file_menu.addSeparator()
 
+        self.correct_action = QAction("Correct Words", self)
+        self.correct_action.triggered.connect(self.correct)
+        self.file_menu.addAction(self.correct_action)
+
         self.reset_action = QAction("Reset Progress", self)
         self.reset_action.triggered.connect(self.reset)
         self.file_menu.addAction(self.reset_action)
@@ -866,6 +870,130 @@ class MainWindow(QMainWindow):
         self.text_widget.show()
         self.hide()
 
+    def correct(self):
+        self.correct_window = SearchWindow(self)
+        self.correct_window.move(100, 100)
+        self.correct_window.show()
+        self.hide()
+
+
+class SearchWindow(QMainWindow):
+
+    def __init__(self, main_window):
+        super().__init__()
+        self.setWindowTitle("Database Corrector")
+        self.resize(400, 200)
+
+        self.main_window = main_window
+
+        # Add a new variable to store the original word
+        self.original_word = None
+
+        # Create widgets
+        self.search_label = QLabel("Search:")
+        self.search_input = QLineEdit()
+        self.search_button = QPushButton("Search")
+        # Create fields and labels
+        self.field_names = ['Word', 'Type', 'Translation', 'Russian', 'Difficulty']
+        self.fields = []
+        self.labels = []
+
+        for field_name in self.field_names:
+            label = QLabel(field_name + ":")
+            field = QLineEdit()
+
+            self.labels.append(label)
+            self.fields.append(field)
+
+        # Create buttons
+        self.save_button = QPushButton("Save")
+        self.close_button = QPushButton("Close")
+
+        # Create layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.search_label)
+        layout.addWidget(self.search_input)
+        layout.addWidget(self.search_button)
+
+        for label, field in zip(self.labels, self.fields):
+            layout.addWidget(label)
+            layout.addWidget(field)
+
+        layout.addWidget(self.save_button)
+        layout.addWidget(self.close_button)
+
+        # Create main widget
+        main_widget = QWidget()
+        main_widget.setLayout(layout)
+        self.setCentralWidget(main_widget)
+
+        # Connect button signals
+        self.search_button.clicked.connect(self.search)
+        self.search_input.returnPressed.connect(self.search_button.click)
+
+
+        self.save_button.clicked.connect(self.save_changes)
+        self.close_button.clicked.connect(self.close)
+
+    def search(self):
+        search_term = self.search_input.text()
+        if not search_term:
+            return
+
+        # Connect to the database
+        connection = sqlite3.connect(GlobalLanguage.file_path + 'words.db')
+        cursor = connection.cursor()
+
+        # Execute the query
+        query = f"SELECT word, type, translation, russian, difficulty FROM words WHERE word LIKE ? OR translation LIKE ?"
+        cursor.execute(query, (f"%{search_term}%", f"%{search_term}%"))
+
+        # Fetch the result
+        result = cursor.fetchone()
+        if result is None:
+            # No matching record found
+            for field in self.fields:
+                field.clear()
+            self.original_word = None  # Clear the original word
+        else:
+            # Update the fields with the fetched values
+            for field, value in zip(self.fields, result):
+                field.setText(str(value))
+            self.original_word = result[0]  # Store the original word
+
+        # Close the database connection
+        connection.close()
+
+    def save_changes(self):
+
+        # Check if there is a word to update
+        if self.original_word is None:
+            return
+
+        # Get the new values from the fields
+        new_values = [field.text() for field in self.fields]
+
+        # Check if the fields are empty
+        if not all(new_values):
+            return
+
+        # Connect to the database
+        connection = sqlite3.connect(GlobalLanguage.file_path + 'words.db')
+        cursor = connection.cursor()
+
+        # Update the values in the database
+        query = "UPDATE words SET word=?, type=?, translation=?, russian=?, difficulty=? WHERE word=?"
+        values = new_values + [self.original_word]  # Use the original word
+        cursor.execute(query, values)
+
+        # Commit the changes and close the database connection
+        connection.commit()
+        connection.close()
+
+    def closeEvent(self, event):
+        self.main_window.show()
+        self.save_changes()
+        super().closeEvent(event)
 
 
 def main():
