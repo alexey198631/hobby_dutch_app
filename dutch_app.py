@@ -640,6 +640,125 @@ class InputCounterWidget(QWidget):
         super().closeEvent(event)
 
 
+class ExamWidget(QWidget):
+    window_closed = pyqtSignal()
+
+    def __init__(self, main_window, sampleList, num):
+        super().__init__()
+
+        self.main_window = main_window
+        self.num = num
+        self.list_of_words = sampleList.copy()
+        self.counter = 0
+        self.setWindowTitle(f'Exam session - [{self.counter}]')
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_title)
+        self.timer.start(1000)  # Update title every second
+
+        self.start_list = sampleList.copy()
+        self.label = QLabel("Enter your translation:", self)
+        self.line_edit = QLineEdit(self)
+        self.submit_button = QPushButton("Submit", self)
+
+        self.lcd_counter = QLCDNumber(self)
+        self.lcd_counter.setDigitCount(3)
+        self.lcd_counter_pts = QLCDNumber(self)
+        self.lcd_counter_pts.setDigitCount(3)
+
+        self.count = 0
+        self.attempts = 0
+        self.indx = 0
+        self.list_to_delete = []
+
+        self.submit_button.clicked.connect(self.submit_text)
+        self.line_edit.returnPressed.connect(self.submit_button.click)
+
+        # Create QGroupBox for special character buttons
+        groupBox = QGroupBox('Special Characters', self)
+        hbox = QHBoxLayout(groupBox)
+
+        # Create buttons with special characters
+        spec_buttons = ['à', 'ë', 'ï', 'é', 'è', 'ç', '’']
+        for char in spec_buttons:
+            button = QPushButton(char, self)
+            button.clicked.connect(lambda _, ch=char: self.insertChar(ch))
+            hbox.addWidget(button)
+
+        # Vertical layout with label for words/translations
+        layout = QVBoxLayout()
+        layout.addWidget(self.label)
+        # Horizontal layout with line_edit and submit button under the words/translation label
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(self.line_edit)
+        hlayout.addWidget(self.submit_button)
+        layout.addLayout(hlayout)
+
+        hlayout2 = QHBoxLayout()
+        hlayout2.addWidget(self.lcd_counter)
+        hlayout2.addWidget(self.lcd_counter_pts)
+        layout.addLayout(hlayout2)
+        layout.addWidget(groupBox)
+        self.setLayout(layout)
+
+        # Start quiz
+        self.next_word()
+
+    def update_title(self):
+        self.counter += 1
+        self.setWindowTitle(f'Exam session - [{self.counter}]')
+
+    def next_word(self):
+        if self.count == self.num:
+            self.close()
+        elif self.indx == len(self.list_of_words):
+            for word in self.list_to_delete:
+                self.list_of_words.remove(word)
+            self.list_to_delete = []
+            self.indx = 0
+            random.shuffle(self.list_of_words)
+            self.current_word = self.list_of_words[self.indx]
+        else:
+            self.current_word = self.list_of_words[self.indx]
+
+        # Set the question label
+        self.label.setText(f"{self.current_word.getWord()}: ")
+
+        # Clear the answer line edit and result label
+        self.line_edit.clear()
+
+    def submit_text(self):
+        text = self.line_edit.text()
+        translation = self.current_word.getTranslation()
+        translation = translation_with_comma(translation) # create list of all translations
+        if text in translation:
+            self.count += 1
+            self.attempts += 1
+            self.list_to_delete.append(self.current_word)
+            self.indx += 1
+            self.lcd_counter.display(self.count)
+            self.lcd_counter_pts.display(self.attempts)
+            self.next_word()
+        else:
+            self.indx += 1
+            self.attempts += 1
+            self.lcd_counter_pts.display(self.attempts)
+            self.next_word()
+
+    def hideMe(self):
+        self.hide()
+
+    def shoeMe(self):
+        self.show()
+
+    def insertChar(self, ch):
+        # Insert character into QLineEdit
+        self.line_edit.insert(ch)
+
+    def closeEvent(self, event):
+        self.window_closed.emit()
+        super().closeEvent(event)
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -822,7 +941,13 @@ class MainWindow(QMainWindow):
         self.close() #here hide
 
     def exam(self):
-        pass
+        words = loadData('word')
+        # preparation of word list
+        wordList = loadWords(words)
+        self.exam_window = ExamWidget(self, sampleList=wordList, num=25)
+        self.exam_window.move(100, 100)
+        self.exam_window.show()
+        self.close()  # here hide
 
     def verbs(self):
         pass
