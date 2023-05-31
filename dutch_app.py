@@ -1,6 +1,10 @@
 """
 To do:
 
+можно реализовать отдельно расчеты и статистику в разных разрезах
+а с помощью pyqt еще можно поучиться и строить графики
+
+
 Печатании уроков было бы неплохо сделать фильтр на сложность
 if the lesson in top already - not to put it the last .. is it possible to make it bold?
 if now db?? I need to create the initial start version
