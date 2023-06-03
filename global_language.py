@@ -22,6 +22,8 @@ class Difficulty:
             cls.difficulty_distribution = {1: 0, 2: 0, 3: 1, 4: 1, 5: 2, 6: 3, 7: 3, 8: 4, 9: 3, 10: 3, 11: 3, 12: 2}
         elif new_dif == 'very hard':
             cls.difficulty_distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 5, 7: 5, 8: 5, 9: 4, 10: 3, 11: 2, 12: 1}
+        elif new_dif == 'exam':
+            cls.difficulty_distribution = {1: 8, 2: 8, 3: 8, 4: 8, 5: 9, 6: 9, 7: 9, 8: 9, 9: 8, 10: 8, 11: 8, 12: 8}
 
 class Styles:
     button_style = """

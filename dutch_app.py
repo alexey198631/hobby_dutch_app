@@ -1,18 +1,32 @@
 """
-To do:
+Sprint:
 
-можно реализовать отдельно расчеты и статистику в разных разрезах
-а с помощью pyqt еще можно поучиться и строить графики
+Base functuanality:
 
+- add difficulty information to printing functuanality, is it possible to have filter in these tables?
+- is it possible to make bold the last lesson in the table when printing
+- hints for words (1st letter, Last letter, random letter)
+- change pointing system - limit number of points = 1000 which is achiavable
 
-Печатании уроков было бы неплохо сделать фильтр на сложность
-if the lesson in top already - not to put it the last .. is it possible to make it bold?
-if now db?? I need to create the initial start version
-exam mode
-verbs mode
-opening the first letter???
-logo for app
-graps
+Exam + Verbs
+
+- limit word choice (not it chooses from all words), it is necessary to choose from learned words with weight less < 50%.
+- create exam database with saving results + create verbs database (including new verbs from book and learndutch)
+- implement saving exam results into database
+- implement results window for exam version
+- implement language choice for exam: from learning language to base language
+
+Graphs
+
+- learn possibiliets PyQT for graphs representation
+
+Spanish
+
+- translate into Russian language words from db
+
+het and de
+
+- add this functuanality for dutch version
 
 
 """
@@ -709,10 +723,10 @@ class ExamWidget(QWidget):
 
     def update_title(self):
         self.counter += 1
-        self.setWindowTitle(f'Exam session - [{self.counter}]')
+        self.setWindowTitle(f'Exam session - [{self.counter}] - [{self.num - self.attempts}]')
 
     def next_word(self):
-        if self.count == self.num:
+        if self.attempts == self.num:
             self.close()
         elif self.indx == len(self.list_of_words):
             for word in self.list_to_delete:
@@ -945,10 +959,12 @@ class MainWindow(QMainWindow):
         self.close() #here hide
 
     def exam(self):
+        new_diff = 'exam'
+        Difficulty.set_difficluty(new_diff)
         words = loadData('word')
         # preparation of word list
         wordList = loadWords(words)
-        self.exam_window = ExamWidget(self, sampleList=wordList, num=25)
+        self.exam_window = ExamWidget(self, sampleList=wordList, num=100)
         self.exam_window.move(100, 100)
         self.exam_window.show()
         self.close()  # here hide

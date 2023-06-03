@@ -56,11 +56,23 @@ def sql_text(dffty, limit):
     return text
 
 
-def loadData(source, final='no'):
+def loadData(source, final='no', exam='no'):
     # connect to the SQLite database and read the data into a pandas dataframe
     conn = sqlite3.connect(GlobalLanguage.file_path + f'/{source}s.db')
 
     if source == 'word' and final == 'no':
+        cursor = conn.cursor()
+        # Sample words from each difficulty level based on difficulty and weight
+        selected_words = []
+        for difficulty, count in Difficulty.difficulty_distribution.items():
+            # Retrieve 5 easy words
+            words_query = sql_text(difficulty, count)
+            cursor.execute(words_query)
+            selected_words = selected_words + cursor.fetchall()
+        # close the database connection
+        conn.close()
+        return selected_words
+    elif source == 'word' and exam == 'yes':
         cursor = conn.cursor()
         # Sample words from each difficulty level based on difficulty and weight
         selected_words = []
