@@ -1,16 +1,32 @@
 """
-To do:
+Sprints:
 
-Печатании уроков было бы неплохо сделать фильтр на сложность
-if the lesson in top already - not to put it the last .. is it possible to make it bold?
-if now db?? I need to create the initial start version
-exam mode
-verbs mode
-opening the first letter???
-logo for app
-graps
+Base functuanality:
 
+- add difficulty information to printing functuanality, is it possible to have filter in these tables?
+- is it possible to make bold the last lesson in the table when printing
+- hints for words (1st letter, Last letter, random letter)
+- change pointing system - limit number of points = 1000 which is achiavable
 
+Exam + Verbs
+
+- limit word choice (not it chooses from all words), it is necessary to choose from learned words with weight less < 50%.
+- create exam database with saving results + create verbs database (including new verbs from book and learndutch)
+- implement saving exam results into database
+- implement results window for exam version
+- implement language choice for exam: from learning language to base language
+
+Graphs
+
+- learn possibiliets PyQT for graphs representation
+
+Spanish
+
+- translate into Russian language words from db
+
+het and de
+
+- add this functuanality for dutch version
 """
 import sys
 import pandas as pd
