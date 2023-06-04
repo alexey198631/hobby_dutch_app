@@ -1,5 +1,5 @@
 """
-Sprint:
+Sprints:
 
 Base functuanality:
 
@@ -27,8 +27,6 @@ Spanish
 het and de
 
 - add this functuanality for dutch version
-
-
 """
 import sys
 import pandas as pd
@@ -471,6 +469,7 @@ class InputCounterWidget(QWidget):
     def __init__(self, main_window, sampleList, awl, rever=0, lsn=999):
         super().__init__()
 
+        self.resize(500, 275)
         self.list_of_words = sampleList.copy()
         random.shuffle(self.list_of_words)
 
@@ -499,9 +498,12 @@ class InputCounterWidget(QWidget):
         self.main_window = main_window
         self.start_list = sampleList.copy()
         self.label = QLabel("Enter your translation:", self)
+        self.label.setFont(QFont("Arial", 16))
         self.line_edit = QLineEdit(self)
+        self.line_edit.setFont(QFont("Arial", 16))
         #self.line_edit.setFont(font)
         self.submit_button = QPushButton("Submit", self)
+        self.submit_button.setFont(QFont("Arial", 16))
 
         self.lcd_counter = QLCDNumber(self)
         self.lcd_counter.setDigitCount(3)
@@ -520,8 +522,14 @@ class InputCounterWidget(QWidget):
         groupBox = QGroupBox('Special Characters', self)
         hbox = QHBoxLayout(groupBox)
 
+
+
         # Create buttons with special characters
-        spec_buttons = ['à', 'ë', 'ï', 'é', 'è', 'ç', '’']
+        if GlobalLanguage.file_path == 'data_files/spanish/':
+            spec_buttons = ['á', 'í', 'é', 'ó', 'ñ', 'ú', 'ü']
+        else:
+            spec_buttons = ['ö', 'ü', 'à', 'ë', 'ï', 'é', 'è', 'ê', '’']
+
         for char in spec_buttons:
             button = QPushButton(char, self)
             button.clicked.connect(lambda _, ch=char: self.insertChar(ch))
@@ -582,9 +590,9 @@ class InputCounterWidget(QWidget):
 
         # Set the question label
         if self.rever == 0:
-            self.label.setText(f"{self.current_word.getWord()}: ")
+            self.label.setText(f"Enter your translation for:   {self.current_word.getWord()} ")
         elif self.rever == 1:
-            self.label.setText(f"{self.current_word.getTranslation()}: ")
+            self.label.setText(f"Enter your translation for:   {self.current_word.getTranslation()} ")
 
         # Clear the answer line edit and result label
         self.line_edit.clear()
@@ -665,6 +673,7 @@ class ExamWidget(QWidget):
         super().__init__()
 
         self.main_window = main_window
+        self.resize(500, 275)
         self.num = num
         self.list_of_words = sampleList.copy()
         self.counter = 0
@@ -675,8 +684,11 @@ class ExamWidget(QWidget):
 
         self.start_list = sampleList.copy()
         self.label = QLabel("Enter your translation:", self)
+        self.label.setFont(QFont("Arial", 16))
         self.line_edit = QLineEdit(self)
+        self.line_edit.setFont(QFont("Arial", 16))
         self.submit_button = QPushButton("Submit", self)
+        self.submit_button.setFont(QFont("Arial", 16))
 
         self.lcd_counter = QLCDNumber(self)
         self.lcd_counter.setDigitCount(3)
@@ -739,7 +751,7 @@ class ExamWidget(QWidget):
             self.current_word = self.list_of_words[self.indx]
 
         # Set the question label
-        self.label.setText(f"{self.current_word.getWord()}: ")
+        self.label.setText(f"Enter your translation for:   {self.current_word.getWord()} ")
 
         # Clear the answer line edit and result label
         self.line_edit.clear()
