@@ -23,6 +23,8 @@ Graphs
 Spanish
 
 - translate into Russian language words from db
+- add level column in lesson db
+- add special symbols - they are different from Dutch
 
 het and de
 
