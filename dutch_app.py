@@ -20,9 +20,6 @@ Graphs
 
 - learn possibiliets PyQT for graphs representation
 
-Spanish
-
-- translate into Russian language words from db
 
 het and de
 
@@ -886,6 +883,9 @@ class MainWindow(QMainWindow):
         repeat_btn.setStyleSheet(Styles.button_style)
         
         exam_btn = QPushButton('Exam', self)
+        exam_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        exam_btn.setStyleSheet(Styles.button_style)
+
         verb_btn = QPushButton('Verbs', self)
 
         next_lesson_btn.clicked.connect(self.next_lesson)
