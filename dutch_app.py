@@ -705,7 +705,11 @@ class ExamWidget(QWidget):
         hbox = QHBoxLayout(groupBox)
 
         # Create buttons with special characters
-        spec_buttons = ['à', 'ë', 'ï', 'é', 'è', 'ç', '’']
+        # Create buttons with special characters
+        if GlobalLanguage.file_path == 'data_files/spanish/':
+            spec_buttons = ['á', 'í', 'é', 'ó', 'ñ', 'ú', 'ü']
+        else:
+            spec_buttons = ['ö', 'ü', 'à', 'ë', 'ï', 'é', 'è', 'ê', '’']
         for char in spec_buttons:
             button = QPushButton(char, self)
             button.clicked.connect(lambda _, ch=char: self.insertChar(ch))

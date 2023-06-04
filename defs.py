@@ -45,11 +45,11 @@ def next_load():  # load data from existing file
     return words, lesson_df, exist, exam_df, verbs_df
 
 
-def sql_text(dffty, limit):
+def sql_text(dffty, limit, wl=100):
     text = f"""
     SELECT word, type, translation, russian, example, example_translation, appear, trial_d, trial_r, success, weight, word_index, difficulty, wd
     FROM words
-    WHERE wd = {dffty}
+    WHERE wd = {dffty} AND weight <= {wl}
     ORDER BY weight DESC, RANDOM()
     LIMIT {limit};
     """
@@ -78,7 +78,7 @@ def loadData(source, final='no', exam='no'):
         selected_words = []
         for difficulty, count in Difficulty.difficulty_distribution.items():
             # Retrieve 5 easy words
-            words_query = sql_text(difficulty, count)
+            words_query = sql_text(difficulty, count, wl=50)
             cursor.execute(words_query)
             selected_words = selected_words + cursor.fetchall()
         # close the database connection
