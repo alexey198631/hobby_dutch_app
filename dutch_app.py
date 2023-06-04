@@ -10,11 +10,11 @@ Base functuanality:
 
 Exam + Verbs
 
-- limit word choice (not it chooses from all words), it is necessary to choose from learned words with weight less < 50%.
-- create exam database with saving results + create verbs database (including new verbs from book and learndutch)
++ limit word choice (not it chooses from all words), it is necessary to choose from learned words with weight less < 50%.
++ create exam database with saving results + create verbs database (including new verbs from book and learndutch)
 - implement saving exam results into database
 - implement results window for exam version
-- implement language choice for exam: from learning language to base language
++ implemented language choice for exam: from learning language to base language
 
 Graphs
 
@@ -30,12 +30,12 @@ import pandas as pd
 from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QTime
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
-                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy)
+                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy, QMenu)
 
 from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon
 from defs import *
 import random
-from global_language import GlobalLanguage, Difficulty, Styles
+from global_language import GlobalLanguage, Difficulty, Styles, ExamSettings
 import sqlite3
 
 
@@ -741,6 +741,7 @@ class ExamWidget(QWidget):
     def next_word(self):
         if self.attempts == self.num:
             self.close()
+            self.main_window_back()
         elif self.indx == len(self.list_of_words):
             for word in self.list_to_delete:
                 self.list_of_words.remove(word)
@@ -752,14 +753,21 @@ class ExamWidget(QWidget):
             self.current_word = self.list_of_words[self.indx]
 
         # Set the question label
-        self.label.setText(f"Enter your translation for:   {self.current_word.getWord()} ")
+        if ExamSettings.exam_direction == 'to_english':
+            self.label.setText(f"Enter your translation for:   {self.current_word.getWord()} ")
+        else:
+            self.label.setText(f"Enter your translation for:   {self.current_word.getTranslation()} ")
+
 
         # Clear the answer line edit and result label
         self.line_edit.clear()
 
     def submit_text(self):
         text = self.line_edit.text()
-        translation = self.current_word.getTranslation()
+        if ExamSettings.exam_direction == 'to_english':
+            translation = self.current_word.getTranslation()
+        elif ExamSettings.exam_direction == 'from_english':
+            translation = self.current_word.getWord()
         translation = translation_with_comma(translation) # create list of all translations
         if text in translation:
             self.count += 1
@@ -784,6 +792,9 @@ class ExamWidget(QWidget):
     def insertChar(self, ch):
         # Insert character into QLineEdit
         self.line_edit.insert(ch)
+
+    def main_window_back(self):
+        self.main_window.show()
 
     def closeEvent(self, event):
         self.window_closed.emit()
@@ -878,6 +889,46 @@ class MainWindow(QMainWindow):
         self.very_hard_action.triggered.connect(self.choose_very_hard)
         self.diff_menu.addAction(self.very_hard_action)
 
+        # Difficulty menu and actions
+        self.exam_menu = self.menuBar().addMenu("Exam Settings")
+
+        # Create the 'direction' submenu
+        self.direction_submenu = QMenu("Direction", self)
+
+        # Create the 'to English' sub-action
+        self.to_english_action = QAction("To English", self)
+        self.to_english_action.triggered.connect(self.dutch_to_english)
+        self.direction_submenu.addAction(self.to_english_action)
+
+        # Create the 'from English' sub-action
+        self.from_english_action = QAction("From English", self)
+        self.from_english_action.triggered.connect(self.english_to_dutch)
+        self.direction_submenu.addAction(self.from_english_action)
+
+        # Add the 'direction' submenu to the 'Exam Settings' menu
+        self.exam_menu.addMenu(self.direction_submenu)
+
+        # Create the 'Length' submenu
+        self.lenght_submenu = QMenu("Length", self)
+
+        # Create the '25' sub-action
+        self.twentyfive = QAction("25", self)
+        self.twentyfive.triggered.connect(self.twenty_five)
+        self.lenght_submenu.addAction(self.twentyfive)
+
+        # Create the '50' sub-action
+        self.fifty = QAction("50", self)
+        self.fifty.triggered.connect(self.to_fifty)
+        self.lenght_submenu.addAction(self.fifty)
+
+        # Create the '100' sub-action
+        self.hundred = QAction("100", self)
+        self.hundred.triggered.connect(self.to_hundred)
+        self.lenght_submenu.addAction(self.hundred)
+
+        # Add the 'direction' submenu to the 'Exam Settings' menu
+        self.exam_menu.addMenu(self.lenght_submenu)
+
         next_lesson_btn = QPushButton('Next Lesson', self)
         next_lesson_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         next_lesson_btn.setStyleSheet(Styles.button_style)
@@ -906,6 +957,24 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
+
+    def dutch_to_english(self):
+        ExamSettings.set_direction('to_english')
+
+    def english_to_dutch(self):
+        ExamSettings.set_direction('from_english')
+
+    def twenty_five(self):
+        new_length = 25
+        ExamSettings.set_length(new_length)
+
+    def to_fifty(self):
+        new_length = 50
+        ExamSettings.set_length(new_length)
+
+    def to_hundred(self):
+        new_length = 100
+        ExamSettings.set_length(new_length)
 
     def reset(self):
         todefault()
@@ -980,7 +1049,7 @@ class MainWindow(QMainWindow):
         words = loadData('word')
         # preparation of word list
         wordList = loadWords(words)
-        self.exam_window = ExamWidget(self, sampleList=wordList, num=100)
+        self.exam_window = ExamWidget(self, sampleList=wordList, num=ExamSettings.exam_length)
         self.exam_window.move(100, 100)
         self.exam_window.show()
         self.close()  # here hide
