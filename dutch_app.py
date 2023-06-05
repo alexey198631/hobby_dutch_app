@@ -10,21 +10,22 @@ Base functuanality:
 
 Exam + Verbs
 
-- limit word choice (not it chooses from all words), it is necessary to choose from learned words with weight less < 50%.
-- create exam database with saving results + create verbs database (including new verbs from book and learndutch)
-- implement saving exam results into database
-- implement results window for exam version
-- implement language choice for exam: from learning language to base language
++ limit word choice (not it chooses from all words), it is necessary to choose from learned words with weight less < 50%.
++ create exam database with saving results + create verbs database (including new verbs from book and learndutch)
++ implement saving exam results into database
++ implement results window for exam version
++ implemented language choice for exam: from learning language to base language
+- show translation when wrong
+- better randomised choice of words for exam
 
 Graphs
 
 - learn possibiliets PyQT for graphs representation
 
-Spanish
-
-- translate into Russian language words from db
-- add level column in lesson db
-- add special symbols - they are different from Dutch
+- add difficulty information to printing functuanality, is it possible to have filter in these tables?
+- is it possible to make bold the last lesson in the table when printing
+- hints for words (1st letter, Last letter, random letter)
+- change pointing system - limit number of points = 1000 which is achiavable
 
 het and de
 
@@ -32,15 +33,15 @@ het and de
 """
 import sys
 import pandas as pd
-from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QTime
+from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QTime, QDateTime
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
-                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy)
+                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy, QMenu)
 
-from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon
+from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon, QColor
 from defs import *
 import random
-from global_language import GlobalLanguage, Difficulty, Styles
+from global_language import GlobalLanguage, Difficulty, Styles, ExamSettings
 import sqlite3
 
 
@@ -471,6 +472,7 @@ class InputCounterWidget(QWidget):
     def __init__(self, main_window, sampleList, awl, rever=0, lsn=999):
         super().__init__()
 
+        self.resize(500, 275)
         self.list_of_words = sampleList.copy()
         random.shuffle(self.list_of_words)
 
@@ -499,9 +501,12 @@ class InputCounterWidget(QWidget):
         self.main_window = main_window
         self.start_list = sampleList.copy()
         self.label = QLabel("Enter your translation:", self)
+        self.label.setFont(QFont("Arial", 16))
         self.line_edit = QLineEdit(self)
+        self.line_edit.setFont(QFont("Arial", 16))
         #self.line_edit.setFont(font)
         self.submit_button = QPushButton("Submit", self)
+        self.submit_button.setFont(QFont("Arial", 16))
 
         self.lcd_counter = QLCDNumber(self)
         self.lcd_counter.setDigitCount(3)
@@ -520,8 +525,14 @@ class InputCounterWidget(QWidget):
         groupBox = QGroupBox('Special Characters', self)
         hbox = QHBoxLayout(groupBox)
 
+
+
         # Create buttons with special characters
-        spec_buttons = ['à', 'ë', 'ï', 'é', 'è', 'ç', '’']
+        if GlobalLanguage.file_path == 'data_files/spanish/':
+            spec_buttons = ['á', 'í', 'é', 'ó', 'ñ', 'ú', 'ü']
+        else:
+            spec_buttons = ['ö', 'ü', 'à', 'ë', 'ï', 'é', 'è', 'ê', '’']
+
         for char in spec_buttons:
             button = QPushButton(char, self)
             button.clicked.connect(lambda _, ch=char: self.insertChar(ch))
@@ -582,9 +593,9 @@ class InputCounterWidget(QWidget):
 
         # Set the question label
         if self.rever == 0:
-            self.label.setText(f"{self.current_word.getWord()}: ")
+            self.label.setText(f"Enter your translation for:   {self.current_word.getWord()} ")
         elif self.rever == 1:
-            self.label.setText(f"{self.current_word.getTranslation()}: ")
+            self.label.setText(f"Enter your translation for:   {self.current_word.getTranslation()} ")
 
         # Clear the answer line edit and result label
         self.line_edit.clear()
@@ -649,6 +660,220 @@ class InputCounterWidget(QWidget):
         self.text_window.move(100, 100)
         self.text_window.show()
         self.text_window.window_closed.connect(self.main_window_back)
+
+    def main_window_back(self):
+        self.main_window.show()
+
+    def closeEvent(self, event):
+        self.window_closed.emit()
+        super().closeEvent(event)
+
+
+class ExamWidget(QWidget):
+    window_closed = pyqtSignal()
+
+    def __init__(self, main_window, sampleList, num):
+        super().__init__()
+
+        self.main_window = main_window
+        self.resize(500, 275)
+        self.start_time = QTime.currentTime()
+        self.num = num
+        self.list_of_words = sampleList.copy()
+        self.total_weight = round(sum([i.getWeight() for i in sampleList]), 2)
+        self.total_words = total_exam_words()
+        self.counter = 0
+        self.setWindowTitle(f'Exam session - [{self.counter}]')
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_title)
+        self.timer.start(1000)  # Update title every second
+
+        self.start_list = sampleList.copy()
+        self.label = QLabel("Enter your translation:", self)
+        self.label.setFont(QFont("Arial", 16))
+        self.line_edit = QLineEdit(self)
+        self.line_edit.setFont(QFont("Arial", 16))
+        self.submit_button = QPushButton("Submit", self)
+        self.submit_button.setFont(QFont("Arial", 16))
+
+        self.lcd_counter = QLCDNumber(self)
+        self.lcd_counter.setDigitCount(3)
+        self.lcd_counter_pts = QLCDNumber(self)
+        self.lcd_counter_pts.setDigitCount(3)
+
+        self.count = 0
+        self.attempts = 0
+        self.indx = 0
+        self.list_to_delete = []
+
+        self.submit_button.clicked.connect(self.submit_text)
+        self.line_edit.returnPressed.connect(self.submit_button.click)
+
+        # Create QGroupBox for special character buttons
+        groupBox = QGroupBox('Special Characters', self)
+        hbox = QHBoxLayout(groupBox)
+
+        # Create buttons with special characters
+        # Create buttons with special characters
+        if GlobalLanguage.file_path == 'data_files/spanish/':
+            spec_buttons = ['á', 'í', 'é', 'ó', 'ñ', 'ú', 'ü']
+        else:
+            spec_buttons = ['ö', 'ü', 'à', 'ë', 'ï', 'é', 'è', 'ê', '’']
+        for char in spec_buttons:
+            button = QPushButton(char, self)
+            button.clicked.connect(lambda _, ch=char: self.insertChar(ch))
+            hbox.addWidget(button)
+
+        # Vertical layout with label for words/translations
+        layout = QVBoxLayout()
+        layout.addWidget(self.label)
+        # Horizontal layout with line_edit and submit button under the words/translation label
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(self.line_edit)
+        hlayout.addWidget(self.submit_button)
+        layout.addLayout(hlayout)
+
+        hlayout2 = QHBoxLayout()
+        hlayout2.addWidget(self.lcd_counter)
+        hlayout2.addWidget(self.lcd_counter_pts)
+        layout.addLayout(hlayout2)
+        layout.addWidget(groupBox)
+        self.setLayout(layout)
+
+        # Start quiz
+        self.next_word()
+
+    def update_title(self):
+        self.counter += 1
+        self.setWindowTitle(f'Exam session - [{self.counter}] - [{self.num - self.attempts}]')
+
+    def next_word(self):
+        if self.attempts == self.num:
+            current_time = QTime.currentTime()
+            elapsed_time = self.start_time.secsTo(current_time)
+            self.time_minutes = elapsed_time // 60
+            self.time_seconds = elapsed_time % 60
+            self.finalresults()
+        elif self.indx == len(self.list_of_words):
+            for word in self.list_to_delete:
+                self.list_of_words.remove(word)
+            self.list_to_delete = []
+            self.indx = 0
+            random.shuffle(self.list_of_words)
+            self.current_word = self.list_of_words[self.indx]
+        else:
+            self.current_word = self.list_of_words[self.indx]
+
+        # Set the question label
+        if ExamSettings.exam_direction == 'to_english':
+            self.label.setText(f"Enter your translation for:   {self.current_word.getWord()} ")
+        else:
+            self.label.setText(f"Enter your translation for:   {self.current_word.getTranslation()} ")
+
+
+        # Clear the answer line edit and result label
+        self.line_edit.clear()
+
+    def submit_text(self):
+        text = self.line_edit.text()
+        if ExamSettings.exam_direction == 'to_english':
+            translation = self.current_word.getTranslation()
+        elif ExamSettings.exam_direction == 'from_english':
+            translation = self.current_word.getWord()
+        translation = translation_with_comma(translation) # create list of all translations
+        if text in translation:
+            self.count += 1
+            self.attempts += 1
+            self.list_to_delete.append(self.current_word)
+            self.indx += 1
+            self.lcd_counter.display(self.count)
+            self.lcd_counter_pts.display(self.attempts)
+            self.next_word()
+        else:
+            self.indx += 1
+            self.attempts += 1
+            self.lcd_counter_pts.display(self.attempts)
+            self.next_word()
+
+    def finalresults(self):
+        self.close()
+        self.main_window.hide()
+
+        if ExamSettings.exam_direction == 'to_english':
+            lang = 'nl'
+        else:
+            lang = 'en'
+
+        # Connect to the database
+        conn = sqlite3.connect('data_files/exams.db')
+        cursor = conn.cursor()
+        # Execute the query
+        cursor.execute(f"SELECT COALESCE(MAX(prcnt), 0) FROM exams WHERE size = {self.num} AND lang = '{lang}'")
+        # Fetch the result
+        best_result = cursor.fetchone()[0]
+        best_result = round(best_result, 0)
+        # Close the database connection
+        conn.close()
+
+        correct_answers, total_questions, time_minutes, time_seconds, best_result = self.count, self.attempts, self.time_minutes, self.time_seconds, best_result
+
+        self.exam_results_window = ExamResultsWidget(self, correct_answers, total_questions, time_minutes, time_seconds, best_result)
+        self.exam_results_window.move(100, 100)
+        self.exam_results_window.show()
+        self.exam_results_window.window_closed.connect(self.main_window_back)
+        current_date = QDateTime.currentDateTime().date()
+        datetime = QDateTime(current_date, self.start_time)
+        formatted_datetime = datetime.toString("yy-MM-dd hh:mm:ss.zzz")
+        prcnt = round((self.count / self.num) * 100, 1)
+        exam_sql(formatted_datetime, self.num, prcnt, self.total_words, lang, self.total_weight)
+
+    def hideMe(self):
+        self.hide()
+
+    def shoeMe(self):
+        self.show()
+
+    def insertChar(self, ch):
+        # Insert character into QLineEdit
+        self.line_edit.insert(ch)
+
+    def main_window_back(self):
+        self.main_window.show()
+
+    def closeEvent(self, event):
+        self.window_closed.emit()
+        self.main_window_back()
+        super().closeEvent(event)
+
+
+class ExamResultsWidget(QWidget):
+    window_closed = pyqtSignal()
+
+    def __init__(self, main_window, correct_answers, total_questions, time_minutes, time_seconds, best_result):
+        super().__init__()
+
+        self.main_window = main_window
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        font = QFont("Arial", 16)
+
+        result_label = QLabel(f"Results: {correct_answers}/{total_questions}")
+        result_label.setFont(font)
+        result_color = QColor("green") if correct_answers > best_result else QColor("red")
+        result_label.setStyleSheet(f"color: {result_color.name()};")
+
+        time_label = QLabel(f"Time: {time_minutes:02d}:{time_seconds:02d}")
+        time_label.setFont(font)
+
+        best_result_label = QLabel(f"Best Result: {best_result}/{total_questions}")
+        best_result_label.setFont(font)
+
+        layout.addWidget(result_label)
+        layout.addWidget(time_label)
+        layout.addWidget(best_result_label)
+
+        self.setWindowTitle("Exam Results")
 
     def main_window_back(self):
         self.main_window.show()
@@ -746,6 +971,46 @@ class MainWindow(QMainWindow):
         self.very_hard_action.triggered.connect(self.choose_very_hard)
         self.diff_menu.addAction(self.very_hard_action)
 
+        # Difficulty menu and actions
+        self.exam_menu = self.menuBar().addMenu("Exam Settings")
+
+        # Create the 'direction' submenu
+        self.direction_submenu = QMenu("Direction", self)
+
+        # Create the 'to English' sub-action
+        self.to_english_action = QAction("To English", self)
+        self.to_english_action.triggered.connect(self.dutch_to_english)
+        self.direction_submenu.addAction(self.to_english_action)
+
+        # Create the 'from English' sub-action
+        self.from_english_action = QAction("From English", self)
+        self.from_english_action.triggered.connect(self.english_to_dutch)
+        self.direction_submenu.addAction(self.from_english_action)
+
+        # Add the 'direction' submenu to the 'Exam Settings' menu
+        self.exam_menu.addMenu(self.direction_submenu)
+
+        # Create the 'Length' submenu
+        self.lenght_submenu = QMenu("Length", self)
+
+        # Create the '25' sub-action
+        self.twentyfive = QAction("25", self)
+        self.twentyfive.triggered.connect(self.twenty_five)
+        self.lenght_submenu.addAction(self.twentyfive)
+
+        # Create the '50' sub-action
+        self.fifty = QAction("50", self)
+        self.fifty.triggered.connect(self.to_fifty)
+        self.lenght_submenu.addAction(self.fifty)
+
+        # Create the '100' sub-action
+        self.hundred = QAction("100", self)
+        self.hundred.triggered.connect(self.to_hundred)
+        self.lenght_submenu.addAction(self.hundred)
+
+        # Add the 'direction' submenu to the 'Exam Settings' menu
+        self.exam_menu.addMenu(self.lenght_submenu)
+
         next_lesson_btn = QPushButton('Next Lesson', self)
         next_lesson_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         next_lesson_btn.setStyleSheet(Styles.button_style)
@@ -755,6 +1020,9 @@ class MainWindow(QMainWindow):
         repeat_btn.setStyleSheet(Styles.button_style)
         
         exam_btn = QPushButton('Exam', self)
+        exam_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        exam_btn.setStyleSheet(Styles.button_style)
+
         verb_btn = QPushButton('Verbs', self)
 
         next_lesson_btn.clicked.connect(self.next_lesson)
@@ -771,6 +1039,24 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
+
+    def dutch_to_english(self):
+        ExamSettings.set_direction('to_english')
+
+    def english_to_dutch(self):
+        ExamSettings.set_direction('from_english')
+
+    def twenty_five(self):
+        new_length = 25
+        ExamSettings.set_length(new_length)
+
+    def to_fifty(self):
+        new_length = 50
+        ExamSettings.set_length(new_length)
+
+    def to_hundred(self):
+        new_length = 100
+        ExamSettings.set_length(new_length)
 
     def reset(self):
         todefault()
@@ -840,7 +1126,15 @@ class MainWindow(QMainWindow):
         self.close() #here hide
 
     def exam(self):
-        pass
+        new_diff = 'exam'
+        Difficulty.set_difficluty(new_diff)
+        words = loadData('word')
+        # preparation of word list
+        wordList = loadWords(words)
+        self.exam_window = ExamWidget(self, sampleList=wordList, num=ExamSettings.exam_length)
+        self.exam_window.move(100, 100)
+        self.exam_window.show()
+        self.close()  # here hide
 
     def verbs(self):
         pass
