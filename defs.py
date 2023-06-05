@@ -828,4 +828,36 @@ def repeat_difficulty(words):
     else:
         return 'very hard'
 
+def exam_sql(exam_date, size, prcnt, words, lang, total_weight):
+    # Connect to the database
+    conn = sqlite3.connect(GlobalLanguage.file_path + 'exams.db')
+    cursor = conn.cursor()
+    # Determine the values for the new row
+    next_n = cursor.execute('SELECT MAX(n) FROM exams').fetchone()[0] + 1
+
+    # Insert the new row into the 'exams' table
+    cursor.execute("INSERT INTO exams (n, date, size, prcnt, words, lang, total_weight) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                   (next_n, exam_date, size, prcnt, words, lang, total_weight))
+
+    # Commit the changes and close the connection
+    conn.commit()
+    conn.close()
+
+def total_exam_words():
+    # Connect to the SQLite database
+    conn = sqlite3.connect(GlobalLanguage.file_path + 'words.db')
+    cursor = conn.cursor()
+
+    # Execute the SQL query to count rows where weight >= 50
+    cursor.execute('SELECT COUNT(*) FROM words WHERE weight <= 50')
+
+    # Fetch the count value from the cursor
+    row_count = cursor.fetchone()[0]
+
+    # Close the database connection
+    conn.close()
+
+    return row_count
+
+    print(f"Number of rows where weight >= 50: {row_count}")
 

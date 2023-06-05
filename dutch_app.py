@@ -12,9 +12,11 @@ Exam + Verbs
 
 + limit word choice (not it chooses from all words), it is necessary to choose from learned words with weight less < 50%.
 + create exam database with saving results + create verbs database (including new verbs from book and learndutch)
-- implement saving exam results into database
-- implement results window for exam version
++ implement saving exam results into database
++ implement results window for exam version
 + implemented language choice for exam: from learning language to base language
+- show translation when wrong
+- better randomised choice of words for exam
 
 Graphs
 
@@ -27,12 +29,12 @@ het and de
 """
 import sys
 import pandas as pd
-from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QTime
+from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QTime, QDateTime
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
                              QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy, QMenu)
 
-from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon
+from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon, QColor
 from defs import *
 import random
 from global_language import GlobalLanguage, Difficulty, Styles, ExamSettings
@@ -671,8 +673,11 @@ class ExamWidget(QWidget):
 
         self.main_window = main_window
         self.resize(500, 275)
+        self.start_time = QTime.currentTime()
         self.num = num
         self.list_of_words = sampleList.copy()
+        self.total_weight = round(sum([i.getWeight() for i in sampleList]), 2)
+        self.total_words = total_exam_words()
         self.counter = 0
         self.setWindowTitle(f'Exam session - [{self.counter}]')
         self.timer = QTimer(self)
@@ -740,8 +745,11 @@ class ExamWidget(QWidget):
 
     def next_word(self):
         if self.attempts == self.num:
-            self.close()
-            self.main_window_back()
+            current_time = QTime.currentTime()
+            elapsed_time = self.start_time.secsTo(current_time)
+            self.time_minutes = elapsed_time // 60
+            self.time_seconds = elapsed_time % 60
+            self.finalresults()
         elif self.indx == len(self.list_of_words):
             for word in self.list_to_delete:
                 self.list_of_words.remove(word)
@@ -783,6 +791,38 @@ class ExamWidget(QWidget):
             self.lcd_counter_pts.display(self.attempts)
             self.next_word()
 
+    def finalresults(self):
+        self.close()
+        self.main_window.hide()
+
+        if ExamSettings.exam_direction == 'to_english':
+            lang = 'nl'
+        else:
+            lang = 'en'
+
+        # Connect to the database
+        conn = sqlite3.connect('data_files/exams.db')
+        cursor = conn.cursor()
+        # Execute the query
+        cursor.execute(f"SELECT COALESCE(MAX(prcnt), 0) FROM exams WHERE size = {self.num} AND lang = '{lang}'")
+        # Fetch the result
+        best_result = cursor.fetchone()[0]
+        best_result = round(best_result, 0)
+        # Close the database connection
+        conn.close()
+
+        correct_answers, total_questions, time_minutes, time_seconds, best_result = self.count, self.attempts, self.time_minutes, self.time_seconds, best_result
+
+        self.exam_results_window = ExamResultsWidget(self, correct_answers, total_questions, time_minutes, time_seconds, best_result)
+        self.exam_results_window.move(100, 100)
+        self.exam_results_window.show()
+        self.exam_results_window.window_closed.connect(self.main_window_back)
+        current_date = QDateTime.currentDateTime().date()
+        datetime = QDateTime(current_date, self.start_time)
+        formatted_datetime = datetime.toString("yy-MM-dd hh:mm:ss.zzz")
+        prcnt = round((self.count / self.num) * 100, 1)
+        exam_sql(formatted_datetime, self.num, prcnt, self.total_words, lang, self.total_weight)
+
     def hideMe(self):
         self.hide()
 
@@ -792,6 +832,44 @@ class ExamWidget(QWidget):
     def insertChar(self, ch):
         # Insert character into QLineEdit
         self.line_edit.insert(ch)
+
+    def main_window_back(self):
+        self.main_window.show()
+
+    def closeEvent(self, event):
+        self.window_closed.emit()
+        self.main_window_back()
+        super().closeEvent(event)
+
+
+class ExamResultsWidget(QWidget):
+    window_closed = pyqtSignal()
+
+    def __init__(self, main_window, correct_answers, total_questions, time_minutes, time_seconds, best_result):
+        super().__init__()
+
+        self.main_window = main_window
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        font = QFont("Arial", 16)
+
+        result_label = QLabel(f"Results: {correct_answers}/{total_questions}")
+        result_label.setFont(font)
+        result_color = QColor("green") if correct_answers > best_result else QColor("red")
+        result_label.setStyleSheet(f"color: {result_color.name()};")
+
+        time_label = QLabel(f"Time: {time_minutes:02d}:{time_seconds:02d}")
+        time_label.setFont(font)
+
+        best_result_label = QLabel(f"Best Result: {best_result}/{total_questions}")
+        best_result_label.setFont(font)
+
+        layout.addWidget(result_label)
+        layout.addWidget(time_label)
+        layout.addWidget(best_result_label)
+
+        self.setWindowTitle("Exam Results")
 
     def main_window_back(self):
         self.main_window.show()
