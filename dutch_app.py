@@ -546,7 +546,6 @@ class InputCounterWidget(QWidget):
         hlayout.addWidget(self.line_edit)
         hlayout.addWidget(self.submit_button)
         layout.addLayout(hlayout)
-
         hlayout2 = QHBoxLayout()
         hlayout2.addWidget(self.lcd_counter)
         hlayout2.addWidget(self.lcd_counter_pts)
