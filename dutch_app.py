@@ -10,11 +10,6 @@ Base functuanality:
 
 Exam + Verbs
 
-+ limit word choice (not it chooses from all words), it is necessary to choose from learned words with weight less < 50%.
-+ create exam database with saving results + create verbs database (including new verbs from book and learndutch)
-+ implement saving exam results into database
-+ implement results window for exam version
-+ implemented language choice for exam: from learning language to base language
 - show translation when wrong
 - better randomised choice of words for exam
 
