@@ -7,6 +7,8 @@ Base functuanality:
 - is it possible to make bold the last lesson in the table when printing
 - hints for words (1st letter, Last letter, random letter)
 - change pointing system - limit number of points = 1000 which is achiavable
+- change light for buttons with weight != 100
+- name results window with level and filter level results
 
 Exam + Verbs
 
@@ -348,6 +350,8 @@ class ButtonGridWidget(QWidget):
                 else:
                     button = QPushButton(f'{wrd.getWord()}', self)  # \n | \n {sample[i * 5 + j].getTranslation()}
                 button.setFixedSize(200, 100)
+                if wrd.getWeight() != 100.0:
+                    button.setStyleSheet("background-color: lightblue")
                 button.clicked.connect(lambda _, i=i, j=j: self.on_button_clicked(i, j))
 
                 grid_layout.addWidget(button, i, j)
@@ -375,10 +379,11 @@ class ButtonGridWidget(QWidget):
                 sender.setText(f'{self.shared_object_list[i * 5 + j].getTyp()} \n \n {self.shared_object_list[i * 5 + j].getWord()}')
             else:
                 sender.setText(f'{self.shared_object_list[i * 5 + j].getWord()}')
-            sender.setStyleSheet("")
+            sender.setStyleSheet(sender.property('original_style')) # Restore the original style for words which were learnt before
             self.counter_click -= 1
         else:
             sender.setProperty('clicked', True)
+            sender.setProperty('original_style', sender.styleSheet()) # Store the original style
             sender.setText(
                 f'{self.shared_object_list[i * 5 + j].getTranslation()} \n | \n {self.shared_object_list[i * 5 + j].getRussian()}')
             sender.setStyleSheet("background-color: green")  # change the background color of the clicked button
