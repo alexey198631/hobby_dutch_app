@@ -653,7 +653,7 @@ class InputCounterWidget(QWidget):
         self.input_translation_widget.window_closed.connect(self.placing)
 
     def placing(self):
-        data = place()
+        data = place(dif=Difficulty.difficulty)
         # Create and show the text window
         self.text_window = TextWindow(self, data=data, after_lesson=1)
         self.text_window.move(100, 100)
@@ -891,8 +891,6 @@ class MainWindow(QMainWindow):
 
         # File menu and actions
         self.file_menu = self.menuBar().addMenu("File")
-
-
 
         self.file_menu.addSeparator()
 
