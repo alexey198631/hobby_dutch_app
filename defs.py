@@ -398,14 +398,14 @@ def place(t=0, cond=0, dif=0):
     cursor = conn.cursor()
 
     # Get the known value of the last row
-    cursor.execute("SELECT known, level FROM lessons ORDER BY rowid DESC LIMIT 1")
+    cursor.execute("SELECT known FROM lessons ORDER BY rowid DESC LIMIT 1")
     rep = cursor.fetchone()[0]
 
     # Prepare the base SQL query
     if rep != 25:
-        sql = f"SELECT * FROM lessons WHERE known != 25"
+        sql = f"SELECT * FROM lessons WHERE known != 25 AND level == '{dif}'"
     else:
-        sql = f"SELECT * FROM lessons WHERE known == 25"
+        sql = f"SELECT * FROM lessons WHERE known == 25 AND level == '{dif}'"
 
     # Execute the SQL query
     cursor.execute(sql)
