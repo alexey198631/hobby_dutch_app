@@ -10,6 +10,8 @@ Base functuanality:
 - change light for buttons with weight != 100
 - name results window with level and filter level results
 
+- name place() window
+
 Exam + Verbs
 
 - show translation when wrong
@@ -128,6 +130,8 @@ class TextWindow(QMainWindow):
         widget = QWidget()
         layout = QVBoxLayout()
         widget.setLayout(layout)
+
+        self.setWindowTitle(f'{data[2]}')
 
         # Create a table widget and add it to the layout
         self.table_widget = QTableWidget()
@@ -653,7 +657,7 @@ class InputCounterWidget(QWidget):
         self.input_translation_widget.window_closed.connect(self.placing)
 
     def placing(self):
-        data = place(dif=Difficulty.difficulty)
+        data = place()
         # Create and show the text window
         self.text_window = TextWindow(self, data=data, after_lesson=1)
         self.text_window.move(100, 100)

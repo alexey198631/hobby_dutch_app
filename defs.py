@@ -392,14 +392,17 @@ def for_inter_time(df, lessonNumber, known):
     return lessn
 
 
-def place(t=0, cond=0, dif=0):
+def place(t=0, cond=0):
 
     conn = sqlite3.connect(GlobalLanguage.file_path + 'lessons.db')
     cursor = conn.cursor()
 
     # Get the known value of the last row
-    cursor.execute("SELECT known FROM lessons ORDER BY rowid DESC LIMIT 1")
-    rep = cursor.fetchone()[0]
+    cursor.execute("SELECT known, level FROM lessons ORDER BY rowid DESC LIMIT 1")
+    result = cursor.fetchone()
+    if result is not None:
+        rep = result[0]
+        dif = result[1]
 
     # Prepare the base SQL query
     if rep != 25:
@@ -435,7 +438,7 @@ def place(t=0, cond=0, dif=0):
     # Close the connection
     conn.close()
 
-    return best_lessons, columns_names
+    return best_lessons, columns_names, dif
 
 
 """
