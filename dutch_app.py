@@ -3,14 +3,9 @@ Sprints:
 
 Base functuanality:
 
-- add difficulty information to printing functuanality, is it possible to have filter in these tables?
-- is it possible to make bold the last lesson in the table when printing
+- is it possible to make bold the last lesson in the table when printing, filter?
 - hints for words (1st letter, Last letter, random letter)
 - change pointing system - limit number of points = 1000 which is achiavable
-- change light for buttons with weight != 100
-- name results window with level and filter level results
-
-- name place() window
 
 Exam + Verbs
 
@@ -131,7 +126,12 @@ class TextWindow(QMainWindow):
         layout = QVBoxLayout()
         widget.setLayout(layout)
 
-        self.setWindowTitle(f'{data[2]}')
+        try:
+            self.setWindowTitle(f'{data[2]}')
+        except:
+            self.setWindowTitle('results')
+
+
 
         # Create a table widget and add it to the layout
         self.table_widget = QTableWidget()

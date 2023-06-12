@@ -404,6 +404,7 @@ def place(t=0, cond=0):
         rep = result[0]
         dif = result[1]
 
+
     # Prepare the base SQL query
     if rep != 25:
         sql = f"SELECT * FROM lessons WHERE known != 25 AND level == '{dif}'"
@@ -439,6 +440,8 @@ def place(t=0, cond=0):
     conn.close()
 
     return best_lessons, columns_names, dif
+
+
 
 
 """
