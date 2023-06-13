@@ -426,11 +426,14 @@ def place(t=0, cond=0):
     # Find the place of the last row
     last_row = next((row for row in data if row[1] == last_lesson), None)
     last_place = last_row[0]
+    current_index = last_place
 
     # Get the best lessons and ensure the last lesson is included if not already in the top 10
     best_lessons = data[:10]
     if last_place > 10:
         best_lessons.append(last_row)
+        # index for making bold
+        current_index = 10
 
     # Format the data for output
     best_lessons = [('Lesson ' + str(row[1]), row[2], row[3], row[0]) for row in best_lessons]
@@ -439,7 +442,7 @@ def place(t=0, cond=0):
     # Close the connection
     conn.close()
 
-    return best_lessons, columns_names, dif
+    return best_lessons, columns_names, dif, current_index
 
 
 

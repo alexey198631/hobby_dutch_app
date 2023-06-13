@@ -3,7 +3,6 @@ Sprints:
 
 Base functuanality:
 
-- is it possible to make bold the last lesson in the table when printing, filter?
 - hints for words (1st letter, Last letter, random letter)
 - change pointing system - limit number of points = 1000 which is achiavable
 
@@ -15,7 +14,6 @@ Exam + Verbs
 Graphs
 
 - learn possibiliets PyQT for graphs representation
-
 - add difficulty information to printing functuanality, is it possible to have filter in these tables?
 - is it possible to make bold the last lesson in the table when printing
 - hints for words (1st letter, Last letter, random letter)
@@ -32,7 +30,7 @@ from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QTime, QDateTime
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
                              QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy, QMenu)
 
-from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon, QColor
+from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon, QColor, QBrush
 from defs import *
 import random
 from global_language import GlobalLanguage, Difficulty, Styles, ExamSettings
@@ -118,19 +116,17 @@ class TextWindow(QMainWindow):
         if after_lesson != 0:
             # Set the fixed size of the window
             self.setFixedSize(450, 410)
+            self.setWindowTitle(f'{data[2]}')
+            self.current_index = data[3]
         else:
             self.setFixedSize(350, 380)
+            self.setWindowTitle('results')
+            self.current_index = False
 
         # Create a widget to hold the table and text input field
         widget = QWidget()
         layout = QVBoxLayout()
         widget.setLayout(layout)
-
-        try:
-            self.setWindowTitle(f'{data[2]}')
-        except:
-            self.setWindowTitle('results')
-
 
 
         # Create a table widget and add it to the layout
@@ -193,6 +189,13 @@ class TextWindow(QMainWindow):
                 if j != 0:
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)  # Set the text alignment of the cell to center
                     item.setData(Qt.ItemDataRole.DisplayRole, float(val))  # Set the data type of the cell to float
+                # Check if the current row is the one you want to make bold
+                if self.current_index and i == self.current_index:
+                    font = item.font()
+                    font.setBold(True)
+                    item.setFont(font)
+                    brush = QBrush(QColor(230, 230, 230))  # Create a light grey brush
+                    item.setBackground(brush)
                 self.table_widget.setItem(i, j, item)
 
     def sort_table(self, logical_index):
