@@ -101,8 +101,6 @@ def loadData(source, final='no', exam='no'):
         return list_of_lessons,  max(list_of_lessons) + 1
 
 
-
-
 def loadWords(words_data):  # data frame from xlsx file with words, it creates list of class Words
     list_of_words = []
     for row in words_data:
