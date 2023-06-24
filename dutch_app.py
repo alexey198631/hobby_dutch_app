@@ -10,8 +10,7 @@ Base functuanality:
 
 Exam + Verbs
 
-- show translation when wrong
-- better randomised choice of words for exam
+- check best results in exam mode.. something not right with new achievement results
 
 Graphs
 
@@ -741,11 +740,14 @@ class ExamWidget(QWidget):
         hlayout.addWidget(self.submit_button)
         layout.addLayout(hlayout)
 
+        self.label_answer = QLabel("", self)
+
         hlayout2 = QHBoxLayout()
         hlayout2.addWidget(self.lcd_counter)
         hlayout2.addWidget(self.lcd_counter_pts)
         layout.addLayout(hlayout2)
         layout.addWidget(groupBox)
+        layout.addWidget(self.label_answer)
         self.setLayout(layout)
 
         # Start quiz
@@ -783,6 +785,7 @@ class ExamWidget(QWidget):
         self.line_edit.clear()
 
     def submit_text(self):
+
         text = self.line_edit.text()
         if ExamSettings.exam_direction == 'to_english':
             translation = self.current_word.getTranslation()
@@ -798,6 +801,7 @@ class ExamWidget(QWidget):
             self.lcd_counter_pts.display(self.attempts)
             self.next_word()
         else:
+            self.label_answer.setText(f"Right answer: {translation[0]} ")
             self.indx += 1
             self.attempts += 1
             self.lcd_counter_pts.display(self.attempts)
@@ -1134,12 +1138,14 @@ class MainWindow(QMainWindow):
     def exam(self):
         new_diff = 'exam'
         Difficulty.set_difficluty(new_diff)
-        words = loadData('word')
+        words = loadData('word', exam='yes')
         # preparation of word list
         wordList = loadWords(words)
         self.exam_window = ExamWidget(self, sampleList=wordList, num=ExamSettings.exam_length)
         self.exam_window.move(100, 100)
         self.exam_window.show()
+        new_diff = 'standard'
+        Difficulty.set_difficluty(new_diff)
         self.close()  # here hide
 
     def verbs(self):

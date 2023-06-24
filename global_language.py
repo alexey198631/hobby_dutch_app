@@ -46,13 +46,14 @@ class Difficulty:
         elif new_dif == 'very hard':
             cls.difficulty_distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 5, 7: 5, 8: 5, 9: 4, 10: 3, 11: 2, 12: 1}
         elif new_dif == 'exam' and ExamSettings.exam_length == 100:
-            cls.difficulty_distribution = {0: 10, 1: 10, 2: 10, 3: 10, 4: 10, 5: 10, 6: 10, 7: 10, 8: 10, 9: 10}
+            cls.difficulty_distribution = [100, 30.0]
         elif new_dif == 'exam' and ExamSettings.exam_length == 50:
-            cls.difficulty_distribution = {0: 5, 1: 5, 2: 5, 3: 5, 4: 5, 5: 5, 6: 5, 7: 5, 8: 5, 9: 5}
+            cls.difficulty_distribution = [50, 50.0]
         elif new_dif == 'exam' and ExamSettings.exam_length == 25:
-            cls.difficulty_distribution = {0: 2, 1: 2, 2: 2, 3: 3, 4: 3, 5: 3, 6: 3, 7: 3, 8: 2, 9: 2}
+            cls.difficulty_distribution = [25, 70.0]
 
-        cls.difficulty_distribution = shuffle_dictionary(cls.difficulty_distribution)
+        if new_dif != 'exam':
+            cls.difficulty_distribution = shuffle_dictionary(cls.difficulty_distribution)
 
 
 class Styles:

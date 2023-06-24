@@ -64,7 +64,7 @@ def loadData(source, final='no', exam='no'):
     # connect to the SQLite database and read the data into a pandas dataframe
     conn = sqlite3.connect(GlobalLanguage.file_path + f'/{source}s.db')
 
-    if source == 'word' and final == 'no':
+    if source == 'word' and final == 'no' and exam == 'no':
         cursor = conn.cursor()
         # Sample words from each difficulty level based on difficulty and weight
         selected_words = []
@@ -78,14 +78,19 @@ def loadData(source, final='no', exam='no'):
         return selected_words
     elif source == 'word' and exam == 'yes':
         cursor = conn.cursor()
-        # Sample words from each difficulty level based on difficulty and weight
-        selected_words = []
-        for difficulty, count in Difficulty.difficulty_distribution.items():
-            # Retrieve 5 easy words
-            words_query = sql_text(difficulty, count, wl=50, exm='yes')
-            cursor.execute(words_query)
-            selected_words = selected_words + cursor.fetchall()
+        length, weight = Difficulty.difficulty_distribution
+        # Execute the SQL query
+        cursor.execute(f"SELECT * FROM words WHERE weight <= {weight}")
+        # Fetch all the rows
+        rows = cursor.fetchall()
+        # Extract values from the 'word_index' column and store in a list
+        word_index_list = [row[11] for row in rows]
+        # Choose 'n' = length random indexes from the list
+        random_indexes = random.sample(range(len(word_index_list)), length)
+        # Retrieve the corresponding rows using the random indexes
+        selected_words = [rows[index] for index in random_indexes]
         # close the database connection
+        cursor.close()
         conn.close()
         return selected_words
     if source == 'lesson':
