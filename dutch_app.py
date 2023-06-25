@@ -10,7 +10,7 @@ Base functuanality:
 
 Exam + Verbs
 
-- check best results in exam mode.. something not right with new achievement results
+- check spanish version
 
 Graphs
 
@@ -823,6 +823,7 @@ class ExamWidget(QWidget):
         cursor.execute(f"SELECT COALESCE(MAX(prcnt), 0) FROM exams WHERE size = {self.num} AND lang = '{lang}'")
         # Fetch the result
         best_result = cursor.fetchone()[0]
+
         best_result = round(best_result, 0)
         # Close the database connection
         conn.close()
@@ -836,8 +837,8 @@ class ExamWidget(QWidget):
         current_date = QDateTime.currentDateTime().date()
         datetime = QDateTime(current_date, self.start_time)
         formatted_datetime = datetime.toString("yy-MM-dd hh:mm:ss.zzz")
-        prcnt = round((self.count / self.num) * 100, 1)
-        exam_sql(formatted_datetime, self.num, prcnt, self.total_words, lang, self.total_weight)
+        #prcnt = round((self.count / self.num) * 100, 1)
+        exam_sql(formatted_datetime, self.num, self.count, self.total_words, lang, self.total_weight)
 
     def hideMe(self):
         self.hide()
@@ -877,6 +878,8 @@ class ExamResultsWidget(QWidget):
 
         time_label = QLabel(f"Time: {time_minutes:02d}:{time_seconds:02d}")
         time_label.setFont(font)
+
+        best_result = int(best_result)
 
         best_result_label = QLabel(f"Best Result: {best_result}/{total_questions}")
         best_result_label.setFont(font)
