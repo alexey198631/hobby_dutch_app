@@ -31,7 +31,7 @@ from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QTime, QDateTime
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
                              QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy, QMenu)
 
-from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon, QColor, QBrush
+from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon, QColor, QBrush, QPalette
 from defs import *
 import random
 from global_language import GlobalLanguage, Difficulty, Styles, ExamSettings
@@ -504,6 +504,11 @@ class InputCounterWidget(QWidget):
         self.timer.timeout.connect(self.update_title)
         self.timer.start(1000)  # Update title every second
 
+        # fine for help with letter
+        self.penalty = 0
+        self.push_help_w = 0
+        self.push_help_t = 0
+
         self.all_words = awl
         self.rever = rever
         self.main_window = main_window
@@ -537,14 +542,18 @@ class InputCounterWidget(QWidget):
 
         # Create buttons with special characters
         if GlobalLanguage.file_path == 'data_files/spanish/':
-            spec_buttons = ['á', 'í', 'é', 'ó', 'ñ', 'ú', 'ü']
+            spec_buttons = ['1L', 'á', 'í', 'é', 'ó', 'ñ', 'ú', 'ü']
         else:
-            spec_buttons = ['ö', 'ü', 'à', 'ë', 'ï', 'é', 'è', 'ê', '’']
+            spec_buttons = ['1L', 'ö', 'ü', 'à', 'ë', 'ï', 'é', 'è', 'ê', '’']
 
         for char in spec_buttons:
             button = QPushButton(char, self)
+            if char == '1L':
+                button.setFixedSize(35, 21)
+                button.setStyleSheet("QPushButton {background-color: lightgreen; border-radius: 5px; padding: 5px;}")
             button.clicked.connect(lambda _, ch=char: self.insertChar(ch))
             hbox.addWidget(button)
+
 
         # Vertical layout with label for words/translations
         layout = QVBoxLayout()
@@ -567,19 +576,19 @@ class InputCounterWidget(QWidget):
     def update_title(self):
         self.counter += 1
         if self.rever == 0:
-            self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{2000 - self.counter - self.attempts + self.count}]')
+            self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{2000 - self.counter - self.attempts + self.count - self.penalty}]')
         elif self.rever == 1:
-            self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{1725 - self.counter - self.attempts + self.count + self.lesson.getInterPoints()}]')
+            self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{1725 - self.counter - self.attempts + self.count + self.lesson.getInterPoints() - self.penalty}]')
 
     def next_word(self):
         if self.count == 25 and self.rever == 0:
             self.rever = 1
-            self.lesson.points(250 - self.attempts)
+            self.lesson.points(250 - self.attempts - self.penalty)
             self.lesson.inter(datetime.now())
             self.list_to_delete = []
             self.start_translation()
         elif self.count == 25 and self.rever == 1:
-            self.lesson.add_pts(250 - self.attempts)
+            self.lesson.add_pts(250 - self.attempts - self.penalty)
             self.lesson.finish(datetime.now())
             final_creation_sql(self.all_words, self.lesson)
             self.close()
@@ -644,8 +653,18 @@ class InputCounterWidget(QWidget):
         self.show()
 
     def insertChar(self, ch):
+
         # Insert character into QLineEdit
-        self.line_edit.insert(ch)
+        if ch == '1L':
+            if self.rever == 0 and self.push_help_w == 0:
+                self.penalty += 10
+                self.push_help_w = 1
+                self.line_edit.insert(self.current_word.getTranslation()[0][0])
+            elif self.rever == 1 and self.push_help_t == 0:
+                self.push_help_t = 1
+                self.line_edit.insert(self.current_word.getWord()[0][0])
+        else:
+            self.line_edit.insert(ch)
 
     def start_translation(self):
         self.close()
@@ -717,19 +736,23 @@ class ExamWidget(QWidget):
         self.line_edit.returnPressed.connect(self.submit_button.click)
 
         # Create QGroupBox for special character buttons
-        groupBox = QGroupBox('Special Characters', self)
+        groupBox = QGroupBox('Open the first letter or use Special Characters', self)
         hbox = QHBoxLayout(groupBox)
 
         # Create buttons with special characters
         # Create buttons with special characters
         if GlobalLanguage.file_path == 'data_files/spanish/':
-            spec_buttons = ['á', 'í', 'é', 'ó', 'ñ', 'ú', 'ü']
+            spec_buttons = ['1L', 'á', 'í', 'é', 'ó', 'ñ', 'ú', 'ü']
         else:
-            spec_buttons = ['ö', 'ü', 'à', 'ë', 'ï', 'é', 'è', 'ê', '’']
+            spec_buttons = ['1L', 'ö', 'ü', 'à', 'ë', 'ï', 'é', 'è', 'ê', '’']
         for char in spec_buttons:
             button = QPushButton(char, self)
+            if char == '1L':
+                button.setFixedSize(35, 21)
+                button.setStyleSheet("QPushButton {background-color: lightgreen; border-radius: 5px; padding: 5px;}")
             button.clicked.connect(lambda _, ch=char: self.insertChar(ch))
             hbox.addWidget(button)
+
 
         # Vertical layout with label for words/translations
         layout = QVBoxLayout()
@@ -788,11 +811,11 @@ class ExamWidget(QWidget):
 
         text = self.line_edit.text()
         if ExamSettings.exam_direction == 'to_english':
-            translation = self.current_word.getTranslation()
+            self.translation = self.current_word.getTranslation()
         elif ExamSettings.exam_direction == 'from_english':
-            translation = self.current_word.getWord()
-        translation = translation_with_comma(translation) # create list of all translations
-        if text in translation:
+            self.translation = self.current_word.getWord()
+        self.translation = translation_with_comma(self.translation) # create list of all translations
+        if text in self.translation:
             self.count += 1
             self.attempts += 1
             self.list_to_delete.append(self.current_word)
@@ -801,7 +824,7 @@ class ExamWidget(QWidget):
             self.lcd_counter_pts.display(self.attempts)
             self.next_word()
         else:
-            self.label_answer.setText(f"Right answer: {translation[0]} ")
+            self.label_answer.setText(f"Right answer: {self.translation[0]} ")
             self.indx += 1
             self.attempts += 1
             self.lcd_counter_pts.display(self.attempts)
@@ -848,7 +871,13 @@ class ExamWidget(QWidget):
 
     def insertChar(self, ch):
         # Insert character into QLineEdit
-        self.line_edit.insert(ch)
+        if ch == '1L':
+            if ExamSettings.exam_direction == 'to_english':
+                self.line_edit.insert(self.current_word.getTranslation()[0][0])
+            else:
+                self.line_edit.insert(self.current_word.getWord()[0][0])
+        else:
+            self.line_edit.insert(ch)
 
     def main_window_back(self):
         self.main_window.show()
