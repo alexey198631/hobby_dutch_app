@@ -506,8 +506,7 @@ class InputCounterWidget(QWidget):
 
         # fine for help with letter
         self.penalty = 0
-        self.push_help_w = 0
-        self.push_help_t = 0
+        self.guess_count = 0
 
         self.all_words = awl
         self.rever = rever
@@ -552,6 +551,7 @@ class InputCounterWidget(QWidget):
                 button.setFixedSize(35, 21)
                 button.setStyleSheet("QPushButton {background-color: lightgreen; border-radius: 5px; padding: 5px;}")
             button.clicked.connect(lambda _, ch=char: self.insertChar(ch))
+            button.clicked.connect(self.buttonClicked)
             hbox.addWidget(button)
 
 
@@ -572,6 +572,11 @@ class InputCounterWidget(QWidget):
 
         # Start quiz
         self.next_word()
+
+    def buttonClicked(self):
+        if self.guess_count == 3:
+            button = self.sender()  # Get the button that was clicked
+            button.setStyleSheet("QPushButton {background-color: red; border-radius: 5px; padding: 5px;}")
 
     def update_title(self):
         self.counter += 1
@@ -656,13 +661,17 @@ class InputCounterWidget(QWidget):
 
         # Insert character into QLineEdit
         if ch == '1L':
-            if self.rever == 0 and self.push_help_w == 0:
+            if self.rever == 0 and self.guess_count != 3:
+                cword = self.current_word.getTranslation()[0][0]
+                self.line_edit.insert(cword)
                 self.penalty += 10
-                self.push_help_w = 1
-                self.line_edit.insert(self.current_word.getTranslation()[0][0])
-            elif self.rever == 1 and self.push_help_t == 0:
-                self.push_help_t = 1
-                self.line_edit.insert(self.current_word.getWord()[0][0])
+                self.guess_count += 1
+
+            elif self.rever == 1 and self.guess_count != 3:
+                tword = self.current_word.getWord()[0][0]
+                self.line_edit.insert(tword)
+                self.penalty += 10
+                self.guess_count += 1
         else:
             self.line_edit.insert(ch)
 
