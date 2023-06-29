@@ -3,7 +3,6 @@ Sprints:
 
 Base functuanality:
 
-- hints for words (1st letter, Last letter, random letter)
 - change pointing system - limit number of points = 1000 which is achiavable
 - when printing top results - it should depend on difficulty
 - overall - нужно указать сложности

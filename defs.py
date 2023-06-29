@@ -629,11 +629,12 @@ def nine_nine_nine(sample, sample_weights):
 
 
 def bottom_not_repeated():
+    dif = Difficulty.difficulty
     conn = sqlite3.connect(GlobalLanguage.file_path + f'/lessons.db')
     cursor = conn.cursor()
 
     # Prepare the SQL query
-    sql = """
+    sql = f"""
     SELECT r AS Lesson, time AS Time, points AS Points
     FROM (
         SELECT r, time, points
@@ -641,6 +642,7 @@ def bottom_not_repeated():
             SELECT r, time, points, 
             ROW_NUMBER() OVER(PARTITION BY r ORDER BY points DESC) rn
             FROM lessons
+            WHERE level = '{dif}' -- Additional condition
         )
         WHERE rn = 1
         ORDER BY points ASC
