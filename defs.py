@@ -8,43 +8,6 @@ from word_plot import *
 from global_language import GlobalLanguage, Difficulty
 
 
-def initial_load() -> object:  # load data from init file - xlsx with words
-    """
-
-    :rtype: object
-    """
-    words = pd.read_excel('data_files/init_words.xlsx', sheet_name='words')
-    lesson_df = pd.DataFrame()
-    exist = 'no'
-
-    return words, lesson_df, exist
-
-
-def next_load():  # load data from existing file
-    words = pd.read_excel('data_files/dutch.xlsx', sheet_name='update')
-    words = words.loc[:, 'word':]
-    lesson_df = pd.read_excel('data_files/dutch.xlsx', sheet_name='lesson')
-    lesson_df = lesson_df.loc[:, 'lesson':]
-    verbs_df = pd.read_excel('data_files/dutch.xlsx', sheet_name='verbs')
-    verbs_df = verbs_df.loc[:, 'translation':]
-    try:
-        exam_df = pd.read_excel('data_files/dutch.xlsx', sheet_name='exams')
-        exam_df = exam_df.loc[:, 'n#':]
-
-    except:
-        exam_df = pd.DataFrame()
-        exam_df['n#'] = 0
-        exam_df['date'] = 0
-        exam_df['size'] = 0
-        exam_df['%'] = 0
-        exam_df['words'] = 0
-        exam_df['lang'] = 0
-
-    exist = 'yes'
-
-    return words, lesson_df, exist, exam_df, verbs_df
-
-
 def sql_text(dffty, limit, wl=100, exm='no'):
     if exm != 'no':
         wd = 'difficulty'
@@ -158,69 +121,6 @@ def help_for_guess(word, r):  # r - number of letters
     back = ' '.join(list_of_word)
 
     return back
-
-
-def right_word(word, translation, rever=0):
-    point_counter = 0
-    if rever == 1:
-        while True:
-            x = input(f'\nPress "1","2","3" to open 1, 2, 3 letters in the word\n\n {translation}: ')
-            if x == word:
-                return [True, point_counter]
-            elif x == '1' or x == '2' or x == '3':
-                print(help_for_guess(word, int(x)))
-                point_counter += int(x)
-            else:
-                return [False, point_counter]
-
-    elif rever == 0:
-        translation = translation_with_comma(translation)
-        while True:
-            x = input(f'\nPress "1","2","3" to open 1, 2, 3 letters in the word\n\n {word}: ')
-            if x in translation:
-                return [True, point_counter]
-            elif x == '1' or x == '2' or x == '3':
-                print(help_for_guess(translation[0], int(x)))
-                point_counter += int(x)
-            else:
-                return [False, point_counter]
-
-
-def cycle(sample_of_words, rever):
-    p = 250
-    s = sample_of_words.copy()
-    while len(s) > 0:
-        random.shuffle(s)
-        lst_to_delete = []
-        for i in s:
-            temp = right_word(i.getWord(), i.getTranslation(), rever)
-            if temp[0]:
-                print("\nRIGHT!")
-                p = p - temp[1]
-                i.addSuccess()
-                if rever == 0:
-                    i.addTrials_d()
-                else:
-                    i.addTrials_r()
-                lst_to_delete.append(i)
-            else:
-                print("\nWRONG!")
-                p = p - temp[1]
-                p -= 1
-                if rever == 0:
-                    i.addTrials_d()
-                else:
-                    i.addTrials_r()
-        if len(lst_to_delete) > 0:
-            for w in lst_to_delete:
-                s.remove(w)
-            if len(s) != 0:
-                plotting(s)
-        else:
-            if len(s) != 0:
-                plotting(s)
-    print(p,'\n')
-    return p
 
 
 def list_to_list(lst):
@@ -448,164 +348,6 @@ def place(t=0, cond=0):
     return best_lessons, columns_names, dif, current_index
 
 
-
-
-"""
-def place(df, t=0, cond=0):
-    lesson = df.copy()
-    rep = int(lesson.loc[:, "known"][-1:].values[0])
-    if rep != 25:
-        mod_lesson = lesson[lesson.known != 25]
-    else:
-        mod_lesson = lesson[lesson.known == 25]
-
-    if cond == 0:
-
-        last = mod_lesson.loc[:, "r"][-1:].values[0]
-        last_points = mod_lesson.loc[:, "points"][-1:].values[0]
-        last_lesson = mod_lesson.tail(1)  # Extract the last row
-
-        mod_lesson = mod_lesson.sort_values(by='points', ascending=False, ignore_index=True)
-        place = mod_lesson[mod_lesson['points'] == last_points].index[0] + 1
-        last_lesson['Place'] = place
-
-        best_lessons = mod_lesson.head(10)
-        best_lessons = best_lessons.reset_index()
-        best_lessons = best_lessons.rename(columns={'index': 'Place'})
-        best_lessons['Place'] = best_lessons['Place'] + 1
-
-        if last not in best_lessons['r'].values:
-            final_result = pd.concat([best_lessons, last_lesson], ignore_index=True)
-        else:
-            final_result = best_lessons
-
-        final_result = final_result.loc[:, ['r', 'time', 'points', 'Place']]
-        final_result = final_result.rename(columns={'r': 'Lesson', 'time': 'Time', 'points': 'Pts'})
-        final_result['Place'] = final_result['Place'].astype(int)
-        final_result['Lesson'] = final_result['Lesson'].astype(str)
-        final_result['Lesson'] = 'Lesson ' + final_result['Lesson']
-
-        return final_result
-
-    elif cond != 0:
-        last_points = mod_lesson.loc[:, "points"][-1:].values[0]
-        mod_lesson = mod_lesson.sort_values(by='points', ascending=True, ignore_index=True)
-        place = mod_lesson[mod_lesson['points'] == last_points].index[0]
-
-
-        print(f'1. Lesson {mod_lesson.loc[0, "r"]:.0f} - {mod_lesson.loc[0, "points"]:.0f} sec \
-                      \n2. Lesson {mod_lesson.loc[1, "r"]:.0f} - {mod_lesson.loc[1, "points"]:.0f} sec \
-                      \n3. Lesson {mod_lesson.loc[2, "r"]:.0f} - {mod_lesson.loc[2, "points"]:.0f} sec \
-                      \n------------------------ \
-                      \n{t} sec, place {(place + 1):.0f}, difference {- int(mod_lesson.loc[0, "points"]) + int(t)} \
-                      ')
-"""
-
-def final_creation(exist, words, wordList, lessonNumber, lesson_df, sample, exam_df, verbs_df):
-
-    if exist == 'yes':
-        dutch = words.copy()
-
-        for i in range(len(dutch)):
-            dutch.loc[i, 'appear'] = wordList[i].getAppear()
-            dutch.loc[i, 'trial_d'] = wordList[i].getTrials_d()
-            dutch.loc[i, 'trial_r'] = wordList[i].getTrials_r()
-            dutch.loc[i, 'success'] = wordList[i].getSuccess()
-            dutch.loc[i, 'weight'] = wordList[i].getWeight()
-            dutch.loc[i, 'word_index'] = wordList[i].getWordIndex()
-            dutch.loc[i, 'difficulty'] = wordList[i].getDifficulty()
-            dutch.loc[i, 'wd'] = wordList[i].getWD()
-
-
-        row = lesson_df.loc[:, 'lesson'][-1:].values[0]
-        lesson_df.loc[row, 'lesson'] = lesson_df.loc[:, 'lesson'][-1:].values[0] + 1
-        lesson_df.loc[row, 'start'] = lessonNumber.getStart()
-        lesson_df.loc[row, 'inter'] = lessonNumber.getInter()
-        lesson_df.loc[row, 'finish'] = lessonNumber.getFinish()
-        lesson_df.loc[row, 'known'] = lessonNumber.getNumber_of_easy()
-        lesson_df.loc[row, 'points'] = lessonNumber.getPoints()
-        lesson_df.loc[row, 'length'] = lessonNumber.getLength_of_lesson()
-        lesson_df.loc[row, 'time'] = lessonNumber.getTime()
-        lesson_df.loc[row, 'list_of_words'] = list_to_list(lessonNumber.getList())
-        lesson_df.loc[row, 'r'] = lessonNumber.getNumber()
-
-    else:
-
-        dutch = words.copy()
-
-        dutch['appear'] = 0
-        dutch['trial_d'] = 0
-        dutch['trial_r'] = 0
-        dutch['success'] = 0
-        dutch['weight'] = 100
-
-        for i in range(len(dutch)):
-            dutch.loc[i, 'appear'] = wordList[i].getAppear()
-            dutch.loc[i, 'trial_d'] = wordList[i].getTrials_d()
-            dutch.loc[i, 'trial_r'] = wordList[i].getTrials_r()
-            dutch.loc[i, 'success'] = wordList[i].getSuccess()
-            dutch.loc[i, 'weight'] = wordList[i].getWeight()
-            dutch.loc[i, 'word_index'] = wordList[i].getWordIndex()
-            dutch.loc[i, 'difficulty'] = wordList[i].getDifficulty()
-            dutch.loc[i, 'wd'] = wordList[i].getWD()
-
-        lesson_df['lesson'] = 0
-        lesson_df['start'] = 0
-        lesson_df['inter'] = 0
-        lesson_df['finish'] = 0
-        lesson_df['known'] = 0
-        lesson_df['points'] = 0
-        lesson_df['length'] = 0
-        lesson_df['time'] = 0
-        lesson_df['list_of_words'] = []
-
-        lesson_df.loc[0, 'lesson'] = lessonNumber.getNumber()
-        lesson_df.loc[0, 'start'] = lessonNumber.getStart()
-        lesson_df.loc[0, 'inter'] = lessonNumber.getInter()
-        lesson_df.loc[0, 'finish'] = lessonNumber.getFinish()
-        lesson_df.loc[0, 'known'] = lessonNumber.getNumber_of_easy()
-        lesson_df.loc[0, 'points'] = lessonNumber.getPoints()
-        lesson_df.loc[0, 'length'] = lessonNumber.getLength_of_lesson()
-        lesson_df.loc[0, 'time'] = lessonNumber.getTime()
-        lesson_df.loc[0, 'list_of_words'] = list_to_list(lessonNumber.getList())
-        lesson_df.loc[0, 'r'] = lessonNumber.getNumber()
-
-    writer = pd.ExcelWriter('data_files/dutch.xlsx', engine='xlsxwriter')
-    dutch.to_excel(writer, sheet_name='update')
-    lesson_df.to_excel(writer, sheet_name='lesson')
-    exam_df.to_excel(writer, sheet_name='exams')
-    verbs_df.to_excel(writer, sheet_name='verbs')
-    writer.save()
-
-    temp = []
-    for w in sample:
-        try:
-            math.isnan(w.getTyp())
-            temp.append(w)
-        except:
-            if re.search(r'de', w.getTyp()) and not re.search(r'het', w.getTyp()):
-                print('de', w)
-            elif re.search(r'het', w.getTyp()) and not re.search(r'de', w.getTyp()):
-                print('het', w)
-            elif re.search(r'het', w.getTyp()) and re.search(r'de', w.getTyp()):
-                print('de/het', w)
-            else:
-                print(w)
-    for t in temp:
-        print(t)
-
-    print('\n', 'EXAMPLES', '\n')
-
-    for w in sample:
-        try:
-            math.isnan(w.getExample_nl())
-        except:
-            print(w.getWord(), '->', w.getExample_nl(), '->', w.getExample_en(), '\n')
-
-    print('Lesson #:', lessonNumber.getNumber(), 'time spent:', lessonNumber.getTime(), 'points: ',
-          lessonNumber.getPoints(), '\n')
-
-
 def initial_weight(sample):
     sample_weights = {}
     for w in sample:
@@ -627,9 +369,8 @@ def nine_nine_nine(sample, sample_weights):
     print(f'Progress for {count} words from {len(sample)}. Good job!')
 
 
-
 def bottom_not_repeated():
-    dif = Difficulty.difficulty
+    difficulty = Difficulty.difficulty
     conn = sqlite3.connect(GlobalLanguage.file_path + f'/lessons.db')
     cursor = conn.cursor()
 
@@ -642,7 +383,7 @@ def bottom_not_repeated():
             SELECT r, time, points, 
             ROW_NUMBER() OVER(PARTITION BY r ORDER BY points DESC) rn
             FROM lessons
-            WHERE level = '{dif}' -- Additional condition
+            WHERE level = '{difficulty}' -- Additional condition
         )
         WHERE rn = 1
         ORDER BY points ASC
@@ -667,14 +408,15 @@ def bottom_not_repeated():
 
 
 def topbottom(top=1):
+    difficulty = Difficulty.difficulty
     conn = sqlite3.connect(GlobalLanguage.file_path + f'/lessons.db')
     cursor = conn.cursor()
     # Prepare the basic SQL query
-    sql = "SELECT r AS Lesson, time AS Time, points AS Pts FROM lessons"
+    sql = "SELECT r AS Lesson, time AS Time, points AS Pts, level as Difficulty FROM lessons"
 
     # Add conditions to the SQL query based on the top parameter
     if top != 'overall':
-        sql += " WHERE known != 25"
+        sql += f" WHERE known != 25 AND level = '{difficulty}'"
     if top == 0:
         sql += " ORDER BY Pts ASC, Time DESC LIMIT 10"
     elif top == 'all' or top == 'overall':
@@ -689,8 +431,8 @@ def topbottom(top=1):
     # Close the connection
     conn.close()
     # Convert the data into the required format
-    data = [('Lesson ' + str(lesson), time, pts) for lesson, time, pts in data]
-    column_names = ['Lesson', 'Time', 'Pts']
+    data = [('Lesson ' + str(lesson), time, pts, level) for lesson, time, pts, level in data]
+    column_names = ['Lesson', 'Time', 'Pts', 'Difficulty']
 
     return data, column_names
 

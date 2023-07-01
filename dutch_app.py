@@ -1,15 +1,10 @@
 """
 Sprints:
 
-Base functuanality:
-
-- change pointing system - limit number of points = 1000 which is achiavable
-- when printing top results - it should depend on difficulty
-- overall - нужно указать сложности
-
 Exam + Verbs
 
 - check spanish version
+- create verbs functionality only for dutch? or for spanish as well?
 
 Graphs
 
@@ -22,6 +17,7 @@ Graphs
 het and de
 
 - add this functuanality for dutch version
+
 """
 import sys
 import pandas as pd
@@ -112,12 +108,13 @@ class TextWindow(QMainWindow):
         super().__init__()
 
         self.main_window = main_window
+        self.after_lesson = after_lesson
 
-        if after_lesson != 0:
+        if self.after_lesson != 0:
             # Set the fixed size of the window
             self.setFixedSize(450, 410)
             self.setWindowTitle(f'{data[2]}')
-            self.current_index = data[3]
+            self.current_index = data[3] - 1
         else:
             self.setFixedSize(350, 380)
             self.setWindowTitle('results')
@@ -138,7 +135,7 @@ class TextWindow(QMainWindow):
         self.table_widget.setColumnWidth(1, 200)  # Set the width of the second column to 200 pixels
         self.table_widget.setColumnWidth(2, 200)  # Set the width of the second column to 200 pixels
 
-        if after_lesson != 0:
+        if self.after_lesson != 0:
             self.table_widget.setColumnWidth(3, 200)  # Set the width of the second column to 200 pixels
 
         # Set the column names
@@ -150,7 +147,7 @@ class TextWindow(QMainWindow):
         if data is not None:
             self.populate_table(data)
 
-        if after_lesson == 0:
+        if self.after_lesson == 0:
             # Create a button to go to Main Menu
             submit_button = QPushButton("Main Menu")
             submit_button.clicked.connect(self.main_window_back)
@@ -182,21 +179,42 @@ class TextWindow(QMainWindow):
         self.table_widget.setRowCount(len(table_data))
         self.table_widget.setColumnCount(len(table_data[0]))
 
-        # Populate the table with the data
-        for i, row in enumerate(table_data):
-            for j, val in enumerate(row):
-                item = QTableWidgetItem(val)  #item = QTableWidgetItem(str(val))
-                if j != 0:
-                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)  # Set the text alignment of the cell to center
-                    item.setData(Qt.ItemDataRole.DisplayRole, float(val))  # Set the data type of the cell to float
-                # Check if the current row is the one you want to make bold
-                if self.current_index and i == self.current_index:
-                    font = item.font()
-                    font.setBold(True)
-                    item.setFont(font)
-                    brush = QBrush(QColor(230, 230, 230))  # Create a light grey brush
-                    item.setBackground(brush)
-                self.table_widget.setItem(i, j, item)
+
+        if self.after_lesson == 0:
+            # Populate the table with the data
+            for i, row in enumerate(table_data):
+                for j, val in enumerate(row):
+                    item = QTableWidgetItem(val)  #item = QTableWidgetItem(str(val))
+                    if j != 0 and j != 3:
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)  # Set the text alignment of the cell to center
+                        item.setData(Qt.ItemDataRole.DisplayRole, float(val))  # Set the data type of the cell to float
+                    # Check if the current row is the one you want to make bold
+                    if self.current_index and i == self.current_index:
+                        font = item.font()
+                        font.setBold(True)
+                        item.setFont(font)
+                        brush = QBrush(QColor(230, 230, 230))  # Create a light grey brush
+                        item.setBackground(brush)
+                    self.table_widget.setItem(i, j, item)
+        else:
+            # Populate the table with the data
+            for i, row in enumerate(table_data):
+                for j, val in enumerate(row):
+                    item = QTableWidgetItem(val)  # item = QTableWidgetItem(str(val))
+                    if j != 0:
+                        item.setTextAlignment(
+                            Qt.AlignmentFlag.AlignCenter)  # Set the text alignment of the cell to center
+                        item.setData(Qt.ItemDataRole.DisplayRole, float(val))  # Set the data type of the cell to float
+                    # Check if the current row is the one you want to make bold
+                    if self.current_index and i == self.current_index:
+                        font = item.font()
+                        font.setBold(True)
+                        item.setFont(font)
+                        brush = QBrush(QColor(230, 230, 230))  # Create a light grey brush
+                        item.setBackground(brush)
+                    self.table_widget.setItem(i, j, item)
+
+
 
     def sort_table(self, logical_index):
         # Get the current sort order for the column
