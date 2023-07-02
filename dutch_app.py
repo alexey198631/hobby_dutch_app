@@ -1092,6 +1092,8 @@ class MainWindow(QMainWindow):
         exam_btn.setStyleSheet(Styles.button_style)
 
         verb_btn = QPushButton('Verbs', self)
+        verb_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        verb_btn.setStyleSheet(Styles.button_style)
 
         next_lesson_btn.clicked.connect(self.next_lesson)
         repeat_btn.clicked.connect(self.repeat)
@@ -1207,7 +1209,11 @@ class MainWindow(QMainWindow):
         self.close()  # here hide
 
     def verbs(self):
-        pass
+        words = loadVerbsData('verb')
+        wordList = loadVerbs(words)
+        for w in wordList:
+            print(w)
+
 
     def choose_dutch(self):
         new_value = 'data_files/'

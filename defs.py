@@ -69,6 +69,29 @@ def loadData(source, final='no', exam='no'):
         return list_of_lessons,  max(list_of_lessons) + 1
 
 
+def sql_verbs_text():
+    text = f"""
+    SELECT verb, translation, past_singular, past_participle, appear, trial_d, trial_r, success, weight, time_spent
+    FROM verbs
+    ORDER BY weight DESC, RANDOM()
+    LIMIT 25;
+    """
+    return text
+
+
+def loadVerbsData(source): # data frame from xlsx file with verbs, it creates list of class Verbs
+    # connect to the SQLite database and read the data into a pandas dataframe
+    conn = sqlite3.connect(GlobalLanguage.file_path + f'/{source}s.db')
+    cursor = conn.cursor()
+    selected_words = []
+    words_query = sql_verbs_text()
+    cursor.execute(words_query)
+    selected_words = selected_words + cursor.fetchall()
+    # close the database connection
+    conn.close()
+    return selected_words
+
+
 def loadWords(words_data):  # data frame from xlsx file with words, it creates list of class Words
     list_of_words = []
     for row in words_data:
@@ -77,13 +100,11 @@ def loadWords(words_data):  # data frame from xlsx file with words, it creates l
     return list_of_words
 
 
-def loadVerbs(df_words):  # data frame from xlsx file with verbs, it creates list of class Verbs
+def loadVerbs(words_data):
     list_of_words = []
-    for i in range(len(df_words)):
-        list_of_words.append(
-            Verbs(df_words.iloc[i, 1], df_words.iloc[i, 2], df_words.iloc[i, 3], df_words.iloc[i, 0],
-                  df_words.iloc[i, 4],
-                  df_words.iloc[i, 5], df_words.iloc[i, 6], df_words.iloc[i, 7], df_words.iloc[i, 8], df_words.iloc[i, 9]))
+    for row in words_data:
+        word = Verbs(*row)
+        list_of_words.append(word)
     return list_of_words
 
 
