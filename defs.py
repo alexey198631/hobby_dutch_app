@@ -350,7 +350,7 @@ def place(t=0, cond=0):
     # Find the place of the last row
     last_row = next((row for row in data if row[1] == last_lesson), None)
     last_place = last_row[0]
-    current_index = last_place
+    current_index = last_place - 1
 
     # Get the best lessons and ensure the last lesson is included if not already in the top 10
     best_lessons = data[:10]

@@ -114,7 +114,7 @@ class TextWindow(QMainWindow):
             # Set the fixed size of the window
             self.setFixedSize(450, 410)
             self.setWindowTitle(f'{data[2]}')
-            self.current_index = data[3] - 1
+            self.current_index = data[3]
         else:
             self.setFixedSize(350, 380)
             self.setWindowTitle('results')
