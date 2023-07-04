@@ -1214,6 +1214,8 @@ class MainWindow(QMainWindow):
         for w in wordList:
             print(w)
 
+        raise NotImplementedError('Sorry, this functionality is not implemented yet!')
+
 
     def choose_dutch(self):
         new_value = 'data_files/'
