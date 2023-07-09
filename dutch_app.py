@@ -1,6 +1,8 @@
 """
 Sprints:
 
+- chekc the first place in placing - not working
+
 Exam + Verbs
 
 - check spanish version
@@ -1246,7 +1248,6 @@ class MainWindow(QMainWindow):
     def choose_very_hard(self):
         new_diff = 'very hard'
         Difficulty.set_difficluty(new_diff)
-        print(Difficulty.difficulty_distribution)
 
     def print_lesson_words(self):
         self.text_widget = TextWidget(self)
