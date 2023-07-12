@@ -1212,9 +1212,7 @@ class MainWindow(QMainWindow):
 
     def verbs(self):
         words = loadVerbsData('verb')
-        wordList = loadVerbs(words)
-        for w in wordList:
-            print(w)
+
 
         raise NotImplementedError('Sorry, this functionality is not implemented yet!')
 

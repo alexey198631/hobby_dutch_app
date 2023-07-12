@@ -89,7 +89,11 @@ def loadVerbsData(source): # data frame from xlsx file with verbs, it creates li
     selected_words = selected_words + cursor.fetchall()
     # close the database connection
     conn.close()
-    return selected_words
+    list_of_verbs = []
+    for row in selected_words:
+        verb = Verbs(*row)
+        list_of_verbs.append(verb)
+    return list_of_verbs
 
 
 def loadWords(words_data):  # data frame from xlsx file with words, it creates list of class Words
