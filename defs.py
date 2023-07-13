@@ -355,7 +355,7 @@ def place(t=0, cond=0):
     last_row = next((row for row in data if row[1] == last_lesson), None)
     last_place = last_row[0]
     if last_place == 1:
-        current_index = 1
+        current_index = 0
     else:
         current_index = last_place - 1
 
