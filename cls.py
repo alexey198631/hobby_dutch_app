@@ -194,7 +194,7 @@ class Verbs(Words):
 
     ts: object
 
-    def __init__(self, word, second, third, translation, appear, trial_d, trial_r, success,
+    def __init__(self, word, translation, second, third, appear, trial_d, trial_r, success,
                  weight, timespent):
         self.word = word
         self.second = second
