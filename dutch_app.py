@@ -336,8 +336,6 @@ class ButtonGridWidget(QWidget):
             words = loadData('word')
             # preparation of word list
             wordList = loadWords(words)
-
-            #sample = random_sample(wordList, 25)
             sample = wordList
 
             try:
@@ -493,6 +491,67 @@ class ButtonGridWidgetSpare(QWidget):
         super().closeEvent(event)
 
 
+class ButtonGridWidgetVerbs(QWidget):
+    window_closed = pyqtSignal()
+    sampleList = pyqtSignal(list)
+
+    def __init__(self):
+        super().__init__()
+
+        verbs = loadVerbsData('verb')
+        sample = verbs
+
+        # set the title name for the widget
+        self.counter = 0
+        self.setWindowTitle(f'Learning Verbs - [{self.counter}]')
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_title)
+        self.timer.start(1000)  # Update title every second
+
+        # adding apperance for each verb in a sample of words
+        [verb.addAppear() for verb in sample]
+
+        self.shared_object_list = sample
+        #self.all_word_list = wordList
+        self.save = sample.copy()
+        self.counter_click = 0  # initialize the counter variable
+        grid_layout = QGridLayout()
+
+        for i in range(5):
+            vrb = self.shared_object_list[i]
+            for j in range(5):
+                if j == 0:
+                    button = QPushButton(f'{vrb.getWord()}', self)
+                elif j == 1:
+                    button = QPushButton(f'{vrb.getSecond()}', self)
+                elif j == 2:
+                    button = QPushButton(f'{vrb.getThird()}', self)
+                elif j == 3:
+                    button = QPushButton(f'{vrb.getTranslation()}', self)
+                else:
+                    button = QPushButton(f'{vrb.getWeight()}', self)
+                button.setFixedSize(200, 100)
+                if vrb.getWeight() != 100.0:
+                    button.setStyleSheet("background-color: lightblue")
+                grid_layout.addWidget(button, i, j)
+        # Create a button to go next
+        next_button = QPushButton("Next")
+        next_button.clicked.connect(self.close)
+        next_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        next_button.setStyleSheet(Styles.button_style)
+        grid_layout.addWidget(next_button, i+1, j)
+        self.setLayout(grid_layout)
+
+    def update_title(self):
+        self.counter += 1
+        self.setWindowTitle(f'Learning Verbs - [{self.counter}]')
+
+    def closeEvent(self, event):
+        self.window_closed.emit()
+        self.sampleList.emit([self.shared_object_list]) # emit sample of words and lesson object
+        super().closeEvent(event)
+
+
 class InputCounterWidget(QWidget):
     window_closed = pyqtSignal()
 
@@ -603,6 +662,220 @@ class InputCounterWidget(QWidget):
             self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{2000 - self.counter - self.attempts + self.count - self.penalty}]')
         elif self.rever == 1:
             self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{1725 - self.counter - self.attempts + self.count + self.lesson.getInterPoints() - self.penalty}]')
+
+    def next_word(self):
+        if self.count == 25 and self.rever == 0:
+            self.rever = 1
+            self.lesson.points(250 - self.attempts - self.penalty)
+            self.lesson.inter(datetime.now())
+            self.list_to_delete = []
+            self.start_translation()
+        elif self.count == 25 and self.rever == 1:
+            self.lesson.add_pts(250 - self.attempts - self.penalty)
+            self.lesson.finish(datetime.now())
+            final_creation_sql(self.all_words, self.lesson)
+            self.close()
+        elif self.indx == len(self.list_of_words):
+            for word in self.list_to_delete:
+                self.list_of_words.remove(word)
+            self.list_to_delete = []
+            self.indx = 0
+            random.shuffle(self.list_of_words)
+            self.current_word = self.list_of_words[self.indx]
+            self.hideMe()
+            self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=self.list_of_words, lsn=self.lesson)
+            self.button_grid_window_spare.move(100, 100)
+            self.button_grid_window_spare.window_closed.connect(self.shoeMe)
+            self.button_grid_window_spare.show()
+        else:
+            self.current_word = self.list_of_words[self.indx]
+
+        # Set the question label
+        if self.rever == 0:
+            self.label.setText(f"Enter your translation for:   {self.current_word.getWord()} ")
+        elif self.rever == 1:
+            self.label.setText(f"Enter your translation for:   {self.current_word.getTranslation()} ")
+
+        # Clear the answer line edit and result label
+        self.line_edit.clear()
+
+    def submit_text(self):
+        text = self.line_edit.text()
+        if self.rever == 0:
+            translation = self.current_word.getTranslation()
+        elif self.rever == 1:
+            translation = self.current_word.getWord()
+        translation = translation_with_comma(translation) # create list of all translations
+        if text in translation:
+            self.current_word.addSuccess()
+            if self.rever == 0:
+                self.current_word.addTrials_d()
+            else:
+                self.current_word.addTrials_r()
+            self.count += 1
+            self.attempts += 1
+            self.list_to_delete.append(self.current_word)
+            self.indx += 1
+            self.lcd_counter.display(self.count)
+            self.lcd_counter_pts.display(self.attempts)
+            self.next_word()
+        else:
+            if self.rever == 0:
+                self.current_word.addTrials_d()
+            else:
+                self.current_word.addTrials_r()
+            self.indx += 1
+            self.attempts += 1
+            self.lcd_counter_pts.display(self.attempts)
+            self.next_word()
+
+    def hideMe(self):
+        self.hide()
+
+    def shoeMe(self):
+        self.show()
+
+    def insertChar(self, ch):
+
+        # Insert character into QLineEdit
+        if ch == '1L':
+            if self.rever == 0 and self.guess_count != 3:
+                cword = self.current_word.getTranslation()[0][0]
+                self.line_edit.insert(cword)
+                self.penalty += 10
+                self.guess_count += 1
+
+            elif self.rever == 1 and self.guess_count != 3:
+                tword = self.current_word.getWord()[0][0]
+                self.line_edit.insert(tword)
+                self.penalty += 10
+                self.guess_count += 1
+        else:
+            self.line_edit.insert(ch)
+
+    def start_translation(self):
+        self.close()
+        self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=self.start_list, lsn=self.lesson)
+        self.button_grid_window_spare.move(100, 100)
+        self.button_grid_window_spare.window_closed.connect(self.open_tranlsation_counter_widget)
+        self.button_grid_window_spare.show()
+
+    def open_tranlsation_counter_widget(self):
+        self.input_translation_widget = InputCounterWidget(self, self.start_list, rever=1, lsn=self.lesson, awl=self.all_words)
+        self.input_translation_widget.move(100, 100)
+        self.input_translation_widget.show()
+        self.input_translation_widget.window_closed.connect(self.placing)
+
+    def placing(self):
+        data = place()
+        # Create and show the text window
+        self.text_window = TextWindow(self, data=data, after_lesson=1)
+        self.text_window.move(100, 100)
+        self.text_window.show()
+        self.text_window.window_closed.connect(self.main_window_back)
+
+    def main_window_back(self):
+        self.main_window.show()
+
+    def closeEvent(self, event):
+        self.window_closed.emit()
+        super().closeEvent(event)
+
+
+class InputCounterWidgetVerbs(QWidget):
+    window_closed = pyqtSignal()
+
+    def __init__(self, main_window, sampleList, startTime=datetime(1970, 1, 1)):
+        super().__init__()
+
+        self.resize(500, 275)
+        self.list_of_words = sampleList.copy()
+        random.shuffle(self.list_of_words)
+
+
+        # set the title name for the widget
+        start = (datetime.now() - startTime).total_seconds()
+        self.counter = int(round(start, 0))
+        self.setWindowTitle(f'Learning Verbs - [{self.counter}]')
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_title)
+        self.timer.start(1000)  # Update title every second
+
+        # fine for help with letter
+        self.penalty = 0
+        self.guess_count = 0
+
+        self.main_window = main_window
+        self.start_list = sampleList.copy()
+        self.label = QLabel("Enter your translation:", self)
+        self.label.setFont(QFont("Arial", 16))
+        self.line_edit = QLineEdit(self)
+        self.line_edit.setFont(QFont("Arial", 16))
+        #self.line_edit.setFont(font)
+        self.submit_button = QPushButton("Submit", self)
+        self.submit_button.setFont(QFont("Arial", 16))
+
+        self.lcd_counter = QLCDNumber(self)
+        self.lcd_counter.setDigitCount(3)
+        self.lcd_counter_pts = QLCDNumber(self)
+        self.lcd_counter_pts.setDigitCount(3)
+
+        self.count = 0
+        self.attempts = 0
+        self.indx = 0
+        self.list_to_delete = []
+
+        self.submit_button.clicked.connect(self.submit_text)
+        self.line_edit.returnPressed.connect(self.submit_button.click)
+
+        # Create QGroupBox for special character buttons
+        groupBox = QGroupBox('Special Characters', self)
+        hbox = QHBoxLayout(groupBox)
+
+
+
+        # Create buttons with special characters
+        if GlobalLanguage.file_path == 'data_files/spanish/':
+            spec_buttons = ['1L', 'á', 'í', 'é', 'ó', 'ñ', 'ú', 'ü']
+        else:
+            spec_buttons = ['1L', 'ö', 'ü', 'à', 'ë', 'ï', 'é', 'è', 'ê', '’']
+
+        for char in spec_buttons:
+            button = QPushButton(char, self)
+            if char == '1L':
+                button.setFixedSize(35, 21)
+                button.setStyleSheet("QPushButton {background-color: lightgreen; border-radius: 5px; padding: 5px;}")
+            button.clicked.connect(lambda _, ch=char: self.insertChar(ch))
+            button.clicked.connect(self.buttonClicked)
+            hbox.addWidget(button)
+
+
+        # Vertical layout with label for words/translations
+        layout = QVBoxLayout()
+        layout.addWidget(self.label)
+        # Horizontal layout with line_edit and submit button under the words/translation label
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(self.line_edit)
+        hlayout.addWidget(self.submit_button)
+        layout.addLayout(hlayout)
+        hlayout2 = QHBoxLayout()
+        hlayout2.addWidget(self.lcd_counter)
+        hlayout2.addWidget(self.lcd_counter_pts)
+        layout.addLayout(hlayout2)
+        layout.addWidget(groupBox)
+        self.setLayout(layout)
+
+        # Start quiz
+        self.next_word()
+
+    def buttonClicked(self):
+        if self.guess_count == 3:
+            button = self.sender()  # Get the button that was clicked
+            button.setStyleSheet("QPushButton {background-color: red; border-radius: 5px; padding: 5px;}")
+
+    def update_title(self):
+        self.counter += 1
+        self.setWindowTitle(f'Learning Verbs - [{self.counter}]')
 
     def next_word(self):
         if self.count == 25 and self.rever == 0:
@@ -890,226 +1163,6 @@ class ExamWidget(QWidget):
         formatted_datetime = datetime.toString("yy-MM-dd hh:mm:ss.zzz")
         #prcnt = round((self.count / self.num) * 100, 1)
         exam_sql(formatted_datetime, self.num, self.count, self.total_words, lang, self.total_weight)
-
-    def hideMe(self):
-        self.hide()
-
-    def shoeMe(self):
-        self.show()
-
-    def insertChar(self, ch):
-        # Insert character into QLineEdit
-        if ch == '1L':
-            if ExamSettings.exam_direction == 'to_english':
-                self.line_edit.insert(self.current_word.getTranslation()[0][0])
-            else:
-                self.line_edit.insert(self.current_word.getWord()[0][0])
-        else:
-            self.line_edit.insert(ch)
-
-    def main_window_back(self):
-        self.main_window.show()
-
-    def closeEvent(self, event):
-        self.window_closed.emit()
-        self.main_window_back()
-        super().closeEvent(event)
-
-
-class ButtonGridWidgetVerbs(QWidget):
-    window_closed = pyqtSignal()
-
-    def __init__(self, list_of_words=[]):
-        super().__init__()
-
-        # set the title name for the widget
-        self.setWindowTitle(f'Learning verbs')
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_title)
-        self.timer.start(1000)  # Update title every second
-
-        sample = list_of_words.copy()
-        grid_layout = QGridLayout()
-
-        # change location of each word at the button board
-        coord_i = [0, 1, 2, 3, 4]
-        coord_j = [0, 1, 2, 3, 4]
-        coord = []
-        for i in coord_i:
-            for j in coord_j:
-                coord.append((i, j))
-        random.shuffle(coord)
-        random.shuffle(sample)
-
-        for k, (i, j) in enumerate(coord):
-            try:
-                if self.rever == 0:
-                    button = QPushButton(f'{sample[k].getWord()} \n | \n {sample[k].getTranslation()}', self)
-                    button.setFixedSize(200, 100)
-                    grid_layout.addWidget(button, i, j)
-                elif self.rever == 1:
-                    button = QPushButton(f'{sample[k].getTranslation()} \n | \n {sample[k].getWord()}', self)
-                    button.setFixedSize(200, 100)
-                    grid_layout.addWidget(button, i, j)
-            except:
-                button = QPushButton()
-                button.setFixedSize(200, 100)
-                grid_layout.addWidget(button, i, j)
-        # Create a button to go next
-        next_button = QPushButton("Next")
-        next_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        next_button.setStyleSheet(Styles.button_style)
-        next_button.clicked.connect(self.close)
-        grid_layout.addWidget(next_button, 5, 4)
-        self.setLayout(grid_layout)
-
-    def update_title(self):
-        self.setWindowTitle(f'Learning verbs')
-
-    def closeEvent(self, event):
-        self.window_closed.emit()
-        super().closeEvent(event)
-
-
-class VerbsWidget(QWidget):
-    window_closed = pyqtSignal()
-
-    def __init__(self, main_window, sampleList):
-        super().__init__()
-
-        self.main_window = main_window
-        self.resize(500, 275)
-        self.start_time = QTime.currentTime()
-        self.list_of_words = sampleList.copy()
-        self.total_weight = round(sum([i.getWeight() for i in sampleList]), 2)
-        self.total_words = total_exam_words()
-        self.counter = 0
-        self.setWindowTitle(f'Exam session - [{self.counter}]')
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_title)
-        self.timer.start(1000)  # Update title every second
-
-        self.start_list = sampleList.copy()
-        self.label = QLabel("Enter your translation:", self)
-        self.label.setFont(QFont("Arial", 16))
-        self.line_edit = QLineEdit(self)
-        self.line_edit.setFont(QFont("Arial", 16))
-        self.submit_button = QPushButton("Submit", self)
-        self.submit_button.setFont(QFont("Arial", 16))
-
-        self.lcd_counter = QLCDNumber(self)
-        self.lcd_counter.setDigitCount(3)
-        self.lcd_counter_pts = QLCDNumber(self)
-        self.lcd_counter_pts.setDigitCount(3)
-
-        self.count = 0
-        self.attempts = 0
-        self.indx = 0
-        self.list_to_delete = []
-
-        self.submit_button.clicked.connect(self.submit_text)
-        self.line_edit.returnPressed.connect(self.submit_button.click)
-
-        # Create QGroupBox for special character buttons
-        groupBox = QGroupBox('Open the first letter or use Special Characters', self)
-        hbox = QHBoxLayout(groupBox)
-
-        # Create buttons with special characters
-        # Create buttons with special characters
-        if GlobalLanguage.file_path == 'data_files/spanish/':
-            spec_buttons = ['1L', 'á', 'í', 'é', 'ó', 'ñ', 'ú', 'ü']
-        else:
-            spec_buttons = ['1L', 'ö', 'ü', 'à', 'ë', 'ï', 'é', 'è', 'ê', '’']
-        for char in spec_buttons:
-            button = QPushButton(char, self)
-            if char == '1L':
-                button.setFixedSize(35, 21)
-                button.setStyleSheet("QPushButton {background-color: lightgreen; border-radius: 5px; padding: 5px;}")
-            button.clicked.connect(lambda _, ch=char: self.insertChar(ch))
-            hbox.addWidget(button)
-
-
-        # Vertical layout with label for words/translations
-        layout = QVBoxLayout()
-        layout.addWidget(self.label)
-        # Horizontal layout with line_edit and submit button under the words/translation label
-        hlayout = QHBoxLayout()
-        hlayout.addWidget(self.line_edit)
-        hlayout.addWidget(self.submit_button)
-        layout.addLayout(hlayout)
-
-        self.label_answer = QLabel("", self)
-
-        hlayout2 = QHBoxLayout()
-        hlayout2.addWidget(self.lcd_counter)
-        hlayout2.addWidget(self.lcd_counter_pts)
-        layout.addLayout(hlayout2)
-        layout.addWidget(groupBox)
-        layout.addWidget(self.label_answer)
-        self.setLayout(layout)
-
-        # Start quiz
-        self.next_word()
-
-    def update_title(self):
-        self.counter += 1
-        self.setWindowTitle(f'Exam session - [{self.counter}] - [{- self.attempts}]')
-
-    def next_word(self):
-        if self.attempts == 25:
-            current_time = QTime.currentTime()
-            elapsed_time = self.start_time.secsTo(current_time)
-            self.time_minutes = elapsed_time // 60
-            self.time_seconds = elapsed_time % 60
-            self.finalresults()
-        elif self.indx == len(self.list_of_words):
-            for word in self.list_to_delete:
-                self.list_of_words.remove(word)
-            self.list_to_delete = []
-            self.indx = 0
-            random.shuffle(self.list_of_words)
-            self.current_word = self.list_of_words[self.indx]
-        else:
-            self.current_word = self.list_of_words[self.indx]
-
-        # Set the question label
-        if ExamSettings.exam_direction == 'to_english':
-            self.label.setText(f"Enter your translation for:   {self.current_word.getWord()} ")
-        else:
-            self.label.setText(f"Enter your translation for:   {self.current_word.getTranslation()} ")
-
-
-        # Clear the answer line edit and result label
-        self.line_edit.clear()
-
-    def submit_text(self):
-
-        text = self.line_edit.text()
-        if ExamSettings.exam_direction == 'to_english':
-            self.translation = self.current_word.getTranslation()
-        elif ExamSettings.exam_direction == 'from_english':
-            self.translation = self.current_word.getWord()
-        self.translation = translation_with_comma(self.translation) # create list of all translations
-        if text in self.translation:
-            self.count += 1
-            self.attempts += 1
-            self.list_to_delete.append(self.current_word)
-            self.indx += 1
-            self.lcd_counter.display(self.count)
-            self.lcd_counter_pts.display(self.attempts)
-            self.next_word()
-        else:
-            self.label_answer.setText(f"Right answer: {self.translation[0]} ")
-            self.indx += 1
-            self.attempts += 1
-            self.lcd_counter_pts.display(self.attempts)
-            self.next_word()
-
-    def finalresults(self):
-        self.close()
-        self.main_window.hide()
-
-        raise NotImplementedError('Sorry, not working yet')
 
     def hideMe(self):
         self.hide()
@@ -1431,27 +1484,18 @@ class MainWindow(QMainWindow):
         self.close()  # here hide
 
     def verbs(self):
-        verbList = loadVerbsData('verb')
-        print(verbList[0].getWord(), '\n',  verbList[0].getTranslation(), '\n', verbList[0].getSecond(), '\n', verbList[0].getThird() )
-
-        raise NotImplementedError('Sorry, this functionality is not implemented yet!')
-        """
-        I need to understand what logic I want to realize with verbs. Should I use standard windows? But it make them more difficult and not easy to understand and find bugs. 
-        So, I need to implement something similar with 'next lesson' functionality and windows but without lesson func
-        
-        """
-
-
-        self.button_grid_verb_window = ButtonGridWidgetVerbs(list_of_words=verbList)
-        self.button_grid_verb_window.move(100, 100)
-        self.button_grid_verb_window.show()
+        self.button_grid_window = ButtonGridWidgetVerbs()
+        self.button_grid_window.move(100, 100)
+        self.button_grid_window.show()
+        self.button_grid_window.sampleList.connect(self.open_input_counter_widget_verbs)
         self.hide()
-        self.verb_window = VerbsWidget(self, sampleList=verbList)
-        self.verb_window.move(100, 100)
-        self.verb_window.show()
-        self.close()
 
-
+    def open_input_counter_widget_verbs(self, sampleList):
+        raise NotImplementedError('Sorry, this functionality is not implemented yet!')
+        sampleList_words = sampleList[0]
+        self.input_counter_widget_verbs = InputCounterWidgetVerbs(self, sampleList=sampleList_words)
+        self.input_counter_widget_verbs.move(100, 100)
+        self.input_counter_widget_verbs.show()
 
     def choose_dutch(self):
         new_value = 'data_files/'
