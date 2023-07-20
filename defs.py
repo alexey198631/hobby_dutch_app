@@ -74,7 +74,7 @@ def sql_verbs_text():
     SELECT verb, translation, past_singular, past_participle, appear, trial_d, trial_r, success, weight, time_spent
     FROM verbs
     ORDER BY weight DESC, RANDOM()
-    LIMIT 25;
+    LIMIT 5;
     """
     return text
 
@@ -354,7 +354,7 @@ def place(t=0, cond=0):
     # Find the place of the last row
     last_row = next((row for row in data if row[1] == last_lesson), None)
     last_place = last_row[0]
-    if last_place == 1:
+    if last_place == 0:
         current_index = 0
     else:
         current_index = last_place - 1
