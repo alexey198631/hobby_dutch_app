@@ -1,7 +1,4 @@
 """
-Sprints:
-
-- chekc the first place in placing - not working
 
 Exam + Verbs
 

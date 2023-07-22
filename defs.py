@@ -9,14 +9,23 @@ from global_language import GlobalLanguage, Difficulty
 
 
 def sql_text(dffty, limit, wl=100, exm='no'):
+
     if exm != 'no':
         wd = 'difficulty'
     else:
         wd = 'wd'
+
+    # Check if wd has a specific value or should include all values
+    if dffty != 'ANY':
+        condition = f"{wd} = {dffty}"
+    else:
+        condition = "1=1"  # This will always evaluate to true and include all rows
+
+
     text = f"""
     SELECT word, type, translation, russian, example, example_translation, appear, trial_d, trial_r, success, weight, word_index, difficulty, wd
     FROM words
-    WHERE {wd} = {dffty} AND weight <= {wl}
+    WHERE {condition} AND weight <= {wl}
     ORDER BY weight DESC, RANDOM()
     LIMIT {limit};
     """
@@ -32,13 +41,22 @@ def loadData(source, final='no', exam='no'):
         # Sample words from each difficulty level based on difficulty and weight
         selected_words = []
         for difficulty, count in Difficulty.difficulty_distribution.items():
-            # Retrieve 5 easy words
+            # Retrieve 5 words
             words_query = sql_text(difficulty, count)
+            cursor.execute(words_query)
+            selected_words = selected_words + cursor.fetchall()
+
+        # sometimes words with some level of difficulty can come to 0, so it is necessary to add other random words
+        qty = len(selected_words)
+        if qty != 25:
+            lim = 25 - qty
+            words_query = sql_text('ANY', lim)
             cursor.execute(words_query)
             selected_words = selected_words + cursor.fetchall()
         # close the database connection
         conn.close()
         return selected_words
+
     elif source == 'word' and exam == 'yes':
         cursor = conn.cursor()
         length, weight = Difficulty.difficulty_distribution
