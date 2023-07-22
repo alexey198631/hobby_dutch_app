@@ -1530,16 +1530,22 @@ class MainWindow(QMainWindow):
         verb_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         verb_btn.setStyleSheet(Styles.button_style)
 
+        exit_btn = QPushButton('Exit', self)
+        exit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        exit_btn.setStyleSheet(Styles.button_style)
+
         next_lesson_btn.clicked.connect(self.next_lesson)
         repeat_btn.clicked.connect(self.repeat)
         exam_btn.clicked.connect(self.exam)
         verb_btn.clicked.connect(self.verbs)
+        exit_btn.clicked.connect(self.close)
 
         layout = QVBoxLayout()
         layout.addWidget(next_lesson_btn)
         layout.addWidget(repeat_btn)
         layout.addWidget(exam_btn)
         layout.addWidget(verb_btn)
+        layout.addWidget(exit_btn)
 
         central_widget = QWidget()
         central_widget.setLayout(layout)
