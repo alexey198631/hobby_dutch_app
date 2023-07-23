@@ -89,7 +89,7 @@ def loadData(source, final='no', exam='no'):
 
 def sql_verbs_text():
     text = f"""
-    SELECT verb, translation, past_singular, past_participle, appear, trial_d, trial_r, success, weight, time_spent
+    SELECT verb_index, verb, translation, past_singular, past_participle, appear, trial_d, trial_r, success, weight
     FROM verbs
     ORDER BY weight DESC, RANDOM()
     LIMIT 5;
@@ -336,6 +336,30 @@ def for_inter_time(df, lessonNumber, known):
     lessn.loc[row, 'r'] = ln
 
     return lessn
+
+
+def hardestVerbs():
+    conn = sqlite3.connect('data_files/verbs.db')
+    cursor = conn.cursor()
+
+    sql = "SELECT * FROM verbs WHERE weight != 100.0"
+
+    # Execute the SQL query
+    cursor.execute(sql)
+
+    # Fetch all the rows
+    data = cursor.fetchall()
+    # Sort the data by points in descending order and enumerate to assign places
+    data.sort(key=lambda row: row[9], reverse=True)
+    data = [(row[2], row[1], row[5], row[9]) for row in data]
+    worst_verbs = data[:10]
+
+    columns_names = ['Verb', 'Translation', 'Appearance', 'Weight']
+
+    # Close the connection
+    conn.close()
+
+    return worst_verbs, columns_names
 
 
 def place(t=0, cond=0):
@@ -645,6 +669,29 @@ def exam_sql(exam_date, size, prcnt, words, lang, total_weight):
     # Commit the changes and close the connection
     conn.commit()
     conn.close()
+
+def verbs_sql(verbList):
+    # Connect to the database
+    conn = sqlite3.connect(GlobalLanguage.file_path + 'verbs.db')
+    cursor = conn.cursor()
+    indexes = [verb.getVerbIndex() for verb in verbList]
+
+    for k, i in enumerate(indexes):
+        v1 = verbList[k].getAppear()
+        v2 = verbList[k].getTrials_d()
+        v3 = verbList[k].getTrials_r()
+        v4 = verbList[k].getSuccess()
+        v5 = verbList[k].getWeight()
+        verbList[k].updateWeight()
+
+        cursor.execute(
+            "UPDATE verbs SET appear = ?, trial_d = ?, trial_r = ?, success = ?, weight = ? WHERE verb_index = ?",
+            (v1, v2, v3, v4, v5, i))
+
+    # Commit the changes and close the connection
+    conn.commit()
+    conn.close()
+
 
 def total_exam_words():
     # Connect to the SQLite database

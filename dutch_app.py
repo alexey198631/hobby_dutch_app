@@ -1,5 +1,8 @@
 """
 
+надо проверить все имеющиеся индексы и все слова в уроках? чтобы не получилось? что я удалил ошибочное слово
+но оно есть в уроках
+
 Exam + Verbs
 
 - it is necessary to write results to verbs db
@@ -33,6 +36,7 @@ from defs import *
 import random
 from global_language import GlobalLanguage, Difficulty, Styles, ExamSettings
 import sqlite3
+
 
 
 class TextWidget(QMainWindow):
@@ -248,15 +252,15 @@ class TextWindow(QMainWindow):
 
 
 class TextWindowVerbs(QMainWindow):
-    window_closed = pyqtSignal()
+    #window_closed = pyqtSignal()
+    closed_window = pyqtSignal()
 
     def __init__(self, main_window, data=None):
         super().__init__()
 
         self.main_window = main_window
-
         self.setFixedSize(350, 380)
-        self.setWindowTitle('results')
+        self.setWindowTitle('Most Difficult Verbs')
 
         # Create a widget to hold the table and text input field
         widget = QWidget()
@@ -272,11 +276,64 @@ class TextWindowVerbs(QMainWindow):
         self.table_widget.setColumnWidth(0, 400)  # Set the width of the first column to 400 pixels
         self.table_widget.setColumnWidth(1, 200)  # Set the width of the second column to 200 pixels
         self.table_widget.setColumnWidth(2, 200)  # Set the width of the second column to 200 pixels
+        self.table_widget.setColumnWidth(3, 200)  # Set the width of the second column to 200 pixels
 
+        # Set the column names
+        column_names = data[1]
+        self.table_widget.setColumnCount(len(column_names))
+        self.table_widget.setHorizontalHeaderLabels(column_names)
+
+        # If data is provided, populate the table with the data
+        if data is not None:
+            self.populate_table(data)
+
+        submit_button = QPushButton("Close")
+        submit_button.clicked.connect(self.close)
+        layout.addWidget(submit_button)
 
         # Set the central widget of the window to the input widget
         self.setCentralWidget(widget)
 
+        # Resize the columns and rows to fit the content
+        #self.table_widget.resizeColumnsToContents()
+        #self.table_widget.resizeRowsToContents()
+
+        # Initialize the sort order for each column to None
+        self.sort_order = [None] * self.table_widget.columnCount()
+
+        # Connect the sectionClicked signal to the sort_table function
+        self.table_widget.horizontalHeader().sectionClicked.connect(self.sort_table)
+
+    def populate_table(self, data):
+        # Convert the DataFrame to a list of lists
+        table_data = data[0]
+
+        # Set the number of rows and columns in the table
+        self.table_widget.setRowCount(len(table_data))
+        self.table_widget.setColumnCount(len(table_data[0]))
+
+        for i, row in enumerate(table_data):
+            for j, val in enumerate(row):
+                item = QTableWidgetItem(str(val))  # item = QTableWidgetItem(str(val))
+                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)  # Set the text alignment of the cell to center
+                self.table_widget.setItem(i, j, item)
+
+
+    def sort_table(self, logical_index):
+        # Get the current sort order for the column
+        current_order = self.sort_order[logical_index]
+
+        # Determine the new sort order for the column
+        if current_order is None or current_order == Qt.SortOrder.DescendingOrder:
+            new_order = Qt.SortOrder.AscendingOrder
+        else:
+            new_order = Qt.SortOrder.DescendingOrder
+
+        # Sort the table in the desired order
+        self.table_widget.sortItems(logical_index, new_order)
+
+        # Update the sort order for the column
+        self.sort_order[logical_index] = new_order
 
     def main_window_back(self):
         self.close()
@@ -286,7 +343,7 @@ class TextWindowVerbs(QMainWindow):
         self.close()
 
     def closeEvent(self, event):
-        self.window_closed.emit()
+        self.closed_window.emit()
         super().closeEvent(event)
 
 
@@ -539,11 +596,13 @@ class ButtonGridWidgetVerbs(QWidget):
     window_closed = pyqtSignal()
     sampleList = pyqtSignal(list)
 
-    def __init__(self):
+    def __init__(self, main_window):
         super().__init__()
 
         verbs = loadVerbsData('verb')
         sample = verbs
+
+        self.main_window = main_window
 
         # set the title name for the widget
         self.counter = 0
@@ -560,8 +619,6 @@ class ButtonGridWidgetVerbs(QWidget):
         self.save = sample.copy()
         self.counter_click = 0  # initialize the counter variable
         grid_layout = QGridLayout()
-
-        print(len(self.shared_object_list), self.shared_object_list)
 
         for i in range(5):
             vrb = self.shared_object_list[i]
@@ -898,12 +955,11 @@ class InputCounterWidgetVerbs(QWidget):
     def __init__(self, main_window, sampleList, rever=0, startTime=datetime(1970, 1, 1)):
         super().__init__()
 
+        self.main_window = main_window
         self.resize(500, 275)
         self.list_of_words = sampleList.copy()
         random.shuffle(self.list_of_words)
         self.rever = rever
-
-
         # set the title name for the widget
         start = (datetime.now() - startTime).total_seconds()
         self.counter = int(round(start, 0))
@@ -915,9 +971,8 @@ class InputCounterWidgetVerbs(QWidget):
         # fine for help with letter
         self.penalty = 0
         self.guess_count = 0
-
-        self.main_window = main_window
         self.start_list = sampleList.copy()
+        self.finish_list = sampleList.copy()
         self.label = QLabel("Enter your translation:", self)
         self.label.setFont(QFont("Arial", 16))
         self.line_edit = QLineEdit(self)
@@ -943,8 +998,6 @@ class InputCounterWidgetVerbs(QWidget):
         groupBox = QGroupBox('Special Characters', self)
         hbox = QHBoxLayout(groupBox)
 
-
-
         # Create buttons with special characters
         if GlobalLanguage.file_path == 'data_files/spanish/':
             spec_buttons = ['1L', 'á', 'í', 'é', 'ó', 'ñ', 'ú', 'ü']
@@ -959,7 +1012,6 @@ class InputCounterWidgetVerbs(QWidget):
             button.clicked.connect(lambda _, ch=char: self.insertChar(ch))
             button.clicked.connect(self.buttonClicked)
             hbox.addWidget(button)
-
 
         # Vertical layout with label for words/translations
         layout = QVBoxLayout()
@@ -990,23 +1042,22 @@ class InputCounterWidgetVerbs(QWidget):
 
     def next_word(self):
         if self.count == 5 and self.rever == 0:
-            print('first round')
             self.rever = 1
             self.list_to_delete = []
             self.start_translation()
+            self.close()
         elif self.count == 5 and self.rever == 1:
-            print('second round')
             self.rever = 2
             self.list_to_delete = []
             self.start_translation_2()
+            self.close()
         elif self.count == 5 and self.rever == 2:
-            print('third round')
             self.rever = 3
             self.list_to_delete = []
             self.start_translation_3()
+            self.close()
         elif self.count == 5 and self.rever == 3:
-            #final_creation_sql(self.all_words, self.lesson)
-            print('Done!')
+            verbs_sql(self.finish_list)
             self.close()
         elif self.indx == len(self.list_of_words):
             for word in self.list_to_delete:
@@ -1032,7 +1083,6 @@ class InputCounterWidgetVerbs(QWidget):
             self.label.setText(f"Enter the second form for the verb:  {self.current_word.getWord()} ")
         elif self.rever == 3:
             self.label.setText(f"Enter the third form for the verb:  {self.current_word.getWord()} ")
-
 
         # Clear the answer line edit and result label
         self.line_edit.clear()
@@ -1077,6 +1127,9 @@ class InputCounterWidgetVerbs(QWidget):
     def shoeMe(self):
         self.show()
 
+    def closeMe(self):
+        self.close()
+
     def insertChar(self, ch):
 
         # Insert character into QLineEdit
@@ -1109,44 +1162,62 @@ class InputCounterWidgetVerbs(QWidget):
 
     def start_translation(self):
         self.close()
-        self.button_grid_window_spare_verbs = ButtonGridWidgetSpareVerbs(list_of_words=self.start_list)
-        self.button_grid_window_spare_verbs.move(100, 100)
-        self.button_grid_window_spare_verbs.window_closed.connect(lambda: self.open_tranlsation_counter_widget_verb(rever=1))
-        self.button_grid_window_spare_verbs.show()
+        self.button_grid_window_spare_verbs_one = ButtonGridWidgetSpareVerbs(list_of_words=self.start_list)
+        self.button_grid_window_spare_verbs_one.move(100, 100)
+        #self.button_grid_window_spare_verbs_one.window_closed.connect(lambda: self.open_tranlsation_counter_widget_verb(rever=1))
+        self.button_grid_window_spare_verbs_one.window_closed.connect(self.open_tranlsation_counter_widget_verb_one)
+        self.button_grid_window_spare_verbs_one.show()
+
+    def open_tranlsation_counter_widget_verb_one(self):
+        self.input_translation_widget_verbs = InputCounterWidgetVerbs(self, self.start_list, rever=1)
+        self.input_translation_widget_verbs.move(100, 100)
+        self.input_translation_widget_verbs.show()
+        self.input_translation_widget_verbs.window_closed.connect(self.main_window_back)
 
     def start_translation_2(self):
         self.close()
-        self.button_grid_window_spare_verbs = ButtonGridWidgetSpareVerbs(list_of_words=self.start_list)
-        self.button_grid_window_spare_verbs.move(100, 100)
-        self.button_grid_window_spare_verbs.window_closed.connect(lambda: self.open_tranlsation_counter_widget_verb(rever=2))
-        self.button_grid_window_spare_verbs.show()
+        self.button_grid_window_spare_verbs_two = ButtonGridWidgetSpareVerbs(list_of_words=self.start_list)
+        self.button_grid_window_spare_verbs_two.move(100, 100)
+        #self.button_grid_window_spare_verbs_two.window_closed.connect(lambda: self.open_tranlsation_counter_widget_verb(rever=2))
+        self.button_grid_window_spare_verbs_two.window_closed.connect(self.open_tranlsation_counter_widget_verb_two)
+        self.button_grid_window_spare_verbs_two.show()
+
+    def open_tranlsation_counter_widget_verb_two(self):
+        self.close()
+        self.input_translation_widget_verbs = InputCounterWidgetVerbs(self, self.start_list, rever=2)
+        self.input_translation_widget_verbs.move(100, 100)
+        self.input_translation_widget_verbs.show()
+        #self.input_translation_widget_verbs.window_closed.connect(self.main_window_back)
 
     def start_translation_3(self):
         self.close()
-        self.button_grid_window_spare_verbs = ButtonGridWidgetSpareVerbs(list_of_words=self.start_list)
-        self.button_grid_window_spare_verbs.move(100, 100)
-        self.button_grid_window_spare_verbs.window_closed.connect(lambda: self.open_tranlsation_counter_widget_verb(rever=3))
-        self.button_grid_window_spare_verbs.show()
+        self.button_grid_window_spare_verbs_three = ButtonGridWidgetSpareVerbs(list_of_words=self.start_list)
+        self.button_grid_window_spare_verbs_three.move(100, 100)
+        #self.button_grid_window_spare_verbs_three.window_closed.connect(lambda: self.open_tranlsation_counter_widget_verb(rever=3))
+        self.button_grid_window_spare_verbs_three.window_closed.connect(self.open_tranlsation_counter_widget_verb)
+        self.button_grid_window_spare_verbs_three.show()
 
-    def open_tranlsation_counter_widget_verb(self, rever):
-        self.input_translation_widget_verbs = InputCounterWidgetVerbs(self, self.start_list, rever=rever)
+    def open_tranlsation_counter_widget_verb(self):
+        self.close()
+        self.input_translation_widget_verbs = InputCounterWidgetVerbs(self, self.start_list, rever=3)
         self.input_translation_widget_verbs.move(100, 100)
         self.input_translation_widget_verbs.show()
-        if rever == 3:
-             self.input_translation_widget_verbs.window_closed.connect(self.placing)
+        #if rever == 3:
+        self.input_translation_widget_verbs.window_closed.connect(self.verbplacing)
 
-
-    def placing(self):
-        print('Hello')
-        #data = place()
+    def verbplacing(self):
+        data = hardestVerbs()
         # Create and show the text window
-        self.text_window = TextWindowVerbs(self)
-        self.text_window.move(100, 100)
-        self.text_window.show()
-        self.text_window.window_closed.connect(self.main_window_back)
+        self.text_window_verbs = TextWindowVerbs(self, data=data)
+        self.text_window_verbs.move(100, 100)
+        self.text_window_verbs.show()
+        #self.text_window_verbs.closed_window.connect(self.main_window_back)
 
     def main_window_back(self):
         self.main_window.show()
+
+    def main_window_hide(self):
+        self.main_window.hide()
 
     def closeEvent(self, event):
         self.window_closed.emit()
@@ -1631,7 +1702,7 @@ class MainWindow(QMainWindow):
         self.repeat_window = RepeatWindow(self)
         self.repeat_window.move(100, 100)
         self.repeat_window.show()
-        self.close() #here hide
+        self.hide() #here hide
 
     def exam(self):
         new_diff = 'exam'
@@ -1644,10 +1715,10 @@ class MainWindow(QMainWindow):
         self.exam_window.show()
         new_diff = 'standard'
         Difficulty.set_difficluty(new_diff)
-        self.close()  # here hide
+        self.hide()  # here hide
 
     def verbs(self):
-        self.button_grid_window_verbs = ButtonGridWidgetVerbs()
+        self.button_grid_window_verbs = ButtonGridWidgetVerbs(self)
         self.button_grid_window_verbs.move(100, 100)
         self.button_grid_window_verbs.show()
         self.button_grid_window_verbs.sampleList.connect(self.open_input_counter_widget_verbs)

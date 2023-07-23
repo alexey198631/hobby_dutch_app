@@ -194,8 +194,9 @@ class Verbs(Words):
 
     ts: object
 
-    def __init__(self, word, translation, second, third, appear, trial_d, trial_r, success,
-                 weight, timespent):
+    def __init__(self, verb_index, word, translation, second, third, appear, trial_d, trial_r, success,
+                 weight):
+        self.verb_index = verb_index
         self.word = word
         self.second = second
         self.third = third
@@ -205,7 +206,10 @@ class Verbs(Words):
         self.trial_r = trial_r
         self.success = success
         self.weight = weight
-        self.timespent = timespent
+
+
+    def getVerbIndex(self):
+        return self.verb_index
 
     def getSecond(self):
         return self.second
