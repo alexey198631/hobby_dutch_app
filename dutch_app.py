@@ -430,6 +430,7 @@ class ButtonGridWidget(QWidget):
     def __init__(self, repeat=[], lsn=None, awl=[]):
         super().__init__()
 
+
         self.repeat = repeat
 
         if len(repeat) == 0:
@@ -1172,7 +1173,7 @@ class InputCounterWidgetVerbs(QWidget):
         self.input_translation_widget_verbs = InputCounterWidgetVerbs(self, self.start_list, rever=1)
         self.input_translation_widget_verbs.move(100, 100)
         self.input_translation_widget_verbs.show()
-        self.input_translation_widget_verbs.window_closed.connect(self.main_window_back)
+        #self.input_translation_widget_verbs.window_closed.connect(self.main_window_back)
 
     def start_translation_2(self):
         self.close()
@@ -1687,22 +1688,24 @@ class MainWindow(QMainWindow):
         self.button_grid_window.sampleList.connect(self.open_input_counter_widget)
         self.hide()
 
-
     def open_input_counter_widget(self, sampleList):
-
         sampleList_words = sampleList[0]
         lesson_obj = sampleList[1]
         all_word_list = sampleList[2]
-
         self.input_counter_widget = InputCounterWidget(self, sampleList=sampleList_words, awl=all_word_list,  lsn=lesson_obj)
         self.input_counter_widget.move(100, 100)
         self.input_counter_widget.show()
+        self.input_counter_widget.window_closed.connect(self.main_window_back)
+
+    def main_window_back(self):
+        self.show()
 
     def repeat(self):
         self.repeat_window = RepeatWindow(self)
         self.repeat_window.move(100, 100)
         self.repeat_window.show()
         self.hide() #here hide
+        self.repeat_window.window_closed.connect(self.main_window_back)
 
     def exam(self):
         new_diff = 'exam'
@@ -1730,6 +1733,7 @@ class MainWindow(QMainWindow):
         self.input_counter_widget_verbs = InputCounterWidgetVerbs(self, sampleList=sampleList_words)
         self.input_counter_widget_verbs.move(100, 100)
         self.input_counter_widget_verbs.show()
+        self.input_counter_widget_verbs.window_closed.connect(self.main_window_back)
 
     def choose_dutch(self):
         new_value = 'data_files/'
