@@ -1,15 +1,17 @@
 """
 
-надо проверить все имеющиеся индексы и все слова в уроках? чтобы не получилось? что я удалил ошибочное слово
-но оно есть в уроках
+- add points to spare button window to see points
+- after reset repeat should inform that nothing is to repeat - not to break!!!
+- the same for exam - also can create just random words
+- actuall - I should add it to all possible things which connected to results!!!
 
 Exam + Verbs
 
-- it is necessary to write results to verbs db
-- also to fix appearance the main window and results window
+- what to do with main window? should I make fixed size for button window???
 
 - check spanish version
-- create verbs functionality only for dutch? or for spanish as well?
+- irregular verbs for spanish as well?
+- add more verbs and fix verb selection
 
 Graphs
 
@@ -24,6 +26,7 @@ het and de
 - add this functuanality for dutch version
 
 """
+
 import sys
 import pandas as pd
 from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QTime, QDateTime
@@ -36,7 +39,6 @@ from defs import *
 import random
 from global_language import GlobalLanguage, Difficulty, Styles, ExamSettings
 import sqlite3
-
 
 
 class TextWidget(QMainWindow):
@@ -259,7 +261,7 @@ class TextWindowVerbs(QMainWindow):
         super().__init__()
 
         self.main_window = main_window
-        self.setFixedSize(350, 380)
+        self.setFixedSize(450, 410)
         self.setWindowTitle('Most Difficult Verbs')
 
         # Create a widget to hold the table and text input field
@@ -659,12 +661,12 @@ class ButtonGridWidgetVerbs(QWidget):
 class ButtonGridWidgetSpareVerbs(QWidget):
     window_closed = pyqtSignal()
 
-    def __init__(self, list_of_words=[],  startTime=datetime(1970, 1, 1)):
+    def __init__(self, list_of_words=[],  startTime=datetime.now()):
         super().__init__()
 
-
+        self.startTime = startTime
         # set the title name for the widget
-        start = (datetime.now() - startTime).total_seconds()
+        start = (datetime.now() - self.startTime).total_seconds()
         self.counter = int(round(start, 0)) + 1
         self.setWindowTitle(f'Learning Verbs - [{self.counter}]')
         self.timer = QTimer(self)
@@ -953,16 +955,17 @@ class InputCounterWidget(QWidget):
 class InputCounterWidgetVerbs(QWidget):
     window_closed = pyqtSignal()
 
-    def __init__(self, main_window, sampleList, rever=0, startTime=datetime(1970, 1, 1)):
+    def __init__(self, main_window, sampleList, rever=0, startTime=datetime.now()):
         super().__init__()
 
         self.main_window = main_window
+        self.startTime = startTime
         self.resize(500, 275)
         self.list_of_words = sampleList.copy()
         random.shuffle(self.list_of_words)
         self.rever = rever
         # set the title name for the widget
-        start = (datetime.now() - startTime).total_seconds()
+        start = (datetime.now() - self.startTime).total_seconds()
         self.counter = int(round(start, 0))
         self.setWindowTitle(f'Learning Verbs - [{self.counter}]')
         self.timer = QTimer(self)
@@ -1039,7 +1042,7 @@ class InputCounterWidgetVerbs(QWidget):
 
     def update_title(self):
         self.counter += 1
-        self.setWindowTitle(f'Learning Verbs - [{self.counter}] - {self.rever}')
+        self.setWindowTitle(f'Learning Verbs - [{self.counter}]')
 
     def next_word(self):
         if self.count == 5 and self.rever == 0:
@@ -1068,7 +1071,7 @@ class InputCounterWidgetVerbs(QWidget):
             random.shuffle(self.list_of_words)
             self.current_word = self.list_of_words[self.indx]
             self.hideMe()
-            self.button_grid_window_spare_verbs = ButtonGridWidgetSpareVerbs(list_of_words=self.list_of_words)
+            self.button_grid_window_spare_verbs = ButtonGridWidgetSpareVerbs(list_of_words=self.list_of_words, startTime=self.startTime)
             self.button_grid_window_spare_verbs.move(100, 100)
             self.button_grid_window_spare_verbs.window_closed.connect(self.shoeMe)
             self.button_grid_window_spare_verbs.show()
@@ -1163,21 +1166,21 @@ class InputCounterWidgetVerbs(QWidget):
 
     def start_translation(self):
         self.close()
-        self.button_grid_window_spare_verbs_one = ButtonGridWidgetSpareVerbs(list_of_words=self.start_list)
+        self.button_grid_window_spare_verbs_one = ButtonGridWidgetSpareVerbs(list_of_words=self.start_list, startTime=self.startTime)
         self.button_grid_window_spare_verbs_one.move(100, 100)
         #self.button_grid_window_spare_verbs_one.window_closed.connect(lambda: self.open_tranlsation_counter_widget_verb(rever=1))
         self.button_grid_window_spare_verbs_one.window_closed.connect(self.open_tranlsation_counter_widget_verb_one)
         self.button_grid_window_spare_verbs_one.show()
 
     def open_tranlsation_counter_widget_verb_one(self):
-        self.input_translation_widget_verbs = InputCounterWidgetVerbs(self, self.start_list, rever=1)
+        self.input_translation_widget_verbs = InputCounterWidgetVerbs(self, self.start_list, startTime=self.startTime, rever=1)
         self.input_translation_widget_verbs.move(100, 100)
         self.input_translation_widget_verbs.show()
         #self.input_translation_widget_verbs.window_closed.connect(self.main_window_back)
 
     def start_translation_2(self):
         self.close()
-        self.button_grid_window_spare_verbs_two = ButtonGridWidgetSpareVerbs(list_of_words=self.start_list)
+        self.button_grid_window_spare_verbs_two = ButtonGridWidgetSpareVerbs(list_of_words=self.start_list, startTime=self.startTime)
         self.button_grid_window_spare_verbs_two.move(100, 100)
         #self.button_grid_window_spare_verbs_two.window_closed.connect(lambda: self.open_tranlsation_counter_widget_verb(rever=2))
         self.button_grid_window_spare_verbs_two.window_closed.connect(self.open_tranlsation_counter_widget_verb_two)
@@ -1185,14 +1188,14 @@ class InputCounterWidgetVerbs(QWidget):
 
     def open_tranlsation_counter_widget_verb_two(self):
         self.close()
-        self.input_translation_widget_verbs = InputCounterWidgetVerbs(self, self.start_list, rever=2)
+        self.input_translation_widget_verbs = InputCounterWidgetVerbs(self, self.start_list, startTime=self.startTime, rever=2)
         self.input_translation_widget_verbs.move(100, 100)
         self.input_translation_widget_verbs.show()
         #self.input_translation_widget_verbs.window_closed.connect(self.main_window_back)
 
     def start_translation_3(self):
         self.close()
-        self.button_grid_window_spare_verbs_three = ButtonGridWidgetSpareVerbs(list_of_words=self.start_list)
+        self.button_grid_window_spare_verbs_three = ButtonGridWidgetSpareVerbs(list_of_words=self.start_list, startTime=self.startTime)
         self.button_grid_window_spare_verbs_three.move(100, 100)
         #self.button_grid_window_spare_verbs_three.window_closed.connect(lambda: self.open_tranlsation_counter_widget_verb(rever=3))
         self.button_grid_window_spare_verbs_three.window_closed.connect(self.open_tranlsation_counter_widget_verb)
@@ -1200,7 +1203,7 @@ class InputCounterWidgetVerbs(QWidget):
 
     def open_tranlsation_counter_widget_verb(self):
         self.close()
-        self.input_translation_widget_verbs = InputCounterWidgetVerbs(self, self.start_list, rever=3)
+        self.input_translation_widget_verbs = InputCounterWidgetVerbs(self, self.start_list, startTime=self.startTime, rever=3)
         self.input_translation_widget_verbs.move(100, 100)
         self.input_translation_widget_verbs.show()
         #if rever == 3:
@@ -1212,6 +1215,7 @@ class InputCounterWidgetVerbs(QWidget):
         self.text_window_verbs = TextWindowVerbs(self, data=data)
         self.text_window_verbs.move(100, 100)
         self.text_window_verbs.show()
+        print((datetime.now() - self.startTime).total_seconds())
         #self.text_window_verbs.closed_window.connect(self.main_window_back)
 
     def main_window_back(self):

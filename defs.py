@@ -397,7 +397,7 @@ def place(t=0, cond=0):
     last_row = next((row for row in data if row[1] == last_lesson), None)
     last_place = last_row[0]
     if last_place == 0:
-        current_index = 0
+        current_index = 1
     else:
         current_index = last_place - 1
 
@@ -641,6 +641,25 @@ def todefault():
     # Commit the changes and close the connection
     conn2.commit()
     conn2.close()
+
+    # connect to the SQLite database
+    conn3 = sqlite3.connect(GlobalLanguage.file_path + 'verbs.db')
+    cursor = conn3.cursor()
+
+    columns = ['appear', 'trial_d', 'trial_r', 'success', 'weight']
+
+    # Generate and execute the UPDATE statements
+    for column in columns:
+        if column != 'weight':
+            update_query = f"UPDATE verbs SET {column} = 0;"
+            cursor.execute(update_query)
+        else:
+            update_query = f"UPDATE verbs SET {column} = 100.0;"
+            cursor.execute(update_query)
+
+        # Commit the changes and close the connection
+    conn3.commit()
+    conn3.close()
 
 
 def repeat_difficulty(words):
