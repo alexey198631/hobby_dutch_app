@@ -1,5 +1,6 @@
 """
 
+- скорректировать все слова на русском начинающие со чтобы
 - add points to spare button window to see points
 - after reset repeat should inform that nothing is to repeat - not to break!!!
 - the same for exam - also can create just random words
