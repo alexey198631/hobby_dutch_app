@@ -9,7 +9,6 @@
 Exam + Verbs
 
 - what to do with main window? should I make fixed size for button window???
-
 - check spanish version
 - irregular verbs for spanish as well?
 - add more verbs and fix verb selection
@@ -40,6 +39,7 @@ from defs import *
 import random
 from global_language import GlobalLanguage, Difficulty, Styles, ExamSettings
 import sqlite3
+from datetime import datetime
 
 
 class TextWidget(QMainWindow):

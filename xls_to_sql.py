@@ -22,9 +22,7 @@ verbs_df.name = 'verbs'
 exam_df = pd.read_excel('data_files/dutch.xlsx', sheet_name='exams')
 exam_df = exam_df.loc[:, 'n':]
 exam_df.name = 'exams'
-
 list_of_df = [words, lesson_df, verbs_df, exam_df]
-
 
 
 def xlstosql(df):
@@ -57,8 +55,6 @@ def xlstosql(df):
     # close the database connection
     conn.close()
 
-#for df in list_of_df:
- #   xlstosql(df)
 
 spanish = pd.read_excel('data_files/init_words_spanish.xlsx', sheet_name='update')
 spanish = spanish.loc[:, 'word':]
