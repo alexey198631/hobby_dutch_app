@@ -8,7 +8,7 @@ def shuffle_dictionary(d):
 
 
 class GlobalLanguage:
-    file_path = 'data_files/'
+    file_path = 'utils/'
 
     @classmethod
     def set_value(cls, new_value):

@@ -1,6 +1,8 @@
 from utils.database_connection import DatabaseConnection
 from cls import *
 from global_language import GlobalLanguage, Difficulty
+import re
+import random
 
 
 def sql_text(dffty, limit, wl=100, exm='no'):
@@ -459,4 +461,28 @@ def total_exam_words():
         row_count = cursor.fetchone()[0]
 
     return row_count
+
+
+def word_list_to_print(sample):
+    temp = []
+    final = []
+    for w in sample:
+        if w.getTyp() is None:
+            temp.append(w)
+        else:
+            try:
+                math.isnan(w.getTyp())
+                temp.append(w)
+            except:
+                if re.search(r'de', w.getTyp()) and not re.search(r'het', w.getTyp()):
+                    final.append('de ' + str(w.getWord()) + ": " + str(w.getTranslation()))
+                elif re.search(r'het', w.getTyp()) and not re.search(r'de', w.getTyp()):
+                    final.append('het ' + str(w.getWord()) + ": " + str(w.getTranslation()))
+                elif re.search(r'het', w.getTyp()) and re.search(r'de', w.getTyp()):
+                    final.append('de/het ' + str(w.getWord()) + ": " + str(w.getTranslation()))
+                else:
+                    final.append(str(w.getWord()) + ": " + str(w.getTranslation()))
+    for t in temp:
+        final.append(str(t.getWord()) + ": " + str(t.getTranslation()))
+    return final
 
