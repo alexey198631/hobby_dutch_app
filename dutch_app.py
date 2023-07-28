@@ -35,7 +35,8 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout
                              QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy, QMenu)
 
 from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon, QColor, QBrush, QPalette
-from defs import *
+#from defs import *
+from utils.func import *
 import random
 from global_language import GlobalLanguage, Difficulty, Styles, ExamSettings
 import sqlite3
