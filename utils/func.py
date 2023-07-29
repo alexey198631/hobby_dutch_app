@@ -1,8 +1,8 @@
-from utils.database_connection import DatabaseConnection
-from cls import *
-from global_language import GlobalLanguage, Difficulty
+from datetime import datetime
 import re
-import random
+from utils.database_connection import DatabaseConnection
+from utils.global_cls import *
+
 
 
 def sql_text(dffty, limit, wl=100, exm='no'):
@@ -30,7 +30,7 @@ def sql_text(dffty, limit, wl=100, exm='no'):
 
 
 def loadData(source, final='no', exam='no'):
-    with DatabaseConnection(GlobalLanguage.file_path + f'/{source}s.db') as conn:
+    with DatabaseConnection(f'/{source}s.db') as conn:
 
         if source == 'word' and final == 'no' and exam == 'no':
             cursor = conn.cursor()
@@ -87,7 +87,7 @@ def sql_verbs_text():
 
 
 def loadVerbsData(source): # data frame from xlsx file with verbs, it creates list of class Verbs
-    with DatabaseConnection(GlobalLanguage.file_path + f'/{source}s.db') as conn:
+    with DatabaseConnection(f'/{source}s.db') as conn:
         cursor = conn.cursor()
         selected_words = []
         words_query = sql_verbs_text()
@@ -153,7 +153,7 @@ def lesson_length(list_of_words):
 
 def get_lesson_words(lesson_number):
 
-    with DatabaseConnection(GlobalLanguage.file_path + 'lessons.db') as conn:
+    with DatabaseConnection('lessons.db') as conn:
         cursor = conn.cursor()
         if lesson_number != 999:
             cursor.execute(f"SELECT r, list_of_words FROM lessons WHERE r = {lesson_number}")
@@ -161,7 +161,7 @@ def get_lesson_words(lesson_number):
             result_list = []
             r, list_of_words = results
             number_list = list_of_words.split(';')
-            with DatabaseConnection(GlobalLanguage.file_path + 'words.db') as conn2:
+            with DatabaseConnection('words.db') as conn2:
                 for number in number_list:
                     cursor2 = conn2.cursor()
                     word_index = int(number)
@@ -188,7 +188,7 @@ def get_lesson_words(lesson_number):
                            WHERE word_index = ?;
                            """
             cnt = 0
-            with DatabaseConnection(GlobalLanguage.file_path + 'words.db') as conn2:
+            with DatabaseConnection('words.db') as conn2:
                 cursor2 = conn2.cursor()
                 for index in index_list:
                     word_index = int(index)
@@ -202,7 +202,7 @@ def get_lesson_words(lesson_number):
 
 
 def hardestVerbs():
-    with DatabaseConnection(GlobalLanguage.file_path + 'verbs.db') as conn:
+    with DatabaseConnection('verbs.db') as conn:
         cursor = conn.cursor()
         sql = "SELECT * FROM verbs WHERE weight != 100.0"
         # Execute the SQL query
@@ -219,7 +219,7 @@ def hardestVerbs():
 
 
 def place(t=0, cond=0):
-    with DatabaseConnection(GlobalLanguage.file_path + 'lessons.db') as conn:
+    with DatabaseConnection('lessons.db') as conn:
         cursor = conn.cursor()
         # Get the known value of the last row
         cursor.execute("SELECT known, level FROM lessons ORDER BY rowid DESC LIMIT 1")
@@ -264,7 +264,7 @@ def place(t=0, cond=0):
 
 def bottom_not_repeated():
     difficulty = Difficulty.difficulty
-    with DatabaseConnection(GlobalLanguage.file_path + '/lessons.db') as conn:
+    with DatabaseConnection('/lessons.db') as conn:
         cursor = conn.cursor()
         # Prepare the SQL query
         sql = f"""
@@ -295,7 +295,7 @@ def bottom_not_repeated():
 
 def topbottom(top=1):
     difficulty = Difficulty.difficulty
-    with DatabaseConnection(GlobalLanguage.file_path + '/lessons.db') as conn:
+    with DatabaseConnection('/lessons.db') as conn:
         cursor = conn.cursor()
         # Prepare the basic SQL query
         sql = "SELECT r AS Lesson, time AS Time, points AS Pts, level as Difficulty FROM lessons"
@@ -320,7 +320,7 @@ def topbottom(top=1):
 
 
 def final_creation_sql(wordList, lessonNumber):
-    with DatabaseConnection(GlobalLanguage.file_path + 'words.db') as conn:
+    with DatabaseConnection('words.db') as conn:
         cursor = conn.cursor()
         indexes = [word.getWordIndex() for word in wordList]
         for k, i in enumerate(indexes):
@@ -335,7 +335,7 @@ def final_creation_sql(wordList, lessonNumber):
                 "UPDATE words SET appear = ?, trial_d = ?, trial_r = ?, success = ?, weight = ?,  wd = ?  WHERE word_index = ?",
                 (v1, v2, v3, v4, v5, v6, i))
 
-    with DatabaseConnection(GlobalLanguage.file_path + 'lessons.db') as conn:
+    with DatabaseConnection('lessons.db') as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT lesson FROM lessons WHERE lesson IS NOT NULL ORDER BY lesson DESC LIMIT 1")
         try:
@@ -368,7 +368,7 @@ def example_list_to_print(sample):
 
 
 def todefault():
-    with DatabaseConnection(GlobalLanguage.file_path + 'words.db') as conn:
+    with DatabaseConnection('words.db') as conn:
 
         cursor = conn.cursor()
         columns = ['appear', 'trial_d', 'trial_r', 'success', 'weight']
@@ -392,12 +392,12 @@ def todefault():
             """
         cursor.execute(text)
 
-    with DatabaseConnection(GlobalLanguage.file_path + 'lessons.db') as conn2:
+    with DatabaseConnection('lessons.db') as conn2:
         cursor2 = conn2.cursor()
         delete_query = "DELETE FROM lessons;"
         cursor2.execute(delete_query)
 
-    with DatabaseConnection(GlobalLanguage.file_path + 'lessons.db') as conn3:
+    with DatabaseConnection('lessons.db') as conn3:
         cursor = conn3.cursor()
         columns = ['appear', 'trial_d', 'trial_r', 'success', 'weight']
 
@@ -425,7 +425,7 @@ def repeat_difficulty(words):
 
 
 def exam_sql(exam_date, size, prcnt, words, lang, total_weight):
-    with DatabaseConnection(GlobalLanguage.file_path + 'exams.db') as conn:
+    with DatabaseConnection('exams.db') as conn:
         cursor = conn.cursor()
         # Determine the values for the new row
         next_n = cursor.execute('SELECT MAX(n) FROM exams').fetchone()[0] + 1
@@ -436,7 +436,7 @@ def exam_sql(exam_date, size, prcnt, words, lang, total_weight):
 
 
 def verbs_sql(verbList):
-    with DatabaseConnection(GlobalLanguage.file_path + 'verbs.db') as conn:
+    with DatabaseConnection('verbs.db') as conn:
         cursor = conn.cursor()
         indexes = [verb.getVerbIndex() for verb in verbList]
         for k, i in enumerate(indexes):
@@ -453,7 +453,7 @@ def verbs_sql(verbList):
 
 
 def total_exam_words():
-    with DatabaseConnection(GlobalLanguage.file_path + 'words.db') as conn:
+    with DatabaseConnection('words.db') as conn:
         cursor = conn.cursor()
         # Execute the SQL query to count rows where weight >= 50
         cursor.execute('SELECT COUNT(*) FROM words WHERE weight <= 50')

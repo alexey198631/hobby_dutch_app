@@ -28,19 +28,14 @@ het and de
 """
 
 import sys
-import pandas as pd
+import sqlite3
 from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QTime, QDateTime
-
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
                              QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy, QMenu)
-
 from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon, QColor, QBrush, QPalette
-#from defs import *
 from utils.func import *
-import random
-from global_language import GlobalLanguage, Difficulty, Styles, ExamSettings
-import sqlite3
-from datetime import datetime
+#from utils.global_cls import GlobalLanguage, Difficulty, Styles, ExamSettings
+
 
 
 class TextWidget(QMainWindow):

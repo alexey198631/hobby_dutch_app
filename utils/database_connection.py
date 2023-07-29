@@ -1,10 +1,11 @@
 import sqlite3
+from utils.global_cls import GlobalLanguage
 
 
 class DatabaseConnection:
     def __init__(self, host: str):
         self.connection = None
-        self.host = host
+        self.host = GlobalLanguage.file_path + host
 
     def __enter__(self):
         self.connection = sqlite3.connect(self.host)
