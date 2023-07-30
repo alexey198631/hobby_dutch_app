@@ -2,7 +2,7 @@
 
 - скорректировать все слова на русском начинающие со чтобы
 - add points to spare button window to see points
-- after reset repeat should inform that nothing is to repeat - not to break!!!
+- after reset repeat should inform that nothing is to repeat - not to break!!!  - теперь надо repeat !!
 - the same for exam - also can create just random words
 - actuall - I should add it to all possible things which connected to results!!!
 
@@ -1644,6 +1644,7 @@ class MainWindow(QMainWindow):
 
     def worst_lessons(self):
         data = bottom_not_repeated()
+        print(data[0], data[1])
         # Create and show the text window
         self.text_window = TextWindow(self, data=data)
         self.text_window.move(100, 100)

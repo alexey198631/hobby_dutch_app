@@ -289,6 +289,8 @@ def bottom_not_repeated():
         # Convert the data into the required format
         data = [('Lesson ' + str(lesson), time, pts) for lesson, time, pts in data]
         column_names = ['Lesson', 'Time', 'Pts']
+        if len(data) == 0:
+            data = [('None', 0, 0)]
 
     return data, column_names
 
@@ -315,6 +317,8 @@ def topbottom(top=1):
         # Convert the data into the required format
         data = [('Lesson ' + str(lesson), time, pts, level) for lesson, time, pts, level in data]
         column_names = ['Lesson', 'Time', 'Pts', 'Difficulty']
+        if len(data) == 0:
+            data = [('None', 0, 0)]
 
     return data, column_names
 
@@ -397,7 +401,7 @@ def todefault():
         delete_query = "DELETE FROM lessons;"
         cursor2.execute(delete_query)
 
-    with DatabaseConnection('lessons.db') as conn3:
+    with DatabaseConnection('verbs.db') as conn3:
         cursor = conn3.cursor()
         columns = ['appear', 'trial_d', 'trial_r', 'success', 'weight']
 
