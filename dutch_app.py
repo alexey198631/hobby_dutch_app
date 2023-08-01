@@ -201,6 +201,12 @@ class TextWindow(QMainWindow):
                         item.setFont(font)
                         brush = QBrush(QColor(230, 230, 230))  # Create a light grey brush
                         item.setBackground(brush)
+                    elif self.current_index==0 and i == self.current_index:  # in case of 1st place
+                        font = item.font()
+                        font.setBold(True)
+                        item.setFont(font)
+                        brush = QBrush(QColor(230, 230, 230))  # Create a light grey brush
+                        item.setBackground(brush)
                     self.table_widget.setItem(i, j, item)
         else:
             # Populate the table with the data
