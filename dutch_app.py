@@ -224,6 +224,12 @@ class TextWindow(QMainWindow):
                         item.setFont(font)
                         brush = QBrush(QColor(230, 230, 230))  # Create a light grey brush
                         item.setBackground(brush)
+                    elif self.current_index==0 and i == self.current_index:  # in case of 1st place
+                        font = item.font()
+                        font.setBold(True)
+                        item.setFont(font)
+                        brush = QBrush(QColor(230, 230, 230))  # Create a light grey brush
+                        item.setBackground(brush)
                     self.table_widget.setItem(i, j, item)
 
 
@@ -536,10 +542,11 @@ class ButtonGridWidget(QWidget):
 class ButtonGridWidgetSpare(QWidget):
     window_closed = pyqtSignal()
 
-    def __init__(self, list_of_words=[], rever=0, lsn=999):
+    def __init__(self, list_of_words=[], rever=0, lsn=999, pts=0):
         super().__init__()
 
         self.rever = rever
+        self.pts = pts
 
         if lsn != 999:
             self.lesson = lsn
@@ -549,7 +556,8 @@ class ButtonGridWidgetSpare(QWidget):
         # set the title name for the widget
         start = (datetime.now() - self.lesson.getStart()).total_seconds()
         self.counter = int(round(start, 0)) + 1
-        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}]')
+        self.compensator = 0
+        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{self.pts - self.compensator}]')
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_title)
         self.timer.start(1000)  # Update title every second
@@ -591,7 +599,8 @@ class ButtonGridWidgetSpare(QWidget):
 
     def update_title(self):
         self.counter += 1
-        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}]')
+        self.compensator += 1
+        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{self.pts - self.compensator}]')
 
     def closeEvent(self, event):
         self.window_closed.emit()
@@ -732,6 +741,7 @@ class InputCounterWidget(QWidget):
         super().__init__()
 
         self.resize(500, 275)
+        self.rever = rever
         self.list_of_words = sampleList.copy()
         random.shuffle(self.list_of_words)
 
@@ -747,17 +757,23 @@ class InputCounterWidget(QWidget):
         #font.setPointSize(40)
         #font.setWeight(75)
 
-        # set the title name for the widget
-        start = (datetime.now() - self.lesson.getStart()).total_seconds()
-        self.counter = int(round(start, 0))
-        self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{2000 - self.counter}]')
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_title)
-        self.timer.start(1000)  # Update title every second
+        self.count = 0
+        self.attempts = 0
 
         # fine for help with letter
         self.penalty = 0
         self.guess_count = 0
+
+        # set the title name for the widget
+        start = (datetime.now() - self.lesson.getStart()).total_seconds()
+        self.counter = int(round(start, 0))
+        if self.rever == 0:
+            self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{2000 - self.counter - self.attempts + self.count - self.penalty}]')
+        elif self.rever == 1:
+            self.setWindowTitle(f'Lesson # {self.lesson.getNumber()} - [{self.counter}] - [{1725 - self.counter - self.attempts + self.count + self.lesson.getInterPoints() - self.penalty}]')
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_title)
+        self.timer.start(1000)  # Update title every second
 
         self.all_words = awl
         self.rever = rever
@@ -776,8 +792,7 @@ class InputCounterWidget(QWidget):
         self.lcd_counter_pts = QLCDNumber(self)
         self.lcd_counter_pts.setDigitCount(3)
 
-        self.count = 0
-        self.attempts = 0
+
         self.indx = 0
         self.list_to_delete = []
 
@@ -842,7 +857,7 @@ class InputCounterWidget(QWidget):
             self.lesson.points(250 - self.attempts - self.penalty)
             self.lesson.inter(datetime.now())
             self.list_to_delete = []
-            self.start_translation()
+            self.start_translation(pts=(2000 - self.counter - self.attempts + self.count - self.penalty))
         elif self.count == 25 and self.rever == 1:
             self.lesson.add_pts(250 - self.attempts - self.penalty)
             self.lesson.finish(datetime.now())
@@ -856,7 +871,10 @@ class InputCounterWidget(QWidget):
             random.shuffle(self.list_of_words)
             self.current_word = self.list_of_words[self.indx]
             self.hideMe()
-            self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=self.list_of_words, lsn=self.lesson)
+            if self.rever == 0:
+                self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=self.list_of_words, lsn=self.lesson, pts=(2000 - self.counter - self.attempts + self.count - self.penalty))
+            elif self.rever == 1:
+                self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=self.list_of_words, lsn=self.lesson, pts=(1725 - self.counter - self.attempts + self.count + self.lesson.getInterPoints() - self.penalty))
             self.button_grid_window_spare.move(100, 100)
             self.button_grid_window_spare.window_closed.connect(self.shoeMe)
             self.button_grid_window_spare.show()
@@ -926,9 +944,9 @@ class InputCounterWidget(QWidget):
         else:
             self.line_edit.insert(ch)
 
-    def start_translation(self):
+    def start_translation(self, pts):
         self.close()
-        self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=self.start_list, lsn=self.lesson)
+        self.button_grid_window_spare = ButtonGridWidgetSpare(list_of_words=self.start_list, lsn=self.lesson, pts=pts)
         self.button_grid_window_spare.move(100, 100)
         self.button_grid_window_spare.window_closed.connect(self.open_tranlsation_counter_widget)
         self.button_grid_window_spare.show()
@@ -1597,7 +1615,7 @@ class MainWindow(QMainWindow):
         repeat_btn = QPushButton('Repeat', self)
         repeat_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         repeat_btn.setStyleSheet(Styles.button_style)
-        
+
         exam_btn = QPushButton('Exam', self)
         exam_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         exam_btn.setStyleSheet(Styles.button_style)
