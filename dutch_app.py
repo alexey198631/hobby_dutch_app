@@ -1,10 +1,11 @@
 """
 
-- скорректировать все слова на русском начинающие со чтобы
-- add points to spare button window to see points
+
+
 - after reset repeat should inform that nothing is to repeat - not to break!!!  - теперь надо repeat !!
 - the same for exam - also can create just random words
 - actuall - I should add it to all possible things which connected to results!!!
+- скорректировать все слова на русском начинающие со чтобы
 
 Exam + Verbs
 
@@ -120,7 +121,6 @@ class TextWindow(QMainWindow):
             self.setFixedSize(450, 410)
             self.setWindowTitle(f'{data[2]}')
             self.current_index = data[3]
-            print('index', self.current_index)
         else:
             self.setFixedSize(350, 380)
             self.setWindowTitle('results')
@@ -1236,7 +1236,7 @@ class InputCounterWidgetVerbs(QWidget):
         self.text_window_verbs = TextWindowVerbs(self, data=data)
         self.text_window_verbs.move(100, 100)
         self.text_window_verbs.show()
-        print((datetime.now() - self.startTime).total_seconds())
+        #print((datetime.now() - self.startTime).total_seconds())
         #self.text_window_verbs.closed_window.connect(self.main_window_back)
 
     def main_window_back(self):
@@ -1668,7 +1668,7 @@ class MainWindow(QMainWindow):
 
     def worst_lessons(self):
         data = bottom_not_repeated()
-        print(data[0], data[1])
+        #print(data[0], data[1])
         # Create and show the text window
         self.text_window = TextWindow(self, data=data)
         self.text_window.move(100, 100)
