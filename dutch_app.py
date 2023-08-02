@@ -1,8 +1,7 @@
 """
 
 
-
-- after reset repeat should inform that nothing is to repeat - not to break!!!  - теперь надо repeat !!
+- after reset repeat should inform that nothing is to repeat - not to break!!!  - теперь надо exam !!
 - the same for exam - also can create just random words
 - actuall - I should add it to all possible things which connected to results!!!
 - скорректировать все слова на русском начинающие со чтобы
@@ -368,8 +367,11 @@ class RepeatWindow(QWidget):
         self.setGeometry(100, 100, 800, 400)  # x, y, width, height
         self.setWindowTitle('Lessons to repeat')
 
-        unique_values = loadData('lesson')[0]
-        unique_values.insert(0, 'Select random words from the entire learned vocabulary')
+        try:
+            unique_values = loadData('lesson')[0]
+            unique_values.insert(0, 'Select random words from the entire learned vocabulary')
+        except:
+            unique_values = ['Nothing to repeat']
 
         # create layout for widget and add list widget
         vbox = QVBoxLayout()
@@ -399,7 +401,10 @@ class RepeatWindow(QWidget):
     # function to be performed on item click
     def on_lesson_clicked(self, item):
         self.hide()
-        if item.text().split(' ')[0] != 'Lesson':
+        if item.text().split(' ')[0] == 'Nothing':
+            self.main_window_back()
+            return
+        elif item.text().split(' ')[0] != 'Lesson':
             repeat_lesson = 999
             self.words = get_lesson_words(repeat_lesson)
             self.wordList = loadWords(self.words)
