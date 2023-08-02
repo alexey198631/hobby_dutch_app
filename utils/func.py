@@ -30,7 +30,7 @@ def sql_text(dffty, limit, wl=100, exm='no'):
 
 
 def loadData(source, final='no', exam='no'):
-    with DatabaseConnection(f'/{source}s.db') as conn:
+    with DatabaseConnection(f'{source}s.db') as conn:
 
         if source == 'word' and final == 'no' and exam == 'no':
             cursor = conn.cursor()

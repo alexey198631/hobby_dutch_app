@@ -806,7 +806,7 @@ class InputCounterWidget(QWidget):
 
 
         # Create buttons with special characters
-        if GlobalLanguage.file_path == 'data_files/spanish/':
+        if GlobalLanguage.file_path == 'utils/spanish/':
             spec_buttons = ['1L', 'á', 'í', 'é', 'ó', 'ñ', 'ú', 'ü']
         else:
             spec_buttons = ['1L', 'ö', 'ü', 'à', 'ë', 'ï', 'é', 'è', 'ê', '’']
@@ -1024,7 +1024,7 @@ class InputCounterWidgetVerbs(QWidget):
         hbox = QHBoxLayout(groupBox)
 
         # Create buttons with special characters
-        if GlobalLanguage.file_path == 'data_files/spanish/':
+        if GlobalLanguage.file_path == 'utils/spanish/':
             spec_buttons = ['1L', 'á', 'í', 'é', 'ó', 'ñ', 'ú', 'ü']
         else:
             spec_buttons = ['1L', 'ö', 'ü', 'à', 'ë', 'ï', 'é', 'è', 'ê', '’']
@@ -1296,7 +1296,7 @@ class ExamWidget(QWidget):
 
         # Create buttons with special characters
         # Create buttons with special characters
-        if GlobalLanguage.file_path == 'data_files/spanish/':
+        if GlobalLanguage.file_path == 'utils/spanish/':
             spec_buttons = ['1L', 'á', 'í', 'é', 'ó', 'ñ', 'ú', 'ü']
         else:
             spec_buttons = ['1L', 'ö', 'ü', 'à', 'ë', 'ï', 'é', 'è', 'ê', '’']
@@ -1395,7 +1395,7 @@ class ExamWidget(QWidget):
             lang = 'en'
 
         # Connect to the database
-        conn = sqlite3.connect('data_files/exams.db')
+        conn = sqlite3.connect('utils/exams.db')
         cursor = conn.cursor()
         # Execute the query
         cursor.execute(f"SELECT COALESCE(MAX(prcnt), 0) FROM exams WHERE size = {self.num} AND lang = '{lang}'")
@@ -1762,14 +1762,14 @@ class MainWindow(QMainWindow):
         self.input_counter_widget_verbs.window_closed.connect(self.main_window_back)
 
     def choose_dutch(self):
-        new_value = 'data_files/'
+        new_value = 'utils/'
         GlobalLanguage.set_value(new_value)
         icon_path = GlobalLanguage.file_path + '/icon.png'
         icon = QIcon(icon_path)
         QApplication.instance().setWindowIcon(icon)
 
     def choose_spanish(self):
-        new_value = 'data_files/spanish/'
+        new_value = 'utils/spanish/'
         GlobalLanguage.set_value(new_value)
         icon_path = GlobalLanguage.file_path + '/icon.png'
         icon = QIcon(icon_path)
