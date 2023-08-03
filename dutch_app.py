@@ -1,8 +1,5 @@
 """
 
-
-- after reset repeat should inform that nothing is to repeat - not to break!!!  - теперь надо exam !!
-- the same for exam - also can create just random words
 - actuall - I should add it to all possible things which connected to results!!!
 - скорректировать все слова на русском начинающие со чтобы
 
@@ -1399,17 +1396,15 @@ class ExamWidget(QWidget):
         else:
             lang = 'en'
 
-        # Connect to the database
-        conn = sqlite3.connect('utils/exams.db')
-        cursor = conn.cursor()
-        # Execute the query
-        cursor.execute(f"SELECT COALESCE(MAX(prcnt), 0) FROM exams WHERE size = {self.num} AND lang = '{lang}'")
-        # Fetch the result
-        best_result = cursor.fetchone()[0]
+        with DatabaseConnection('exams.db') as conn:
+
+            cursor = conn.cursor()
+            # Execute the query
+            cursor.execute(f"SELECT COALESCE(MAX(prcnt), 0) FROM exams WHERE size = {self.num} AND lang = '{lang}'")
+            # Fetch the result
+            best_result = cursor.fetchone()[0]
 
         best_result = round(best_result, 0)
-        # Close the database connection
-        conn.close()
 
         correct_answers, total_questions, time_minutes, time_seconds, best_result = self.count, self.attempts, self.time_minutes, self.time_seconds, best_result
 
@@ -1880,28 +1875,25 @@ class SearchWindow(QMainWindow):
             return
 
         # Connect to the database
-        connection = sqlite3.connect(GlobalLanguage.file_path + 'words.db')
-        cursor = connection.cursor()
+        with DatabaseConnection('words.db') as conn:
+            cursor = conn.cursor()
 
-        # Execute the query
-        query = f"SELECT word, type, translation, russian, difficulty FROM words WHERE word LIKE ? OR translation LIKE ?"
-        cursor.execute(query, (f"%{search_term}%", f"%{search_term}%"))
+            # Execute the query
+            query = f"SELECT word, type, translation, russian, difficulty FROM words WHERE word LIKE ? OR translation LIKE ?"
+            cursor.execute(query, (f"%{search_term}%", f"%{search_term}%"))
 
-        # Fetch the result
-        result = cursor.fetchone()
-        if result is None:
-            # No matching record found
-            for field in self.fields:
-                field.clear()
-            self.original_word = None  # Clear the original word
-        else:
-            # Update the fields with the fetched values
-            for field, value in zip(self.fields, result):
-                field.setText(str(value))
-            self.original_word = result[0]  # Store the original word
-
-        # Close the database connection
-        connection.close()
+            # Fetch the result
+            result = cursor.fetchone()
+            if result is None:
+                # No matching record found
+                for field in self.fields:
+                    field.clear()
+                self.original_word = None  # Clear the original word
+            else:
+                # Update the fields with the fetched values
+                for field, value in zip(self.fields, result):
+                    field.setText(str(value))
+                self.original_word = result[0]  # Store the original word
 
     def save_changes(self):
 
@@ -1916,18 +1908,13 @@ class SearchWindow(QMainWindow):
         if not all(new_values):
             return
 
-        # Connect to the database
-        connection = sqlite3.connect(GlobalLanguage.file_path + 'words.db')
-        cursor = connection.cursor()
+        with DatabaseConnection('words.db') as conn:
+            cursor = conn.cursor()
 
-        # Update the values in the database
-        query = "UPDATE words SET word=?, type=?, translation=?, russian=?, difficulty=? WHERE word=?"
-        values = new_values + [self.original_word]  # Use the original word
-        cursor.execute(query, values)
-
-        # Commit the changes and close the database connection
-        connection.commit()
-        connection.close()
+            # Update the values in the database
+            query = "UPDATE words SET word=?, type=?, translation=?, russian=?, difficulty=? WHERE word=?"
+            values = new_values + [self.original_word]  # Use the original word
+            cursor.execute(query, values)
 
     def closeEvent(self, event):
         self.main_window.show()

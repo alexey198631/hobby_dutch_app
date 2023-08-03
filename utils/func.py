@@ -1,5 +1,6 @@
 from datetime import datetime
 import re
+import math
 from utils.database_connection import DatabaseConnection
 from utils.global_cls import *
 
@@ -54,10 +55,15 @@ def loadData(source, final='no', exam='no'):
         elif source == 'word' and exam == 'yes':
             cursor = conn.cursor()
             length, weight = Difficulty.difficulty_distribution
+
             # Execute the SQL query
             cursor.execute(f"SELECT * FROM words WHERE weight <= {weight}")
             # Fetch all the rows
             rows = cursor.fetchall()
+            if len(rows) == 0:
+                weight = 100.0
+                cursor.execute(f"SELECT * FROM words WHERE weight <= {weight}")
+                rows = cursor.fetchall()
             # Extract values from the 'word_index' column and store in a list
             word_index_list = [row[11] for row in rows]
             # Choose 'n' = length random indexes from the list
@@ -401,6 +407,11 @@ def todefault():
         delete_query = "DELETE FROM lessons;"
         cursor2.execute(delete_query)
 
+    with DatabaseConnection('exams.db') as conn4:
+        cursor4 = conn4.cursor()
+        delete_query = "DELETE FROM exams;"
+        cursor4.execute(delete_query)
+
     with DatabaseConnection('verbs.db') as conn3:
         cursor = conn3.cursor()
         columns = ['appear', 'trial_d', 'trial_r', 'success', 'weight']
@@ -432,7 +443,10 @@ def exam_sql(exam_date, size, prcnt, words, lang, total_weight):
     with DatabaseConnection('exams.db') as conn:
         cursor = conn.cursor()
         # Determine the values for the new row
-        next_n = cursor.execute('SELECT MAX(n) FROM exams').fetchone()[0] + 1
+        if cursor.execute('SELECT MAX(n) FROM exams').fetchone()[0] is None:
+            next_n = 1
+        else:
+            next_n = cursor.execute('SELECT MAX(n) FROM exams').fetchone()[0] + 1
 
         # Insert the new row into the 'exams' table
         cursor.execute("INSERT INTO exams (n, date, size, prcnt, words, lang, total_weight) VALUES (?, ?, ?, ?, ?, ?, ?)",
