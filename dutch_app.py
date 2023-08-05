@@ -1,12 +1,7 @@
 """
 
-- actuall - I should add it to all possible things which connected to results!!!
-- скорректировать все слова на русском начинающие со чтобы
-
 Exam + Verbs
 
-- what to do with main window? should I make fixed size for button window???
-- check spanish version
 - irregular verbs for spanish as well?
 - add more verbs and fix verb selection
 
@@ -25,13 +20,11 @@ het and de
 """
 
 import sys
-import sqlite3
 from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QTime, QDateTime
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
                              QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy, QMenu)
 from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon, QColor, QBrush, QPalette
 from utils.func import *
-#from utils.global_cls import GlobalLanguage, Difficulty, Styles, ExamSettings
 
 
 
