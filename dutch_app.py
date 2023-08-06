@@ -1,4 +1,5 @@
 """
+- text size at buttons
 
 Exam + Verbs
 
@@ -1835,6 +1836,7 @@ class SearchWindow(QMainWindow):
         # Create buttons
         self.save_button = QPushButton("Save")
         self.close_button = QPushButton("Close")
+        self.result_label = QLabel()
 
         # Create layout
         layout = QVBoxLayout()
@@ -1848,6 +1850,7 @@ class SearchWindow(QMainWindow):
 
         layout.addWidget(self.save_button)
         layout.addWidget(self.close_button)
+        layout.addWidget(self.result_label)
 
         # Create main widget
         main_widget = QWidget()
@@ -1863,6 +1866,7 @@ class SearchWindow(QMainWindow):
         self.close_button.clicked.connect(self.close)
 
     def search(self):
+        self.result_label.setText('')
         search_term = self.search_input.text()
         if not search_term:
             return
@@ -1908,6 +1912,8 @@ class SearchWindow(QMainWindow):
             query = "UPDATE words SET word=?, type=?, translation=?, russian=?, difficulty=? WHERE word=?"
             values = new_values + [self.original_word]  # Use the original word
             cursor.execute(query, values)
+
+        self.result_label.setText('Saved')
 
     def closeEvent(self, event):
         self.main_window.show()
