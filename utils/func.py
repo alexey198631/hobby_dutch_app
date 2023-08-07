@@ -504,3 +504,6 @@ def word_list_to_print(sample):
         final.append(str(t.getWord()) + ": " + str(t.getTranslation()))
     return final
 
+
+
+

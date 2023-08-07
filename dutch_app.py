@@ -24,7 +24,7 @@ import sys
 from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QTime, QDateTime
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
                              QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy, QMenu)
-from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon, QColor, QBrush, QPalette
+from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon, QColor, QBrush, QPalette, QFontMetrics
 from utils.func import *
 
 
@@ -480,9 +480,11 @@ class ButtonGridWidget(QWidget):
             for j in range(5):
                 wrd = self.shared_object_list[i * 5 + j]
                 if wrd.getTyp() is not None:
-                    button = QPushButton(f'{wrd.getTyp()} \n \n {wrd.getWord()}', self)  # \n | \n {sample[i * 5 + j].getTranslation()}
+                    #button = QPushButton(f'{wrd.getTyp()} \n \n {wrd.getWord()}', self)  # \n | \n {sample[i * 5 + j].getTranslation()}
+                    button = AutoFontSizeButton(f'{wrd.getTyp()} \n \n {wrd.getWord()}', self)
                 else:
-                    button = QPushButton(f'{wrd.getWord()}', self)  # \n | \n {sample[i * 5 + j].getTranslation()}
+                    #button = QPushButton(f'{wrd.getWord()}', self)  # \n | \n {sample[i * 5 + j].getTranslation()}
+                    button = AutoFontSizeButton(f'{wrd.getWord()}', self)
                 button.setFixedSize(200, 100)
                 if wrd.getWeight() != 100.0:
                     button.setStyleSheet("background-color: lightblue")
@@ -507,6 +509,7 @@ class ButtonGridWidget(QWidget):
 
     def on_button_clicked(self, i, j):
         sender = self.sender()
+
         if sender.property('clicked'):
             sender.setProperty('clicked', False)
             if self.shared_object_list[i * 5 + j].getTyp() is not None:
@@ -514,13 +517,30 @@ class ButtonGridWidget(QWidget):
             else:
                 sender.setText(f'{self.shared_object_list[i * 5 + j].getWord()}')
             sender.setStyleSheet(sender.property('original_style')) # Restore the original style for words which were learnt before
+            font = sender.property('original_font')
+            sender.setFont(font)  # Restore the original font size
             self.counter_click -= 1
         else:
             sender.setProperty('clicked', True)
             sender.setProperty('original_style', sender.styleSheet()) # Store the original style
-            sender.setText(
-                f'{self.shared_object_list[i * 5 + j].getTranslation()} \n | \n {self.shared_object_list[i * 5 + j].getRussian()}')
+            text = f'{self.shared_object_list[i * 5 + j].getTranslation()} \n | \n {self.shared_object_list[i * 5 + j].getRussian()}'
+            sender.setText(text)
             sender.setStyleSheet("background-color: green")  # change the background color of the clicked button
+
+            # Calculate the optimal font size only if the text doesn't fit within the button's dimensions
+            font = sender.font()
+            metrics = QFontMetrics(font)
+            max_width = sender.width() - 3  # Adjust as needed
+            max_height = sender.height() - 3  # Adjust as needed
+            text_width = metrics.horizontalAdvance(text)
+            text_height = metrics.height()
+
+            if text_width > max_width or text_height > max_height:
+                font_size = min((max_width / text_width) * font.pointSize(),
+                                (max_height / text_height) * font.pointSize()) + 2 # + 2 because it became too small...
+                font.setPointSizeF(font_size)
+                sender.setFont(font)  # Set the updated font size
+
             self.counter_click += 1
 
         sender.style().unpolish(sender)  # update the button's appearance
@@ -1919,6 +1939,32 @@ class SearchWindow(QMainWindow):
         self.main_window.show()
         self.save_changes()
         super().closeEvent(event)
+
+
+class AutoFontSizeButton(QPushButton):
+    def __init__(self, text, parent=None):
+        super().__init__(text, parent)
+        self.setProperty('original_font', self.font())  # Initialize original_font property
+
+    def resizeEvent(self, event):
+        font = self.font()
+        metrics = QFontMetrics(font)
+        available_width = self.width()
+        available_height = self.height()
+
+        text_width = metrics.horizontalAdvance(self.text())
+        text_height = metrics.height()
+
+        while text_width > available_width or text_height > available_height:
+            font_size = font.pointSize() - 1
+            print(font_size)
+            font.setPointSize(font_size)
+            metrics = QFontMetrics(font)
+            text_width = metrics.horizontalAdvance(self.text())
+            text_height = metrics.height()
+
+        self.setFont(font)
+        super().resizeEvent(event)
 
 
 def main():
