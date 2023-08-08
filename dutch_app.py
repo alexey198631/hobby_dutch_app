@@ -1,9 +1,6 @@
 """
-- text size at buttons
 
-Exam + Verbs
-
-- irregular verbs for spanish as well?
+- text size at buttons irregular verbs for spanish as well?
 - add more verbs and fix verb selection
 
 Graphs
@@ -1822,7 +1819,6 @@ class MainWindow(QMainWindow):
         self.correct_window.move(100, 100)
         self.correct_window.show()
         self.hide()
-
 
 
 class SearchWindow(QMainWindow):

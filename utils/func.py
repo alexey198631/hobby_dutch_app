@@ -82,12 +82,32 @@ def loadData(source, final='no', exam='no'):
     return list_of_lessons,  max(list_of_lessons) + 1
 
 
-def sql_verbs_text():
+def sql_verbs_weight_indexes():
+    text = """
+    SELECT verb_index
+    FROM verbs
+    ORDER BY weight DESC, RANDOM()
+    LIMIT 3;
+    """
+    return text
+
+
+def sql_verbs_appear_indexes(index_str):
+    text = f"""
+    SELECT verb_index
+    FROM verbs
+    WHERE verb_index NOT IN ({index_str})
+    ORDER BY appear ASC, RANDOM()
+    LIMIT 2;
+    """
+    return text
+
+
+def sql_verbs_text(index_str):
     text = f"""
     SELECT verb_index, verb, translation, past_singular, past_participle, appear, trial_d, trial_r, success, weight
     FROM verbs
-    ORDER BY weight DESC, RANDOM()
-    LIMIT 5;
+    WHERE verb_index IN ({index_str});
     """
     return text
 
@@ -95,12 +115,22 @@ def sql_verbs_text():
 def loadVerbsData(source): # data frame from xlsx file with verbs, it creates list of class Verbs
     with DatabaseConnection(f'/{source}s.db') as conn:
         cursor = conn.cursor()
-        selected_words = []
-        words_query = sql_verbs_text()
-        cursor.execute(words_query)
-        selected_words = selected_words + cursor.fetchall()
+        selected_indexes = []
+        words_query_by_weight = sql_verbs_weight_indexes()
+        cursor.execute(words_query_by_weight)
+        selected_indexes = selected_indexes + cursor.fetchall()
+        index_str = [index[0] for index in selected_indexes]
+        index_str = ', '.join(map(str, index_str))
+        words_query_by_appear = sql_verbs_appear_indexes(index_str)
+        cursor.execute(words_query_by_appear)
+        selected_indexes = selected_indexes + cursor.fetchall()
+        selected_indexes = [index[0] for index in selected_indexes]
+        selected_indexes = ', '.join(map(str, selected_indexes))
+        verbs_query = sql_verbs_text(selected_indexes)
+        cursor.execute(verbs_query)
+        verbs = cursor.fetchall()
         list_of_verbs = []
-        for row in selected_words:
+        for row in verbs:
             verb = Verbs(*row)
             list_of_verbs.append(verb)
     return list_of_verbs
@@ -503,7 +533,4 @@ def word_list_to_print(sample):
     for t in temp:
         final.append(str(t.getWord()) + ": " + str(t.getTranslation()))
     return final
-
-
-
 
