@@ -1,15 +1,11 @@
 """
 
 - text size at buttons irregular verbs for spanish as well?
-- add more verbs and fix verb selection
+- add more verbs
 
 Graphs
 
 - learn possibiliets PyQT for graphs representation
-- add difficulty information to printing functuanality, is it possible to have filter in these tables?
-- is it possible to make bold the last lesson in the table when printing
-- hints for words (1st letter, Last letter, random letter)
-- change pointing system - limit number of points = 1000 which is achiavable
 
 het and de
 
