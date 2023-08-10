@@ -1631,6 +1631,12 @@ class MainWindow(QMainWindow):
         verb_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         verb_btn.setStyleSheet(Styles.button_style)
 
+        if GlobalLanguage.file_path == 'utils/':
+            self.de_het_btn = QPushButton('De of het', self)
+            self.de_het_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            self.de_het_btn.setStyleSheet(Styles.button_style)
+
+
         exit_btn = QPushButton('Exit', self)
         exit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         exit_btn.setStyleSheet(Styles.button_style)
@@ -1639,6 +1645,8 @@ class MainWindow(QMainWindow):
         repeat_btn.clicked.connect(self.repeat)
         exam_btn.clicked.connect(self.exam)
         verb_btn.clicked.connect(self.verbs)
+        if GlobalLanguage.file_path == 'utils/':
+            self.de_het_btn.clicked.connect(self.dehet)
         exit_btn.clicked.connect(self.close)
 
         layout = QVBoxLayout()
@@ -1646,6 +1654,8 @@ class MainWindow(QMainWindow):
         layout.addWidget(repeat_btn)
         layout.addWidget(exam_btn)
         layout.addWidget(verb_btn)
+        if GlobalLanguage.file_path == 'utils/':
+            layout.addWidget(self.de_het_btn)
         layout.addWidget(exit_btn)
 
         central_widget = QWidget()
@@ -1714,6 +1724,9 @@ class MainWindow(QMainWindow):
         self.text_window.show()
         self.hide()
 
+    def dehet(self):
+        pass
+
     def next_lesson(self):
         self.button_grid_window = ButtonGridWidget()
         self.button_grid_window.move(100, 100)
@@ -1774,6 +1787,7 @@ class MainWindow(QMainWindow):
         icon_path = GlobalLanguage.file_path + '/icon.png'
         icon = QIcon(icon_path)
         QApplication.instance().setWindowIcon(icon)
+        self.de_het_btn.show()
 
     def choose_spanish(self):
         new_value = 'utils/spanish/'
@@ -1781,6 +1795,7 @@ class MainWindow(QMainWindow):
         icon_path = GlobalLanguage.file_path + '/icon.png'
         icon = QIcon(icon_path)
         QApplication.instance().setWindowIcon(icon)
+        self.de_het_btn.hide()
 
     def choose_easy(self):
         new_diff = 'easy'
