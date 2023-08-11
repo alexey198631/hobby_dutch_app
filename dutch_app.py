@@ -21,6 +21,52 @@ from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon, QColor, QBrush, QPal
 from utils.func import *
 
 
+class DeHetWidget(QWidget):
+    window_closed = pyqtSignal()
+
+    def __init__(self, main_window):
+        super().__init__()
+
+        self.main_window = main_window
+
+        self.setWindowTitle("De of Het Widget")
+        self.setFixedSize(200, 200)
+
+        self.word_label = QLabel("Word", self)
+        self.debutton = QPushButton("De", self)
+        self.hetbutton = QPushButton("Het", self)
+        self.translation_label = QLabel("Translation", self)
+
+
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.debutton)
+        button_layout.addWidget(self.hetbutton)
+
+
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(self.word_label)
+        main_layout.addLayout(button_layout)
+        main_layout.addWidget(self.translation_label)
+        self.exitbutton = QPushButton("Exit", self)
+        main_layout.addWidget(self.exitbutton)
+
+        self.setLayout(main_layout)
+
+        self.exitbutton.clicked.connect(self.close)
+
+    def main_window_back(self):
+        self.close()
+        self.main_window.show()
+
+    def close_me(self):
+        self.close()
+
+    def closeEvent(self, event):
+        self.window_closed.emit()
+        super().closeEvent(event)
+
+
+
 
 class TextWidget(QMainWindow):
 
@@ -1725,7 +1771,11 @@ class MainWindow(QMainWindow):
         self.hide()
 
     def dehet(self):
-        pass
+        self.button_de_het_window = DeHetWidget(self)
+        self.button_de_het_window.move(100, 100)
+        self.button_de_het_window.show()
+        self.hide()
+        self.button_de_het_window.window_closed.connect(self.main_window_back)
 
     def next_lesson(self):
         self.button_grid_window = ButtonGridWidget()
