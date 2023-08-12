@@ -9,7 +9,8 @@ Graphs
 
 het and de
 
-- add this functuanality for dutch version
+- add timing
+- add results
 
 """
 
@@ -18,6 +19,7 @@ from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QTime, QDateTime
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
                              QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy, QMenu)
 from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon, QColor, QBrush, QPalette, QFontMetrics
+from functools import partial
 from utils.func import *
 
 
@@ -28,11 +30,12 @@ class DeHetWidget(QWidget):
         super().__init__()
 
         self.dehetlist = loadData('word', dehet='yes')
+        self.points = 0
 
         self.main_window = main_window
 
         self.setWindowTitle("De of Het Widget")
-        self.setFixedSize(200, 200)
+        self.setFixedSize(400, 200)
 
         self.word_label = QLabel("Word", self)
         self.word_label.setFont(QFont("Arial", 16))
@@ -46,11 +49,19 @@ class DeHetWidget(QWidget):
         button_layout.addWidget(self.debutton)
         button_layout.addWidget(self.hetbutton)
 
+        #self.debutton.clicked.connect(partial(self.check_article, 'de'))
+        self.debutton.clicked.connect(lambda: self.check_article("de", self.debutton))
+
+        #self.hetbutton.clicked.connect(partial(self.check_article, 'het'))
+        self.hetbutton.clicked.connect(lambda: self.check_article("het", self.hetbutton))
 
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.word_label)
         main_layout.addLayout(button_layout)
         main_layout.addWidget(self.translation_label)
+        self.result_label = QLabel("0/0", self)
+        self.result_label.setFont(QFont("Arial", 16))
+        main_layout.addWidget(self.result_label)
         self.exitbutton = QPushButton("Exit", self)
         main_layout.addWidget(self.exitbutton)
 
@@ -63,43 +74,34 @@ class DeHetWidget(QWidget):
 
     def next_word(self):
 
-        self.current_word = self.dehetlist[self.indx]
-
+        if self.indx == len(self.dehetlist):
+            print(self.points)
+            self.close_me()
+        else:
+            self.current_word = self.dehetlist[self.indx]
         # Set the word label
         self.word_label.setText(f"De of het?:   {self.current_word[1]} ")
         # Set the translation label
         self.translation_label.setText(f"Translation:   {self.current_word[2]} ")
 
+        self.debutton.setStyleSheet("")  # Reset button color
+        self.hetbutton.setStyleSheet("")  # Reset button color
 
-    def submit_text(self):
-        text = self.line_edit.text()
-        if self.rever == 0:
-            translation = self.current_word.getTranslation()
-        elif self.rever == 1:
-            translation = self.current_word.getWord()
-        translation = translation_with_comma(translation)  # create list of all translations
-        if text in translation:
-            self.current_word.addSuccess()
-            if self.rever == 0:
-                self.current_word.addTrials_d()
-            else:
-                self.current_word.addTrials_r()
-            self.count += 1
-            self.attempts += 1
-            self.list_to_delete.append(self.current_word)
+
+
+    def check_article(self, expected_article, button):
+        if expected_article in self.current_word[0]:
+            self.points += 1
+            button.setStyleSheet("background-color: green;")
             self.indx += 1
-            self.lcd_counter.display(self.count)
-            self.lcd_counter_pts.display(self.attempts)
-            self.next_word()
+            self.result_label.setText(f"{self.points} / {self.indx} ")
         else:
-            if self.rever == 0:
-                self.current_word.addTrials_d()
-            else:
-                self.current_word.addTrials_r()
             self.indx += 1
-            self.attempts += 1
-            self.lcd_counter_pts.display(self.attempts)
-            self.next_word()
+            button.setStyleSheet("background-color: red;")
+            self.result_label.setText(f"{self.points} / {self.indx} ")
+
+        QTimer.singleShot(100, self.next_word)
+
 
 
     def main_window_back(self):
