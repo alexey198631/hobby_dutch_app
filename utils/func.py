@@ -30,10 +30,10 @@ def sql_text(dffty, limit, wl=100, exm='no'):
     return text
 
 
-def loadData(source, final='no', exam='no'):
+def loadData(source, dehet='no', exam='no'):
     with DatabaseConnection(f'{source}s.db') as conn:
 
-        if source == 'word' and final == 'no' and exam == 'no':
+        if source == 'word' and dehet == 'no' and exam == 'no':
             cursor = conn.cursor()
             # Sample words from each difficulty level based on difficulty and weight
             selected_words = []
@@ -71,6 +71,15 @@ def loadData(source, final='no', exam='no'):
             # Retrieve the corresponding rows using the random indexes
             selected_words = [rows[index] for index in random_indexes]
             return selected_words
+
+        elif source == 'word' and dehet == 'yes':
+            cursor = conn.cursor()
+            query = "SELECT type, word, translation FROM words WHERE type LIKE '%de%' OR type LIKE '%het%' ORDER BY RANDOM() LIMIT 100"
+            cursor.execute(query)
+            # Fetch all the rows that match the query
+            random_100_rows = cursor.fetchall()
+            return random_100_rows
+
         if source == 'lesson':
             cursor = conn.cursor()
             cursor.execute(f"SELECT DISTINCT r FROM {source}s")

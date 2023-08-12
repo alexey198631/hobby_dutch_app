@@ -27,15 +27,19 @@ class DeHetWidget(QWidget):
     def __init__(self, main_window):
         super().__init__()
 
+        self.dehetlist = loadData('word', dehet='yes')
+
         self.main_window = main_window
 
         self.setWindowTitle("De of Het Widget")
         self.setFixedSize(200, 200)
 
         self.word_label = QLabel("Word", self)
+        self.word_label.setFont(QFont("Arial", 16))
         self.debutton = QPushButton("De", self)
         self.hetbutton = QPushButton("Het", self)
         self.translation_label = QLabel("Translation", self)
+        self.translation_label.setFont(QFont("Arial", 16))
 
 
         button_layout = QHBoxLayout()
@@ -54,6 +58,50 @@ class DeHetWidget(QWidget):
 
         self.exitbutton.clicked.connect(self.close)
 
+        self.indx = 0
+        self.next_word()
+
+    def next_word(self):
+
+        self.current_word = self.dehetlist[self.indx]
+
+        # Set the word label
+        self.word_label.setText(f"De of het?:   {self.current_word[1]} ")
+        # Set the translation label
+        self.translation_label.setText(f"Translation:   {self.current_word[2]} ")
+
+
+    def submit_text(self):
+        text = self.line_edit.text()
+        if self.rever == 0:
+            translation = self.current_word.getTranslation()
+        elif self.rever == 1:
+            translation = self.current_word.getWord()
+        translation = translation_with_comma(translation)  # create list of all translations
+        if text in translation:
+            self.current_word.addSuccess()
+            if self.rever == 0:
+                self.current_word.addTrials_d()
+            else:
+                self.current_word.addTrials_r()
+            self.count += 1
+            self.attempts += 1
+            self.list_to_delete.append(self.current_word)
+            self.indx += 1
+            self.lcd_counter.display(self.count)
+            self.lcd_counter_pts.display(self.attempts)
+            self.next_word()
+        else:
+            if self.rever == 0:
+                self.current_word.addTrials_d()
+            else:
+                self.current_word.addTrials_r()
+            self.indx += 1
+            self.attempts += 1
+            self.lcd_counter_pts.display(self.attempts)
+            self.next_word()
+
+
     def main_window_back(self):
         self.close()
         self.main_window.show()
@@ -64,8 +112,6 @@ class DeHetWidget(QWidget):
     def closeEvent(self, event):
         self.window_closed.emit()
         super().closeEvent(event)
-
-
 
 
 class TextWidget(QMainWindow):
@@ -292,8 +338,7 @@ class TextWindow(QMainWindow):
 
 
 class TextWindowVerbs(QMainWindow):
-    #window_closed = pyqtSignal()
-    closed_window = pyqtSignal()
+    window_closed = pyqtSignal()
 
     def __init__(self, main_window, data=None):
         super().__init__()
@@ -383,7 +428,7 @@ class TextWindowVerbs(QMainWindow):
         self.close()
 
     def closeEvent(self, event):
-        self.closed_window.emit()
+        self.window_closed.emit()
         super().closeEvent(event)
 
 
