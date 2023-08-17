@@ -142,7 +142,10 @@ class TextWidget(QMainWindow):
         self.list_widget.itemClicked.connect(self.update_text_edit)
         h_layout.addWidget(self.list_widget)
 
-        for i, value in enumerate(self.unique_values):
+        # to show data from the newest to the oldest
+        sorted_values = sorted(self.unique_values, reverse=True)  # Sort in descending order
+
+        for i, value in enumerate(sorted_values):
             lesson_text = 'Lesson ' + str(value)
             self.list_widget.insertItem(i, lesson_text)
 
