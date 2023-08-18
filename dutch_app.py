@@ -11,6 +11,7 @@ het and de
 
 - add timing
 - add results
+- separetly - right for de and for het
 
 """
 
@@ -31,6 +32,10 @@ class DeHetWidget(QWidget):
 
         self.dehetlist = loadData('word', dehet='yes')
         self.points = 0
+        self.de_points = 0
+        self.het_points = 0
+        self.de_total = 0
+        self.het_total = 0
 
         self.main_window = main_window
 
@@ -59,7 +64,7 @@ class DeHetWidget(QWidget):
         main_layout.addWidget(self.word_label)
         main_layout.addLayout(button_layout)
         main_layout.addWidget(self.translation_label)
-        self.result_label = QLabel("0/0", self)
+        self.result_label = QLabel("total: [0/0] - de: [0/0] - het: [0/0]", self)
         self.result_label.setFont(QFont("Arial", 16))
         main_layout.addWidget(self.result_label)
         self.exitbutton = QPushButton("Exit", self)
@@ -90,15 +95,24 @@ class DeHetWidget(QWidget):
 
 
     def check_article(self, expected_article, button):
+        if 'de' in self.current_word[0]:
+            self.de_total += 1
+        elif 'het' in self.current_word[0]:
+            self.het_total += 1
+
         if expected_article in self.current_word[0]:
             self.points += 1
             button.setStyleSheet("background-color: green;")
             self.indx += 1
-            self.result_label.setText(f"{self.points} / {self.indx} ")
+            if 'de' in self.current_word[0]:
+                self.de_points += 1
+            elif 'het' in self.current_word[0]:
+                self.het_points += 1
+            self.result_label.setText(f"total: [{self.points} / {self.indx}] - de: [{self.de_points} / {self.de_total}] - het: [{self.het_points} / {self.het_total}]")
         else:
             self.indx += 1
             button.setStyleSheet("background-color: red;")
-            self.result_label.setText(f"{self.points} / {self.indx} ")
+            self.result_label.setText(f"total: [{self.points} / {self.indx}] - de: [{self.de_points} / {self.de_total}] - het: [{self.het_points} / {self.het_total}]")
 
         QTimer.singleShot(100, self.next_word)
 
