@@ -39,8 +39,14 @@ class DeHetWidget(QWidget):
 
         self.main_window = main_window
 
-        self.setWindowTitle("De of Het Widget")
+        self.counter = 0
+        self.setWindowTitle(f'De of Het Widget - [{self.counter}] s')
         self.setFixedSize(400, 200)
+
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_title)
+        self.timer.start(1000)  # Update title every second
 
         self.word_label = QLabel("Word", self)
         self.word_label.setFont(QFont("Arial", 16))
@@ -76,6 +82,10 @@ class DeHetWidget(QWidget):
 
         self.indx = 0
         self.next_word()
+
+    def update_title(self):
+        self.counter += 1
+        self.setWindowTitle(f'De of Het Widget - [{self.counter}] s')
 
     def next_word(self):
 
