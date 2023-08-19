@@ -103,7 +103,6 @@ class DeHetWidget(QWidget):
         self.hetbutton.setStyleSheet("")  # Reset button color
 
 
-
     def check_article(self, expected_article, button):
         if 'de' in self.current_word[0]:
             self.de_total += 1
@@ -126,6 +125,31 @@ class DeHetWidget(QWidget):
 
         QTimer.singleShot(100, self.next_word)
 
+    def finalresults(self):
+        self.close()
+        self.main_window.hide()
+
+        with DatabaseConnection('dehet.db') as conn:
+
+            cursor = conn.cursor()
+            # Execute the query
+            cursor.execute(f"SELECT COALESCE(MAX(prcnt), 0) FROM exams WHERE size = {self.num} AND lang = '{lang}'")
+            # Fetch the result
+            best_result = cursor.fetchone()[0]
+
+        best_result = round(best_result, 0)
+
+        correct_answers, total_questions, time_minutes, time_seconds, best_result = self.count, self.attempts, self.time_minutes, self.time_seconds, best_result
+
+        self.exam_results_window = ExamResultsWidget(self, correct_answers, total_questions, time_minutes, time_seconds, best_result)
+        self.exam_results_window.move(100, 100)
+        self.exam_results_window.show()
+        self.exam_results_window.window_closed.connect(self.main_window_back)
+        current_date = QDateTime.currentDateTime().date()
+        datetime = QDateTime(current_date, self.start_time)
+        formatted_datetime = datetime.toString("yy-MM-dd hh:mm:ss.zzz")
+        #prcnt = round((self.count / self.num) * 100, 1)
+        exam_sql(formatted_datetime, self.num, self.count, self.total_words, lang, self.total_weight)
 
 
     def main_window_back(self):
