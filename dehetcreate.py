@@ -15,6 +15,7 @@ cursor.execute('''
         points INTEGER,
         total INTEGER,
         rate REAL
+        total_time INTEGER
     )
 ''')
 
