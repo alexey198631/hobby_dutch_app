@@ -90,7 +90,7 @@ class DeHetWidget(QWidget):
     def next_word(self):
 
         if self.indx == len(self.dehetlist):
-            print(self.points)
+            self.finalresults(self)
             self.close_me()
         else:
             self.current_word = self.dehetlist[self.indx]
@@ -133,24 +133,27 @@ class DeHetWidget(QWidget):
 
             cursor = conn.cursor()
             # Execute the query
-            cursor.execute(f"SELECT COALESCE(MAX(prcnt), 0) FROM exams WHERE size = {self.num} AND lang = '{lang}'")
-            # Fetch the result
-            best_result = cursor.fetchone()[0]
+            cursor.execute('SELECT MAX(trial) FROM dehet')
+            last_trial = cursor.fetchone()
 
-        best_result = round(best_result, 0)
+            if last_trial[0] is None:
+                new_trial = 0
+            else:
+                new_trial = last_trial[0] + 1
 
-        correct_answers, total_questions, time_minutes, time_seconds, best_result = self.count, self.attempts, self.time_minutes, self.time_seconds, best_result
+            current_date = QDateTime.currentDateTime().date()
+            datetime = QDateTime(current_date, self.start_time)
+            formatted_datetime = datetime.toString("yy-MM-dd hh:mm:ss.zzz")
 
-        self.exam_results_window = ExamResultsWidget(self, correct_answers, total_questions, time_minutes, time_seconds, best_result)
-        self.exam_results_window.move(100, 100)
-        self.exam_results_window.show()
-        self.exam_results_window.window_closed.connect(self.main_window_back)
-        current_date = QDateTime.currentDateTime().date()
-        datetime = QDateTime(current_date, self.start_time)
-        formatted_datetime = datetime.toString("yy-MM-dd hh:mm:ss.zzz")
-        #prcnt = round((self.count / self.num) * 100, 1)
-        exam_sql(formatted_datetime, self.num, self.count, self.total_words, lang, self.total_weight)
+            rate = round((self.points / self.indx), 2) * 100
 
+            de_points, de_total, het_points, het_total, points, total = self.de_points, self.de_total,  self.het_points, self.het_total, self.points, self.indx
+
+            total_time = self.counter
+
+            cursor.execute('''INSERT INTO dehet (trial, date, de_points, de_total, het_points, het_total, points, total, rate, total_time)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ''', (new_trial, formatted_datetime, de_points, de_total, het_points, het_total, points, total, rate, total_time))
 
     def main_window_back(self):
         self.close()
