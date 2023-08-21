@@ -40,6 +40,7 @@ class DeHetWidget(QWidget):
         self.main_window = main_window
 
         self.counter = 0
+        self.start_time = QTime.currentTime()
         self.setWindowTitle(f'De of Het Widget - [{self.counter}] s')
         self.setFixedSize(400, 200)
 
@@ -90,8 +91,9 @@ class DeHetWidget(QWidget):
     def next_word(self):
 
         if self.indx == len(self.dehetlist):
-            self.finalresults(self)
-            self.close_me()
+            self.finalresults()
+            #self.close_me()
+            self.main_window.show()
         else:
             self.current_word = self.dehetlist[self.indx]
         # Set the word label
@@ -137,7 +139,7 @@ class DeHetWidget(QWidget):
             last_trial = cursor.fetchone()
 
             if last_trial[0] is None:
-                new_trial = 0
+                new_trial = 1
             else:
                 new_trial = last_trial[0] + 1
 
