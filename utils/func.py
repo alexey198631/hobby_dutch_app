@@ -74,7 +74,7 @@ def loadData(source, dehet='no', exam='no'):
 
         elif source == 'word' and dehet == 'yes':
             cursor = conn.cursor()
-            query = "SELECT type, word, translation FROM words WHERE type LIKE '%de%' OR type LIKE '%het%' ORDER BY RANDOM() LIMIT 100"
+            query = "SELECT type, word, translation FROM words WHERE type LIKE '%de%' OR type LIKE '%het%' ORDER BY RANDOM() LIMIT 10"
             cursor.execute(query)
             # Fetch all the rows that match the query
             random_100_rows = cursor.fetchall()
@@ -450,6 +450,11 @@ def todefault():
         cursor4 = conn4.cursor()
         delete_query = "DELETE FROM exams;"
         cursor4.execute(delete_query)
+
+    with DatabaseConnection('dehet.db') as conn5:
+        cursor5 = conn5.cursor()
+        delete_query = "DELETE FROM dehet;"
+        cursor5.execute(delete_query)
 
     with DatabaseConnection('verbs.db') as conn3:
         cursor = conn3.cursor()
