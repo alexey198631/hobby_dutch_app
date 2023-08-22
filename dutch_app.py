@@ -27,10 +27,11 @@ from utils.func import *
 class DeHetWidget(QWidget):
     window_closed = pyqtSignal()
 
-    def __init__(self, main_window):
+    def __init__(self, main_window, num):
         super().__init__()
 
-        self.dehetlist = loadData('word', dehet='yes')
+        self.length = num
+        self.dehetlist = loadData('word', dehet='yes', length=self.length)
         self.points = 0
         self.de_points = 0
         self.het_points = 0
@@ -1874,7 +1875,7 @@ class MainWindow(QMainWindow):
         self.hide()
 
     def dehet(self):
-        self.button_de_het_window = DeHetWidget(self)
+        self.button_de_het_window = DeHetWidget(self, num=ExamSettings.exam_length)
         self.button_de_het_window.move(100, 100)
         self.button_de_het_window.show()
         self.hide()
