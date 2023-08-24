@@ -30,7 +30,7 @@ def sql_text(dffty, limit, wl=100, exm='no'):
     return text
 
 
-def loadData(source, dehet='no', exam='no'):
+def loadData(source, dehet='no', exam='no', length=100):
     with DatabaseConnection(f'{source}s.db') as conn:
 
         if source == 'word' and dehet == 'no' and exam == 'no':
@@ -73,8 +73,9 @@ def loadData(source, dehet='no', exam='no'):
             return selected_words
 
         elif source == 'word' and dehet == 'yes':
+            length = length
             cursor = conn.cursor()
-            query = "SELECT type, word, translation FROM words WHERE type LIKE '%de%' OR type LIKE '%het%' ORDER BY RANDOM() LIMIT 10"
+            query = f"SELECT type, word, translation FROM words WHERE type LIKE '%de%' OR type LIKE '%het%' ORDER BY RANDOM() LIMIT {length}"
             cursor.execute(query)
             # Fetch all the rows that match the query
             random_100_rows = cursor.fetchall()

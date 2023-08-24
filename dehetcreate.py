@@ -14,7 +14,7 @@ cursor.execute('''
         het_total INTEGER,
         points INTEGER,
         total INTEGER,
-        rate REAL
+        rate REAL,
         total_time INTEGER
     )
 ''')

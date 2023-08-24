@@ -7,12 +7,6 @@ Graphs
 
 - learn possibiliets PyQT for graphs representation
 
-het and de
-
-- add timing
-- add results
-- separetly - right for de and for het
-
 """
 
 import sys
