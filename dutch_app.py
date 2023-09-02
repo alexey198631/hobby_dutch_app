@@ -1,8 +1,8 @@
 """
 
 
-- combine all databases in one file
-- modify code accordingly
+
+- check db connections
 - update irregular verbs
 
 - text size at buttons irregular verbs for spanish as well?
