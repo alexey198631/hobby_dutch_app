@@ -134,7 +134,7 @@ class DeHetWidget(QWidget):
         self.close()
         self.main_window.hide()
 
-        with DatabaseConnection('dehet.db') as conn:
+        with DatabaseConnection('app.db') as conn:
 
             cursor = conn.cursor()
             # Execute the query
@@ -775,7 +775,7 @@ class ButtonGridWidgetVerbs(QWidget):
     def __init__(self, main_window):
         super().__init__()
 
-        verbs = loadVerbsData('verb')
+        verbs = loadVerbsData()
         sample = verbs
 
         self.main_window = main_window
@@ -1555,7 +1555,7 @@ class ExamWidget(QWidget):
         else:
             lang = 'en'
 
-        with DatabaseConnection('exams.db') as conn:
+        with DatabaseConnection('app.db') as conn:
 
             cursor = conn.cursor()
             # Execute the query
@@ -2055,7 +2055,7 @@ class SearchWindow(QMainWindow):
             return
 
         # Connect to the database
-        with DatabaseConnection('words.db') as conn:
+        with DatabaseConnection('app.db') as conn:
             cursor = conn.cursor()
 
             # Execute the query
@@ -2088,7 +2088,7 @@ class SearchWindow(QMainWindow):
         if not all(new_values):
             return
 
-        with DatabaseConnection('words.db') as conn:
+        with DatabaseConnection('app.db') as conn:
             cursor = conn.cursor()
 
             # Update the values in the database
