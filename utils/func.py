@@ -385,8 +385,8 @@ def final_creation_sql(wordList, lessonNumber):
                 "UPDATE words SET appear = ?, trial_d = ?, trial_r = ?, success = ?, weight = ?,  wd = ?  WHERE word_index = ?",
                 (v1, v2, v3, v4, v5, v6, i))
 
-    with DatabaseConnection('app.db') as conn:
-        cursor = conn.cursor()
+    #with DatabaseConnection('app.db') as conn:
+        #cursor = conn.cursor()
         cursor.execute("SELECT lesson FROM lessons WHERE lesson IS NOT NULL ORDER BY lesson DESC LIMIT 1")
         try:
             last_lesson = cursor.fetchone()[0]
