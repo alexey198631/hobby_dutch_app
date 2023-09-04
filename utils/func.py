@@ -442,23 +442,23 @@ def todefault():
             """
         cursor.execute(text)
 
-    with DatabaseConnection('app.db') as conn2:
-        cursor2 = conn2.cursor()
+    #with DatabaseConnection('app.db') as conn2:
+        #cursor2 = conn2.cursor()
         delete_query = "DELETE FROM lessons;"
-        cursor2.execute(delete_query)
+        cursor.execute(delete_query)
 
-    with DatabaseConnection('app.db') as conn4:
-        cursor4 = conn4.cursor()
+    #with DatabaseConnection('app.db') as conn4:
+        #cursor4 = conn4.cursor()
         delete_query = "DELETE FROM exams;"
-        cursor4.execute(delete_query)
+        cursor.execute(delete_query)
 
-    with DatabaseConnection('app.db') as conn5:
-        cursor5 = conn5.cursor()
+    #with DatabaseConnection('app.db') as conn5:
+        #cursor5 = conn5.cursor()
         delete_query = "DELETE FROM dehet;"
-        cursor5.execute(delete_query)
+        cursor.execute(delete_query)
 
-    with DatabaseConnection('app.db') as conn3:
-        cursor = conn3.cursor()
+    #with DatabaseConnection('app.db') as conn3:
+        #cursor = conn3.cursor()
         columns = ['appear', 'trial_d', 'trial_r', 'success', 'weight']
 
         # Generate and execute the UPDATE statements
