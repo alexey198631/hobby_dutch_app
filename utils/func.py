@@ -5,7 +5,6 @@ from utils.database_connection import DatabaseConnection
 from utils.global_cls import *
 
 
-
 def sql_text(dffty, limit, wl=100, exm='no'):
 
     if exm != 'no':
@@ -207,15 +206,15 @@ def get_lesson_words(lesson_number):
             result_list = []
             r, list_of_words = results
             number_list = list_of_words.split(';')
-            with DatabaseConnection('app.db') as conn2:
-                for number in number_list:
-                    cursor2 = conn2.cursor()
-                    word_index = int(number)
-                    cursor2.execute("SELECT word, type, translation, russian, example, example_translation, appear, "
-                                    "trial_d, trial_r, success, weight, word_index, difficulty, wd FROM words WHERE word_index = ?", (word_index,))
-                    word_result = cursor2.fetchone()
-                    if word_result is not None:
-                        result_list.append(word_result)
+            for number in number_list:
+                word_index = int(number)
+                cursor.execute("SELECT word, type, translation, russian, example, example_translation, appear, "
+                                "trial_d, trial_r, success, weight, word_index, difficulty, wd FROM words WHERE word_index = ?",
+                                (word_index,))
+                word_result = cursor.fetchone()
+                if word_result is not None:
+                    result_list.append(word_result)
+
         else:
             cursor.execute(f"SELECT list_of_words FROM lessons")
             results = cursor.fetchall()
@@ -234,15 +233,13 @@ def get_lesson_words(lesson_number):
                            WHERE word_index = ?;
                            """
             cnt = 0
-            with DatabaseConnection('app.db') as conn2:
-                cursor2 = conn2.cursor()
-                for index in index_list:
-                    word_index = int(index)
-                    cursor2.execute(text, (word_index,))
-                    word_result = cursor2.fetchone()
-                    if word_result[-4] > 60.0 and cnt != 25:
-                        result_list.append(word_result)
-                        cnt += 1
+            for index in index_list:
+                word_index = int(index)
+                cursor.execute(text, (word_index,))
+                word_result = cursor.fetchone()
+                if word_result[-4] > 60.0 and cnt != 25:
+                    result_list.append(word_result)
+                    cnt += 1
 
     return result_list
 
@@ -385,8 +382,6 @@ def final_creation_sql(wordList, lessonNumber):
                 "UPDATE words SET appear = ?, trial_d = ?, trial_r = ?, success = ?, weight = ?,  wd = ?  WHERE word_index = ?",
                 (v1, v2, v3, v4, v5, v6, i))
 
-    #with DatabaseConnection('app.db') as conn:
-        #cursor = conn.cursor()
         cursor.execute("SELECT lesson FROM lessons WHERE lesson IS NOT NULL ORDER BY lesson DESC LIMIT 1")
         try:
             last_lesson = cursor.fetchone()[0]
@@ -442,23 +437,15 @@ def todefault():
             """
         cursor.execute(text)
 
-    #with DatabaseConnection('app.db') as conn2:
-        #cursor2 = conn2.cursor()
         delete_query = "DELETE FROM lessons;"
         cursor.execute(delete_query)
 
-    #with DatabaseConnection('app.db') as conn4:
-        #cursor4 = conn4.cursor()
         delete_query = "DELETE FROM exams;"
         cursor.execute(delete_query)
 
-    #with DatabaseConnection('app.db') as conn5:
-        #cursor5 = conn5.cursor()
         delete_query = "DELETE FROM dehet;"
         cursor.execute(delete_query)
 
-    #with DatabaseConnection('app.db') as conn3:
-        #cursor = conn3.cursor()
         columns = ['appear', 'trial_d', 'trial_r', 'success', 'weight']
 
         # Generate and execute the UPDATE statements

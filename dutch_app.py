@@ -1,17 +1,9 @@
 """
-
-
-
-- check db connections
 - update irregular verbs
-
 - text size at buttons irregular verbs for spanish as well?
 - add more verbs
 
-
 Graphs
-
-
 - learn possibiliets PyQT for graphs representation
 
 
@@ -47,7 +39,6 @@ class DeHetWidget(QWidget):
         self.setWindowTitle(f'De of Het Widget - [{self.counter}] s')
         self.setFixedSize(400, 200)
 
-
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_title)
         self.timer.start(1000)  # Update title every second
@@ -58,7 +49,6 @@ class DeHetWidget(QWidget):
         self.hetbutton = QPushButton("Het", self)
         self.translation_label = QLabel("Translation", self)
         self.translation_label.setFont(QFont("Arial", 16))
-
 
         button_layout = QHBoxLayout()
         button_layout.addWidget(self.debutton)
@@ -95,7 +85,6 @@ class DeHetWidget(QWidget):
 
         if self.indx == len(self.dehetlist):
             self.finalresults()
-            #self.close_me()
             self.main_window.show()
         else:
             self.current_word = self.dehetlist[self.indx]
@@ -227,7 +216,6 @@ class TextWidget(QMainWindow):
     def update_text_edit(self, item):
         self.text_edit.clear()
         repeat = int(item.text().split(' ')[1])
-
         self.words = get_lesson_words(repeat)
         self.wordList = loadWords(self.words)
 
@@ -267,7 +255,6 @@ class TextWindow(QMainWindow):
         layout = QVBoxLayout()
         widget.setLayout(layout)
 
-
         # Create a table widget and add it to the layout
         self.table_widget = QTableWidget()
         layout.addWidget(self.table_widget)
@@ -302,10 +289,6 @@ class TextWindow(QMainWindow):
 
         # Set the central widget of the window to the input widget
         self.setCentralWidget(widget)
-
-        # Resize the columns and rows to fit the content
-        #self.table_widget.resizeColumnsToContents()
-        #self.table_widget.resizeRowsToContents()
 
         # Initialize the sort order for each column to None
         self.sort_order = [None] * self.table_widget.columnCount()
@@ -413,7 +396,6 @@ class TextWindowVerbs(QMainWindow):
         layout = QVBoxLayout()
         widget.setLayout(layout)
 
-
         # Create a table widget and add it to the layout
         self.table_widget = QTableWidget()
         layout.addWidget(self.table_widget)
@@ -439,10 +421,6 @@ class TextWindowVerbs(QMainWindow):
 
         # Set the central widget of the window to the input widget
         self.setCentralWidget(widget)
-
-        # Resize the columns and rows to fit the content
-        #self.table_widget.resizeColumnsToContents()
-        #self.table_widget.resizeRowsToContents()
 
         # Initialize the sort order for each column to None
         self.sort_order = [None] * self.table_widget.columnCount()
@@ -542,8 +520,12 @@ class RepeatWindow(QWidget):
             return
         elif item.text().split(' ')[0] != 'Lesson':
             repeat_lesson = 999
-            self.words = get_lesson_words(repeat_lesson)
-            self.wordList = loadWords(self.words)
+            try:
+                self.words = get_lesson_words(repeat_lesson)
+                self.wordList = loadWords(self.words)
+            except:
+                self.main_window_back()
+                return
         else:
             repeat_lesson = int(item.text().split(' ')[1])
             self.words = get_lesson_words(repeat_lesson)
