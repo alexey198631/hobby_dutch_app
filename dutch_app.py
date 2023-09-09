@@ -1,20 +1,8 @@
-"""
-- update irregular verbs
-- text size at buttons irregular verbs for spanish as well?
-- add more verbs
-
-Graphs
-- learn possibiliets PyQT for graphs representation
-
-
-"""
-
 import sys
 from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QTime, QDateTime
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
-                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QSizePolicy, QMenu)
-from PyQt6.QtGui import QAction, QTextOption, QFont, QIcon, QColor, QBrush, QPalette, QFontMetrics
-from functools import partial
+                             QGridLayout, QLabel, QLineEdit, QLCDNumber, QHBoxLayout, QGroupBox, QListWidget, QTableWidget, QTableWidgetItem, QTextEdit, QMenu)
+from PyQt6.QtGui import QAction, QFont, QIcon, QColor, QBrush, QFontMetrics
 from utils.func import *
 
 
