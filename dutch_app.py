@@ -819,7 +819,6 @@ class ButtonGridWidgetSpareVerbs(QWidget):
         self.sample = list_of_words.copy()
         grid_layout = QGridLayout()
 
-
         for i in range(5):
             try:
                 vrb = self.sample[i]
