@@ -12,6 +12,8 @@ class DeHetWidget(QWidget):
     def __init__(self, main_window, num):
         super().__init__()
 
+        self.main_window = main_window
+
         self.length = num
         self.dehetlist = loadData('word', dehet='yes', length=self.length)
         self.points = 0
@@ -19,9 +21,6 @@ class DeHetWidget(QWidget):
         self.het_points = 0
         self.de_total = 0
         self.het_total = 0
-
-        self.main_window = main_window
-
         self.counter = 0
         self.start_time = QTime.currentTime()
         self.setWindowTitle(f'De of Het Widget - [{self.counter}] s')
@@ -42,10 +41,8 @@ class DeHetWidget(QWidget):
         button_layout.addWidget(self.debutton)
         button_layout.addWidget(self.hetbutton)
 
-        #self.debutton.clicked.connect(partial(self.check_article, 'de'))
         self.debutton.clicked.connect(lambda: self.check_article("de", self.debutton))
 
-        #self.hetbutton.clicked.connect(partial(self.check_article, 'het'))
         self.hetbutton.clicked.connect(lambda: self.check_article("het", self.hetbutton))
 
         main_layout = QVBoxLayout()
@@ -80,7 +77,6 @@ class DeHetWidget(QWidget):
         self.word_label.setText(f"De of het?:   {self.current_word[1]} ")
         # Set the translation label
         self.translation_label.setText(f"Translation:   {self.current_word[2]} ")
-
         self.debutton.setStyleSheet("")  # Reset button color
         self.hetbutton.setStyleSheet("")  # Reset button color
 
@@ -132,7 +128,6 @@ class DeHetWidget(QWidget):
             de_points, de_total, het_points, het_total, points, total = self.de_points, self.de_total,  self.het_points, self.het_total, self.points, self.indx
 
             total_time = self.counter
-
             cursor.execute('''INSERT INTO dehet (trial, date, de_points, de_total, het_points, het_total, points, total, rate, total_time)
                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                             ''', (new_trial, formatted_datetime, de_points, de_total, het_points, het_total, points, total, rate, total_time))
@@ -287,17 +282,15 @@ class TextWindow(QMainWindow):
     def populate_table(self, data):
         # Convert the DataFrame to a list of lists
         table_data = data[0]
-
         # Set the number of rows and columns in the table
         self.table_widget.setRowCount(len(table_data))
         self.table_widget.setColumnCount(len(table_data[0]))
-
 
         if self.after_lesson == 0:
             # Populate the table with the data
             for i, row in enumerate(table_data):
                 for j, val in enumerate(row):
-                    item = QTableWidgetItem(val)  #item = QTableWidgetItem(str(val))
+                    item = QTableWidgetItem(val)
                     if j != 0 and j != 3:
                         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)  # Set the text alignment of the cell to center
                         item.setData(Qt.ItemDataRole.DisplayRole, float(val))  # Set the data type of the cell to float
@@ -308,7 +301,7 @@ class TextWindow(QMainWindow):
                         item.setFont(font)
                         brush = QBrush(QColor(230, 230, 230))  # Create a light grey brush
                         item.setBackground(brush)
-                    elif self.current_index==0 and i == self.current_index:  # in case of 1st place
+                    elif self.current_index == 0 and i == self.current_index:  # in case of 1st place
                         font = item.font()
                         font.setBold(True)
                         item.setFont(font)
@@ -319,7 +312,7 @@ class TextWindow(QMainWindow):
             # Populate the table with the data
             for i, row in enumerate(table_data):
                 for j, val in enumerate(row):
-                    item = QTableWidgetItem(val)  # item = QTableWidgetItem(str(val))
+                    item = QTableWidgetItem(val)
                     if j != 0:
                         item.setTextAlignment(
                             Qt.AlignmentFlag.AlignCenter)  # Set the text alignment of the cell to center
@@ -331,7 +324,7 @@ class TextWindow(QMainWindow):
                         item.setFont(font)
                         brush = QBrush(QColor(230, 230, 230))  # Create a light grey brush
                         item.setBackground(brush)
-                    elif self.current_index==0 and i == self.current_index:  # in case of 1st place
+                    elif self.current_index == 0 and i == self.current_index:  # in case of 1st place
                         font = item.font()
                         font.setBold(True)
                         item.setFont(font)
@@ -339,12 +332,9 @@ class TextWindow(QMainWindow):
                         item.setBackground(brush)
                     self.table_widget.setItem(i, j, item)
 
-
-
     def sort_table(self, logical_index):
         # Get the current sort order for the column
         current_order = self.sort_order[logical_index]
-
         # Determine the new sort order for the column
         if current_order is None or current_order == Qt.SortOrder.DescendingOrder:
             new_order = Qt.SortOrder.AscendingOrder
@@ -353,7 +343,6 @@ class TextWindow(QMainWindow):
 
         # Sort the table in the desired order
         self.table_widget.sortItems(logical_index, new_order)
-
         # Update the sort order for the column
         self.sort_order[logical_index] = new_order
 
@@ -412,7 +401,6 @@ class TextWindowVerbs(QMainWindow):
 
         # Initialize the sort order for each column to None
         self.sort_order = [None] * self.table_widget.columnCount()
-
         # Connect the sectionClicked signal to the sort_table function
         self.table_widget.horizontalHeader().sectionClicked.connect(self.sort_table)
 
@@ -430,11 +418,9 @@ class TextWindowVerbs(QMainWindow):
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)  # Set the text alignment of the cell to center
                 self.table_widget.setItem(i, j, item)
 
-
     def sort_table(self, logical_index):
         # Get the current sort order for the column
         current_order = self.sort_order[logical_index]
-
         # Determine the new sort order for the column
         if current_order is None or current_order == Qt.SortOrder.DescendingOrder:
             new_order = Qt.SortOrder.AscendingOrder
@@ -443,7 +429,6 @@ class TextWindowVerbs(QMainWindow):
 
         # Sort the table in the desired order
         self.table_widget.sortItems(logical_index, new_order)
-
         # Update the sort order for the column
         self.sort_order[logical_index] = new_order
 
@@ -519,7 +504,6 @@ class RepeatWindow(QWidget):
             self.words = get_lesson_words(repeat_lesson)
             self.wordList = loadWords(self.words)
 
-
         self.lessonNumber = Lesson(repeat_lesson)
         self.lessonNumber.setlevel(repeat_difficulty(self.wordList))
         self.lessonNumber.number_of_easy(25)
@@ -556,7 +540,6 @@ class ButtonGridWidget(QWidget):
         self.repeat = repeat
 
         if len(repeat) == 0:
-
             words = loadData('word')
             # preparation of word list
             wordList = loadWords(words)
@@ -749,7 +732,6 @@ class ButtonGridWidgetVerbs(QWidget):
         sample = verbs
 
         self.main_window = main_window
-
         # set the title name for the widget
         self.counter = 0
         self.setWindowTitle(f'Learning Verbs - [{self.counter}]')
@@ -815,7 +797,6 @@ class ButtonGridWidgetSpareVerbs(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_title)
         self.timer.start(1000)  # Update title every second
-
         self.sample = list_of_words.copy()
         grid_layout = QGridLayout()
 
@@ -841,11 +822,6 @@ class ButtonGridWidgetSpareVerbs(QWidget):
             # here is necessary to keep 25 buttons...
             except:
                 pass
-
-                #button = QPushButton()
-                #button.setFixedSize(200, 100)
-                #grid_layout.addWidget(button, i, j)
-
 
         # Create a button to go next
         next_button = QPushButton("Next")
@@ -933,8 +909,6 @@ class InputCounterWidget(QWidget):
         groupBox = QGroupBox('Special Characters', self)
         hbox = QHBoxLayout(groupBox)
 
-
-
         # Create buttons with special characters
         if GlobalLanguage.file_path == 'utils/spanish/':
             spec_buttons = ['1L', 'á', 'í', 'é', 'ó', 'ñ', 'ú', 'ü']
@@ -949,7 +923,6 @@ class InputCounterWidget(QWidget):
             button.clicked.connect(lambda _, ch=char: self.insertChar(ch))
             button.clicked.connect(self.buttonClicked)
             hbox.addWidget(button)
-
 
         # Vertical layout with label for words/translations
         layout = QVBoxLayout()
@@ -1319,7 +1292,6 @@ class InputCounterWidgetVerbs(QWidget):
         self.close()
         self.button_grid_window_spare_verbs_one = ButtonGridWidgetSpareVerbs(list_of_words=self.start_list, startTime=self.startTime)
         self.button_grid_window_spare_verbs_one.move(100, 100)
-        #self.button_grid_window_spare_verbs_one.window_closed.connect(lambda: self.open_tranlsation_counter_widget_verb(rever=1))
         self.button_grid_window_spare_verbs_one.window_closed.connect(self.open_tranlsation_counter_widget_verb_one)
         self.button_grid_window_spare_verbs_one.show()
 
@@ -1327,13 +1299,11 @@ class InputCounterWidgetVerbs(QWidget):
         self.input_translation_widget_verbs = InputCounterWidgetVerbs(self, self.start_list, startTime=self.startTime, rever=1)
         self.input_translation_widget_verbs.move(100, 100)
         self.input_translation_widget_verbs.show()
-        #self.input_translation_widget_verbs.window_closed.connect(self.main_window_back)
 
     def start_translation_2(self):
         self.close()
         self.button_grid_window_spare_verbs_two = ButtonGridWidgetSpareVerbs(list_of_words=self.start_list, startTime=self.startTime)
         self.button_grid_window_spare_verbs_two.move(100, 100)
-        #self.button_grid_window_spare_verbs_two.window_closed.connect(lambda: self.open_tranlsation_counter_widget_verb(rever=2))
         self.button_grid_window_spare_verbs_two.window_closed.connect(self.open_tranlsation_counter_widget_verb_two)
         self.button_grid_window_spare_verbs_two.show()
 
@@ -1342,13 +1312,11 @@ class InputCounterWidgetVerbs(QWidget):
         self.input_translation_widget_verbs = InputCounterWidgetVerbs(self, self.start_list, startTime=self.startTime, rever=2)
         self.input_translation_widget_verbs.move(100, 100)
         self.input_translation_widget_verbs.show()
-        #self.input_translation_widget_verbs.window_closed.connect(self.main_window_back)
 
     def start_translation_3(self):
         self.close()
         self.button_grid_window_spare_verbs_three = ButtonGridWidgetSpareVerbs(list_of_words=self.start_list, startTime=self.startTime)
         self.button_grid_window_spare_verbs_three.move(100, 100)
-        #self.button_grid_window_spare_verbs_three.window_closed.connect(lambda: self.open_tranlsation_counter_widget_verb(rever=3))
         self.button_grid_window_spare_verbs_three.window_closed.connect(self.open_tranlsation_counter_widget_verb)
         self.button_grid_window_spare_verbs_three.show()
 
@@ -1357,7 +1325,6 @@ class InputCounterWidgetVerbs(QWidget):
         self.input_translation_widget_verbs = InputCounterWidgetVerbs(self, self.start_list, startTime=self.startTime, rever=3)
         self.input_translation_widget_verbs.move(100, 100)
         self.input_translation_widget_verbs.show()
-        #if rever == 3:
         self.input_translation_widget_verbs.window_closed.connect(self.verbplacing)
 
     def verbplacing(self):
@@ -1366,8 +1333,6 @@ class InputCounterWidgetVerbs(QWidget):
         self.text_window_verbs = TextWindowVerbs(self, data=data)
         self.text_window_verbs.move(100, 100)
         self.text_window_verbs.show()
-        #print((datetime.now() - self.startTime).total_seconds())
-        #self.text_window_verbs.closed_window.connect(self.main_window_back)
 
     def main_window_back(self):
         self.main_window.show()
@@ -1437,7 +1402,6 @@ class ExamWidget(QWidget):
                 button.setStyleSheet("QPushButton {background-color: lightgreen; border-radius: 5px; padding: 5px;}")
             button.clicked.connect(lambda _, ch=char: self.insertChar(ch))
             hbox.addWidget(button)
-
 
         # Vertical layout with label for words/translations
         layout = QVBoxLayout()
@@ -1535,7 +1499,6 @@ class ExamWidget(QWidget):
         best_result = round(best_result, 0)
 
         correct_answers, total_questions, time_minutes, time_seconds, best_result = self.count, self.attempts, self.time_minutes, self.time_seconds, best_result
-
         self.exam_results_window = ExamResultsWidget(self, correct_answers, total_questions, time_minutes, time_seconds, best_result)
         self.exam_results_window.move(100, 100)
         self.exam_results_window.show()
@@ -1543,7 +1506,6 @@ class ExamWidget(QWidget):
         current_date = QDateTime.currentDateTime().date()
         datetime = QDateTime(current_date, self.start_time)
         formatted_datetime = datetime.toString("yy-MM-dd hh:mm:ss.zzz")
-        #prcnt = round((self.count / self.num) * 100, 1)
         exam_sql(formatted_datetime, self.num, self.count, self.total_words, lang, self.total_weight)
 
     def hideMe(self):
@@ -1757,7 +1719,6 @@ class MainWindow(QMainWindow):
             self.de_het_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             self.de_het_btn.setStyleSheet(Styles.button_style)
 
-
         exit_btn = QPushButton('Exit', self)
         exit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         exit_btn.setStyleSheet(Styles.button_style)
@@ -1806,7 +1767,6 @@ class MainWindow(QMainWindow):
 
     def worst_lessons(self):
         data = bottom_not_repeated()
-        #print(data[0], data[1])
         # Create and show the text window
         self.text_window = TextWindow(self, data=data)
         self.text_window.move(100, 100)
