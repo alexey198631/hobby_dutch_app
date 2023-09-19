@@ -1,3 +1,12 @@
+"""
+
+it is necessary to add de het and exam results to show!!! ,
+
+
+exlude printing de het something
+
+"""
+
 import sys
 from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QTime, QDateTime
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
@@ -2049,7 +2058,6 @@ class AutoFontSizeButton(QPushButton):
 
         while text_width > available_width or text_height > available_height:
             font_size = font.pointSize() - 1
-            print(font_size)
             font.setPointSize(font_size)
             metrics = QFontMetrics(font)
             text_width = metrics.horizontalAdvance(self.text())
