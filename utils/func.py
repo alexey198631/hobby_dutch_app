@@ -42,13 +42,19 @@ def loadData(source, dehet='no', exam='no', length=100):
                 cursor.execute(words_query)
                 selected_words = selected_words + cursor.fetchall()
 
-            # sometimes words with some level of difficulty can come to 0, so it is necessary to add other random words
-            qty = len(selected_words)
-            if qty != 25:
-                lim = 25 - qty
+            selected_words = set(selected_words)
+
+            while len(selected_words) < 25:
+                # The number of words we still need
+                lim = 25 - len(selected_words)
+
                 words_query = sql_text('ANY', lim)
                 cursor.execute(words_query)
-                selected_words = selected_words + cursor.fetchall()
+                new_words = cursor.fetchall()
+
+                # Add new words to the set. Since it's a set, duplicates will automatically be ignored.
+                selected_words.update(new_words)
+
             return selected_words
 
         elif source == 'word' and exam == 'yes':
