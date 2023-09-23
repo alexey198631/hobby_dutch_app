@@ -55,6 +55,8 @@ def loadData(source, dehet='no', exam='no', length=100):
                 # Add new words to the set. Since it's a set, duplicates will automatically be ignored.
                 selected_words.update(new_words)
 
+            selected_words = list(selected_words)
+
             return selected_words
 
         elif source == 'word' and exam == 'yes':
