@@ -1,9 +1,6 @@
 """
 
-it is necessary to add de het and exam results to show!!! ,
-
-
-exlude printing de het something
+it is necessary to add de het and exam results to show!!! exlude printing de het something
 
 """
 
