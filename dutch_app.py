@@ -1626,6 +1626,10 @@ class MainWindow(QMainWindow):
         self.correct_action.triggered.connect(self.correct)
         self.file_menu.addAction(self.correct_action)
 
+        self.wordprog_action = QAction("Words Progress", self)
+        self.wordprog_action.triggered.connect(self.wordsprogress)
+        self.file_menu.addAction(self.wordprog_action)
+
         self.reset_action = QAction("Reset Progress", self)
         self.reset_action.triggered.connect(self.reset)
         self.file_menu.addAction(self.reset_action)
@@ -1767,6 +1771,13 @@ class MainWindow(QMainWindow):
     def to_hundred(self):
         new_length = 100
         ExamSettings.set_length(new_length)
+
+    def wordsprogress(self):
+        db_path = 'app.db'
+        self.stat_window = StatisticsWindow(db_path, self)
+        self.stat_window.move(100, 100)
+        self.stat_window.show()
+        self.hide()
 
     def reset(self):
         todefault()
@@ -2038,6 +2049,60 @@ class SearchWindow(QMainWindow):
         self.save_changes()
         super().closeEvent(event)
 
+
+class StatisticsWindow(QMainWindow):
+
+    def __init__(self, db_path, main_window):
+        super().__init__()
+        self.setWindowTitle("Statistics")
+        self.resize(200, 150)
+        self.main_window = main_window
+
+        # Fetch data from the database
+        total_rows, appear_rows = self.get_statistics('app.db')
+
+        # Calculate progress percentage
+        progress = (appear_rows / total_rows * 100) if total_rows > 0 else 0
+
+        # Create labels to display statistics
+        self.learned_label = QLabel(f"Total number of learned words: {appear_rows}")
+        self.total_label = QLabel(f"Total number of words: {total_rows}")
+        self.progress_label = QLabel(f"Progress: {progress:.2f}%")
+
+        # Create layout and add labels
+        layout = QVBoxLayout()
+        layout.addWidget(self.learned_label)
+        layout.addWidget(self.total_label)
+        layout.addWidget(self.progress_label)
+
+        # Create a button to go to Main Menu
+        submit_button = QPushButton("Main Menu")
+        submit_button.clicked.connect(self.main_window_back)
+        layout.addWidget(submit_button)
+
+        # Create main widget
+        main_widget = QWidget()
+        main_widget.setLayout(layout)
+        self.setCentralWidget(main_widget)
+
+    def get_statistics(self, db_path):
+        # Connect to the database and fetch statistics
+        with DatabaseConnection(db_path) as conn:
+            cursor = conn.cursor()
+
+            # Total number of rows
+            cursor.execute("SELECT COUNT(*) FROM words")
+            total_rows = cursor.fetchone()[0]
+
+            # Number of learned words (appear >= 1)
+            cursor.execute("SELECT COUNT(*) FROM words WHERE appear >= 1")
+            appear_rows = cursor.fetchone()[0]
+
+        return total_rows, appear_rows
+
+    def main_window_back(self):
+        self.close()
+        self.main_window.show()
 
 class AutoFontSizeButton(QPushButton):
     def __init__(self, text, parent=None):
